@@ -88,7 +88,7 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 .task-entry .actions .icon-edit{flex:0 0 34px}
 @media(max-width:680px){.task-entry .actions{justify-content:flex-end}}
 </style></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand">✳ Little <span>Dock</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav><div class="sidebar-foot">Local only · your board is saved in this browser.</div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Project <span>Planner</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.03.5</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import</button><input id="fileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand">✳ Little <span>Dock</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav><div class="sidebar-foot">Local only · your board is saved in this browser.</div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Project <span>Planner</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.03.6</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice">Your changes are saved instantly in this browser. Export a backup occasionally.</div>
 <section id="mainApp" hidden><div class="head"><div><h1 id="pageHeading" style="margin:0 0 8px;font:700 27px Georgia,serif">Project overview</h1><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter"><option value="">All assignees</option></select><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div class="grid"><div class="card stat"><span class="muted">Total tasks</span><b id="total">0</b></div><div class="card stat"><span class="muted">Completed</span><b id="completed">0</b></div><div class="card stat"><span class="muted">Logged hours</span><b id="hours">0h</b></div></div>
@@ -97,7 +97,7 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026-11-03-action-alignment-v5';
+const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026-11-03-milestone-import-v6';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=['Ethan','Jerry','Jenny'];
@@ -397,6 +397,96 @@ function downloadBackup(){
  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 $('#export').onclick=downloadBackup;
+
+/* Milestone imports are additive. No existing projects, task logs or features are replaced. */
+function milestoneFromImport(source){
+ if(Array.isArray(source.projects)&&Array.isArray(source.milestones)){
+  const list=source.milestones;
+  if(!list.length)throw Error('This backup contains no milestones');
+  let chosen=list[0];
+  if(list.length>1){
+   const answer=prompt('Choose a milestone number to import:\n'+list.map((m,i)=>`${i+1}. ${m.name||m.title||'Untitled'}`).join('\n'),'1');
+   if(answer===null)return null;
+   const index=Number(answer)-1;
+   if(!Number.isInteger(index)||index<0||index>=list.length)throw Error('Please enter a valid milestone number');
+   chosen=list[index];
+  }
+  const features=(source.features||[]).filter(f=>String(f.milestone_id)===String(chosen.milestone_id));
+  const fids=new Set(features.map(f=>String(f.feature_id)));
+  const tasks=(source.tasks||[]).filter(t=>fids.has(String(t.feature_id)));
+  const logs=(source.logs||[]).filter(l=>tasks.some(t=>String(t.task_id)===String(l.task_id)));
+  return {milestone:chosen,features,tasks,logs,members:source.members||[]};
+ }
+ if(source.milestone&&typeof source.milestone==='object'){
+  const features=source.features||source.milestone.features||[];
+  const tasks=source.tasks||features.flatMap(f=>(f.tasks||[]).map(t=>({...t,feature_id:t.feature_id||f.feature_id||f.id||f.name})));
+  return {milestone:source.milestone,features,tasks,logs:source.logs||[],members:source.members||[]};
+ }
+ throw Error('Expected a milestone file or a full Little Dock backup');
+}
+function importOneMilestone(source){
+ const parsed=milestoneFromImport(source);
+ if(!parsed)return false;
+ const {milestone,features,tasks,logs,members}=parsed;
+ if(!Array.isArray(features)||!Array.isArray(tasks)||!Array.isArray(logs))throw Error('Malformed milestone contents');
+ const name=String(milestone.name||milestone.title||'').trim();
+ if(!name)throw Error('Milestone needs a name');
+ const fkey=f=>String(f.feature_id||f.id||f.name||'');
+ const tkey=t=>String(t.task_id||t.id||t.title||t.name||'');
+ if(features.some(f=>!fkey(f)||!String(f.name||'').trim()))throw Error('Every feature needs a name and identifier');
+ if(tasks.some(t=>!tkey(t)||!String(t.title||t.name||'').trim()))throw Error('Every task needs a title and identifier');
+ const featureKeys=features.map(fkey);
+ if(new Set(featureKeys).size!==featureKeys.length)throw Error('Feature identifiers must be unique');
+ const taskKeys=tasks.map(tkey);
+ if(new Set(taskKeys).size!==taskKeys.length)throw Error('Task identifiers must be unique');
+ if(tasks.some(t=>!featureKeys.includes(String(t.feature_id||t.featureId||''))))throw Error('A task refers to a missing feature');
+ const loggedIds=new Set(taskKeys);
+ if(logs.some(l=>!loggedIds.has(String(l.task_id))))throw Error('A time log refers to a missing task');
+ const message=`Add milestone “${name}” with ${features.length} features and ${tasks.length} tasks to the current project? Existing board data will be kept.`;
+ if(!confirm(message))return false;
+ const next=structuredClone(data),newMilestoneId=uid();
+ const memberById=id=>members.find(m=>String(m.member_id||m.id)===String(id))?.display_name;
+ const memberByName=name=>next.members.find(m=>m.display_name.toLowerCase()===String(name).toLowerCase());
+ const resolveMember=t=>{
+  const name=t.assignee||t.assignee_name||t.assignee_display_name||memberById(t.assignee_member_id);
+  let existing=name?memberByName(name):next.members.find(m=>String(m.member_id)===String(t.assignee_member_id));
+  if(!existing&&name&&String(name).toLowerCase()!=='unassigned'){
+   existing={member_id:uid(),display_name:String(name),google_email:'',active:'Yes'};
+   next.members.push(existing);next.roster.push({...existing});
+  }
+  if(existing&&!next.team.some(m=>m.project_id===activeProject&&m.member_id===existing.member_id))
+   next.team.push({project_id:activeProject,member_id:existing.member_id,project_role:'Member',discipline:'',membership_status:'Active'});
+  return existing?.member_id||'';
+ };
+ next.milestones.push({milestone_id:newMilestoneId,project_id:activeProject,name,description:milestone.description||'',status:milestone.status||'To do',target_date:milestone.target_date||''});
+ const mappedFeatures=new Map(),mappedTasks=new Map();
+ for(const f of features){
+  const id=uid();mappedFeatures.set(fkey(f),id);
+  next.features.push({feature_id:id,project_id:activeProject,milestone_id:newMilestoneId,name:String(f.name),description:f.description||'',status:f.status||'To do'});
+ }
+ for(const t of tasks){
+  const id=uid();mappedTasks.set(tkey(t),id);
+  next.tasks.push({task_id:id,project_id:activeProject,feature_id:mappedFeatures.get(String(t.feature_id||t.featureId)),title:String(t.title||t.name),description:t.description||'',assignee_member_id:resolveMember(t),status:t.status||'To do',priority:t.priority||'Normal',estimated_hours:Number(t.estimated_hours??t.estimate??1)||0,remaining_hours:Number(t.remaining_hours??t.estimated_hours??t.estimate??1)||0,created_by_member_id:'penni',updated_at:new Date().toISOString()});
+ }
+ for(const l of logs){
+  const importedTask=tasks.find(t=>tkey(t)===String(l.task_id));
+  const importedTaskId=mappedTasks.get(String(l.task_id));
+  const newTask=next.tasks.find(t=>t.task_id===importedTaskId);
+  next.logs.push({log_id:uid(),task_id:importedTaskId,member_id:newTask?.assignee_member_id||'penni',hours:Number(l.hours)||0,work_date:l.work_date||l.date||'',note:l.note||'',created_at:l.created_at||''});
+ }
+ // Keep current board untouched if persistence fails.
+ const oldData=data;data=next;
+ try{persist()}catch(err){data=oldData;throw err}
+ activeView='m:'+newMilestoneId;saveProject();render();return true;
+}
+$('#importMilestone').onclick=()=>$('#milestoneFileInput').click();
+$('#milestoneFileInput').onchange=async ev=>{
+ const file=ev.target.files?.[0];if(!file)return;
+ try{const source=JSON.parse(await file.text());if(importOneMilestone(source))setNotice('Milestone imported into this project · All your existing work was preserved.')}
+ catch(err){alert('Could not import milestone: '+err.message)}
+ finally{ev.target.value=''}
+};
+
 $('#import').onclick=()=>$('#fileInput').click();
 $('#fileInput').onchange=async ev=>{
  const file=ev.target.files?.[0];if(!file)return;
