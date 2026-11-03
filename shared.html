@@ -11,7 +11,7 @@ window.PROJECT_PLANNER_CONFIG = {
 <div class="card banner" id="notice">Checking shared backend setup…</div>
 <section id="mainApp" hidden><div class="head"><div><h1 style="margin:0 0 8px;font:700 27px Georgia,serif">Tasks</h1><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><select id="assigneeFilter"><option value="">All assignees</option></select><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div class="grid"><div class="card stat"><span class="muted">Total tasks</span><b id="total">0</b></div><div class="card stat"><span class="muted">Completed</span><b id="completed">0</b></div><div class="card stat"><span class="muted">Logged hours</span><b id="hours">0h</b></div></div>
-<div class="card"><div class="head"><h2 style="font:700 19px Georgia,serif;margin:0">Project board</h2><div class="actions" id="pmActions"></div></div><div class="table-wrap"><table><thead><tr><th>Task</th><th>Feature / milestone</th><th>Assigned</th><th>Status</th><th>Est.</th><th>Logged</th><th>Actions</th></tr></thead><tbody id="tasks"></tbody></table></div></div></section></div>
+<div class="card" style="margin-bottom:16px"><div class="head"><h2 style="font:700 19px Georgia,serif;margin:0">Milestones & features</h2></div><div id="milestoneList" style="margin-top:14px"></div></div><div class="card" style="margin-bottom:16px"><div class="head"><h2 style="font:700 19px Georgia,serif;margin:0">Project team</h2></div><div id="teamList" style="margin-top:14px"></div></div><div class="card"><div class="head"><h2 style="font:700 19px Georgia,serif;margin:0">Project board</h2><div class="actions" id="pmActions"></div></div><div class="table-wrap"><table><thead><tr><th>Task</th><th>Feature / milestone</th><th>Assigned</th><th>Status</th><th>Est.</th><th>Logged</th><th>Actions</th></tr></thead><tbody id="tasks"></tbody></table></div></div></section></div>
 <div class="modal-back" id="back"><div class="modal" role="dialog" aria-modal="true"><div class="head"><h2 id="modalTitle"></h2><button class="button" id="close">×</button></div><div id="modalBody"></div></div></div>
 <script>
 'use strict';
@@ -48,7 +48,46 @@ function closeModal(){$('#back').classList.remove('show')}
 $('#close').onclick=closeModal;$('#back').addEventListener('click',ev=>{if(ev.target.id==='back')closeModal()});
 function projectFeatures(){return data.features.filter(x=>x.project_id===activeProject)}
 function projectMembers(){const ids=new Set(data.memberships.filter(x=>x.project_id===activeProject&&x.membership_status==='Active').map(x=>x.member_id));return data.members.filter(x=>ids.has(x.member_id))}
-function render(){const proj=data.projects.filter(p=>data.memberships.some(m=>m.project_id===p.project_id));$('#project').innerHTML=proj.map(p=>`<option value="${e(p.project_id)}" ${p.project_id===activeProject?'selected':''}>${e(p.project_name)}</option>`).join('');const who=projectMembers();$('#assigneeFilter').innerHTML='<option value="">All assignees</option>'+who.map(m=>`<option value="${e(m.member_id)}">${e(m.display_name)}</option>`).join('');$('#newTask').hidden=!isPM();$('#roleDescription').textContent=isPM()?'Project Manager · create, edit and assign tasks':'Team Member · update your assigned tasks and log work';const actions=$('#pmActions');actions.innerHTML=isPM()?'<button class="button" data-action="milestone">+ Milestone</button><button class="button" data-action="feature">+ Feature</button><button class="button" data-action="member">+ Member</button><button class="button" data-action="project">+ Project</button>':'';actions.onclick=ev=>{const a=ev.target.closest('[data-action]');if(a)quickCreate(a.dataset.action)};renderTasks();}
+function render(){const proj=data.projects.filter(p=>data.memberships.some(m=>m.project_id===p.project_id));$('#project').innerHTML=proj.map(p=>`<option value="${e(p.project_id)}" ${p.project_id===activeProject?'selected':''}>${e(p.project_name)}</option>`).join('');const who=projectMembers();$('#assigneeFilter').innerHTML='<option value="">All assignees</option>'+who.map(m=>`<option value="${e(m.member_id)}">${e(m.display_name)}</option>`).join('');$('#newTask').hidden=!isPM();$('#roleDescription').textContent=isPM()?'Project Manager · create, edit and assign tasks':'Team Member · update your assigned tasks and log work';const actions=$('#pmActions');actions.innerHTML=isPM()?'<button class="button" data-action="milestone">+ Milestone</button><button class="button" data-action="feature">+ Feature</button><button class="button" data-action="member">+ Member</button><button class="button" data-action="project">+ Project</button>':'';actions.onclick=ev=>{const a=ev.target.closest('[data-action]');if(a)quickCreate(a.dataset.action)};renderMilestones();renderTeam();renderTasks();}
+
+function renderMilestones(){
+  const ms=data.milestones.filter(m=>m.project_id===activeProject);
+  const fs=projectFeatures();
+  $('#milestoneList').innerHTML=ms.length?ms.map(m=>{
+    const child=fs.filter(f=>f.milestone_id===m.milestone_id);
+    const t=data.tasks.filter(x=>x.project_id===activeProject&&child.some(f=>f.feature_id===x.feature_id));
+    return '<div style="padding:13px 0;border-bottom:1px solid #e7eeeb"><div class="head"><div><strong>'+e(m.name)+'</strong> <span class="tag">'+e(m.status)+'</span><div class="sub">'+e(m.description||'No description')+' · '+t.filter(x=>x.status==='Done').length+'/'+t.length+' tasks complete'+(m.target_date?' · Target '+e(m.target_date):'')+'</div></div>'+(isPM()?'<button class="button" data-milestone="'+e(m.milestone_id)+'">Edit milestone</button>':'')+'</div><div style="margin:8px 0 0 15px">'+child.map(f=>'<div class="head" style="padding:6px 0"><div class="sub">'+e(f.name)+' · '+e(f.status)+'</div>'+(isPM()?'<button class="button" data-feature="'+e(f.feature_id)+'">Edit feature</button>':'')+'</div>').join('')+'</div></div>';
+  }).join(''):'<div class="sub">No milestones yet.</div>';
+  $('#milestoneList').onclick=ev=>{
+    const m=ev.target.closest('[data-milestone]'),f=ev.target.closest('[data-feature]');
+    if(m)editMilestone(m.dataset.milestone);
+    else if(f)editFeature(f.dataset.feature);
+  };
+}
+function editMilestone(id){
+  if(!isPM())return;
+  const m=find(data.milestones,id,'milestone_id');if(!m)return;
+  modal('Edit milestone',`<form id="actionForm"><div class="fields">${field('name','Milestone name',m.name,'text',true)}<label class="wide">Description<textarea name="description">${e(m.description||'')}</textarea></label>${select('status','Status',ST.map(x=>({value:x,label:x})),m.status)}${field('target_date','Target date',m.target_date||'','date')}</div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="submit" class="button main">Save milestone</button></div></form>`);
+  $('#cancel').onclick=closeModal;
+  $('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit('editMilestone',{milestone_id:id,...Object.fromEntries(new FormData(ev.currentTarget).entries())})};
+}
+function editFeature(id){
+  if(!isPM())return;
+  const f=find(data.features,id,'feature_id');if(!f)return;
+  const milestones=data.milestones.filter(x=>x.project_id===activeProject);
+  modal('Edit feature',`<form id="actionForm"><div class="fields">${field('name','Feature name',f.name,'text',true)}<label class="wide">Description<textarea name="description">${e(f.description||'')}</textarea></label>${select('milestone_id','Milestone',milestones.map(x=>({value:x.milestone_id,label:x.name})),f.milestone_id)}${select('status','Status',ST.map(x=>({value:x,label:x})),f.status)}${field('estimated_hours','Estimated hours',f.estimated_hours||0,'number')}</div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="submit" class="button main">Save feature</button></div></form>`);
+  $('#cancel').onclick=closeModal;
+  $('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit('editFeature',{feature_id:id,...Object.fromEntries(new FormData(ev.currentTarget).entries())})};
+}
+function renderTeam(){
+  const memberships=(data.team||[]).filter(x=>x.project_id===activeProject);
+  const roster=data.roster||data.members;
+  $('#teamList').innerHTML=memberships.map(m=>{
+    const p=roster.find(x=>x.member_id===m.member_id)||data.members.find(x=>x.member_id===m.member_id);
+    return '<div class="head" style="padding:9px 0;border-bottom:1px solid #edf0ef"><div><b>'+e(p?.display_name||'Unknown')+'</b> <span class="tag">'+e(m.project_role)+'</span><div class="sub">'+e(m.discipline||'')+'</div></div><div class="sub">'+e(m.membership_status)+(isPM()&&p?.google_email?' · '+e(p.google_email):'')+'</div></div>';
+  }).join('') + (isPM()?'<p class="sub" style="line-height:1.7;margin-top:14px">To invite someone, click <b>+ Member</b>, enter the Google email they will sign in with, and save. Then send them <a class="link" target="_blank" rel="noopener" href="https://pennipopvt.github.io/ProjectPlanner/shared.html">the shared board URL</a>. Existing pending team entries can be activated this way. If your Google OAuth app is in Testing, add their email under Google Auth Platform → Audience → Test users first. They do not need editing access to the Sheet.</p>':'');
+}
+
 function renderTasks(){let ts=data.tasks.filter(x=>x.project_id===activeProject);const filter=$('#assigneeFilter').value;if(filter)ts=ts.filter(x=>x.assignee_member_id===filter);$('#total').textContent=ts.length;$('#completed').textContent=ts.filter(x=>x.status==='Done').length;$('#hours').textContent=formatHours(ts.reduce((n,t)=>n+taskHours(t),0));$('#tasks').innerHTML=ts.length?ts.map(t=>{const f=feature(t.feature_id),m=milestone(f),update=canUpdate(t);return `<tr><td><button class="task-title" data-detail="${e(t.task_id)}">${e(t.title)}</button><div class="sub">${e(t.priority)}</div></td><td>${e(f?.name||'—')}<div class="sub">${e(m?.name||'')}</div></td><td>${e(member(t.assignee_member_id))}</td><td>${update?`<select data-status="${e(t.task_id)}" aria-label="Status for ${e(t.title)}">${ST.map(s=>`<option ${s===t.status?'selected':''}>${e(s)}</option>`).join('')}</select>`:`<span class="tag">${e(t.status)}</span>`}</td><td>${formatHours(t.estimated_hours)}</td><td>${formatHours(taskHours(t))}</td><td><div class="actions">${update?`<button class="button" data-log="${e(t.task_id)}">+ Hours</button>`:''}${isPM()?`<button class="button" data-edit="${e(t.task_id)}">Edit</button>`:''}</div></td></tr>`}).join(''):'<tr><td colspan="7" class="empty">No tasks yet. A PM can create the first one.</td></tr>';
 $('#tasks').onclick=ev=>{const btn=ev.target.closest('button');if(!btn)return;if(btn.dataset.detail)details(btn.dataset.detail);if(btn.dataset.edit)editTask(btn.dataset.edit);if(btn.dataset.log)logHours(btn.dataset.log)};
 $('#tasks').onchange=async ev=>{const sel=ev.target.closest('[data-status]');if(!sel)return;sel.disabled=true;try{await rpc('setStatus',{task_id:sel.dataset.status,status:sel.value});await refresh()}catch(err){alert(err.message);await refresh()}};}
