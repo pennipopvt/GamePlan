@@ -27,6 +27,10 @@ function doGet() {
 
 // Only public server entry point. Server never trusts claimed roles, identities or assignees.
 function dispatch(request) {
+  // Reset all execution-local caches before authenticating each request.
+  for(const key in REQUEST_TABLE_CACHE)delete REQUEST_TABLE_CACHE[key];
+  for(const key in REQUEST_TAB_CACHE)delete REQUEST_TAB_CACHE[key];
+  REQUEST_SPREADSHEET=null;
   if (!request || typeof request !== 'object' || typeof request.idToken !== 'string') throw Error('Sign in is required.');
   const email = verifyIdentity_(request.idToken);
   const op = String(request.op || '');
@@ -70,10 +74,12 @@ function verifyIdentity_(token) {
 // Reuse read-only data within a single Apps Script execution. Never cache between users/requests.
 const REQUEST_TABLE_CACHE = {};
 const REQUEST_TAB_CACHE = {};
+let REQUEST_SPREADSHEET = null;
 function invalidate_(name){delete REQUEST_TABLE_CACHE[name];}
 function tab_(name) {
   if(REQUEST_TAB_CACHE[name])return REQUEST_TAB_CACHE[name];
-  const s = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(name);
+  if(!REQUEST_SPREADSHEET)REQUEST_SPREADSHEET=SpreadsheetApp.openById(SPREADSHEET_ID);
+  const s = REQUEST_SPREADSHEET.getSheetByName(name);
   if (!s) throw Error('Missing sheet: ' + name);
   const headers = s.getRange(1,1,1,SCHEMA[name].length).getDisplayValues()[0];
   if (headers.join('|') !== SCHEMA[name].join('|')) throw Error('Unexpected schema in ' + name);
@@ -93,9 +99,15 @@ function rows_(name) {
 }
 function insert_(name,row) { const s = tab_(name); s.appendRow(SCHEMA[name].map(h=>row[h] == null ? '' : row[h])); invalidate_(name); return row; }
 function patch_(name,row,changes,allowed) {
-  const sheet=tab_(name); allowed.forEach(key=>{if(Object.prototype.hasOwnProperty.call(changes,key)){
-    sheet.getRange(row._row,SCHEMA[name].indexOf(key)+1).setValue(changes[key]);
-  }});invalidate_(name);
+  const keys=allowed.filter(key=>Object.prototype.hasOwnProperty.call(changes,key));
+  if(!keys.length)return;
+  // Write one complete row instead of making separate network calls for every field.
+  // Re-read the row to preserve untouched fields.
+  const sheet=tab_(name),length=SCHEMA[name].length,range=sheet.getRange(row._row,1,1,length);
+  const values=range.getValues()[0];
+  keys.forEach(key=>{values[SCHEMA[name].indexOf(key)]=changes[key]});
+  range.setValues([values]);
+  invalidate_(name);
 }
 function required_(v,name,max=5000){const s=String(v??'').trim();if(!s||s.length>max)throw Error('Invalid '+name);return s;}
 function optional_(v,max=5000){const s=String(v??'').trim();if(s.length>max)throw Error('Text is too long');return s;}
