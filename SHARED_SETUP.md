@@ -34,3 +34,21 @@ The existing **Local board** is intentionally still available at `index.html`. T
 - This is a ready-to-deploy implementation, not a completed live connection. Do not assume roles are enforced until the Apps Script deployment, Google sign-in and a real PM/member test have succeeded.
 - If the Google Identity Services sign-in button does not load, check browser tracking restrictions, consent screen test-user access, and exact authorized JavaScript origin.
 - If the bridge does not connect, check the `/exec` URL and Apps Script web-app access settings; browser cross-origin iframe restrictions may require a different hosting architecture.
+
+## Updating the backend after GitHub changes
+
+The GitHub Pages UI updates after a refresh, but Apps Script does not automatically pull GitHub code.
+
+1. Open your existing Apps Script project, `Project Planner`.
+2. Replace the contents of its `Code.gs` with the current [apps-script/Code.gs](apps-script/Code.gs) from GitHub. Keep the existing `Bridge.html`.
+3. Save. Choose **Deploy → Manage deployments**, select the existing web-app deployment, click its pencil (**Edit**), and choose **New version**. Click **Deploy**. Keep **Execute as: Me** and **Who has access: Anyone**.
+4. Reopen the [Shared board](https://pennipopvt.github.io/ProjectPlanner/shared.html), hard-refresh, and test editing the first milestone. Using **Manage deployments** keeps the existing `/exec` URL, so `shared-config.js` does not need changing.
+
+## Inviting project teammates
+
+1. The PM uses **+ Member** on the shared board and enters each person's actual Google sign-in email. This activates any matching pending roster entry.
+2. If the Google OAuth consent app has **Testing** status, open **Google Cloud Console → Google Auth Platform → Audience → Test users** and add those email addresses there as well.
+3. Share [the shared-board link](https://pennipopvt.github.io/ProjectPlanner/shared.html) with teammates. They sign in with that same Google account. Do **not** grant them Editor permission to the raw spreadsheet or they could bypass the PM-only restrictions.
+4. Verify with one member account: it should view tasks and update only its assigned tasks, and have no buttons to edit milestones/features or create/assign tasks.
+
+The PM can now edit milestone name, description, status and target date; edit feature name, description, parent milestone, status and estimated hours. These edits require the new Apps Script backend version.
