@@ -47,6 +47,8 @@ function dispatch(request) {
     if (op === 'deleteFeature') return deleteFeature_(email, payload);
     if (op === 'deleteMilestone') return deleteMilestone_(email, payload);
     if (op === 'addMember') return addMember_(email, payload);
+    if (op === 'updateMember') return updateMember_(email, payload);
+    if (op === 'removeMember') return removeMember_(email, payload);
     if (op === 'createProject') return createProject_(email, payload);
     throw Error('Unknown operation.');
   } finally { lock.releaseLock(); }
@@ -65,25 +67,35 @@ function verifyIdentity_(token) {
   }
   return String(claims.email).trim().toLowerCase();
 }
+// Reuse read-only data within a single Apps Script execution. Never cache between users/requests.
+const REQUEST_TABLE_CACHE = {};
+const REQUEST_TAB_CACHE = {};
+function invalidate_(name){delete REQUEST_TABLE_CACHE[name];}
 function tab_(name) {
+  if(REQUEST_TAB_CACHE[name])return REQUEST_TAB_CACHE[name];
   const s = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(name);
   if (!s) throw Error('Missing sheet: ' + name);
   const headers = s.getRange(1,1,1,SCHEMA[name].length).getDisplayValues()[0];
   if (headers.join('|') !== SCHEMA[name].join('|')) throw Error('Unexpected schema in ' + name);
+  REQUEST_TAB_CACHE[name]=s;
   return s;
 }
 function rows_(name) {
-  const sheet = tab_(name), headers = SCHEMA[name], last = sheet.getLastRow();
-  if (last < 2) return [];
-  return sheet.getRange(2,1,last-1,headers.length).getValues().map((values,i)=>{
-    const obj = {_row:i+2}; headers.forEach((h,j)=>obj[h]=values[j] instanceof Date ? Utilities.formatDate(values[j], 'GMT','yyyy-MM-dd') : values[j]); return obj;
+  if(REQUEST_TABLE_CACHE[name])return REQUEST_TABLE_CACHE[name];
+  const sheet=tab_(name),headers=SCHEMA[name],last=sheet.getLastRow();
+  const rows=last<2?[]:sheet.getRange(2,1,last-1,headers.length).getValues().map((values,i)=>{
+    const obj={_row:i+2};
+    headers.forEach((h,j)=>obj[h]=values[j] instanceof Date?Utilities.formatDate(values[j],'GMT','yyyy-MM-dd'):values[j]);
+    return obj;
   }).filter(row=>String(row[headers[0]]).trim());
+  REQUEST_TABLE_CACHE[name]=rows;
+  return rows;
 }
-function insert_(name,row) { const s = tab_(name); s.appendRow(SCHEMA[name].map(h=>row[h] == null ? '' : row[h])); return row; }
+function insert_(name,row) { const s = tab_(name); s.appendRow(SCHEMA[name].map(h=>row[h] == null ? '' : row[h])); invalidate_(name); return row; }
 function patch_(name,row,changes,allowed) {
   const sheet=tab_(name); allowed.forEach(key=>{if(Object.prototype.hasOwnProperty.call(changes,key)){
     sheet.getRange(row._row,SCHEMA[name].indexOf(key)+1).setValue(changes[key]);
-  }});
+  }});invalidate_(name);
 }
 function required_(v,name,max=5000){const s=String(v??'').trim();if(!s||s.length>max)throw Error('Invalid '+name);return s;}
 function optional_(v,max=5000){const s=String(v??'').trim();if(s.length>max)throw Error('Text is too long');return s;}
@@ -168,6 +180,7 @@ function deleteRows_(sheetName,predicate){
   const rows=rows_(sheetName).filter(predicate);
   const sh=tab_(sheetName);
   rows.sort((a,b)=>b._row-a._row).forEach(row=>sh.deleteRow(row._row));
+  invalidate_(sheetName);
   return rows.length;
 }
 function deleteTask_(email,p){
@@ -197,4 +210,39 @@ function deleteMilestone_(email,p){
     throw Error('Move or delete this milestone’s features before deleting the milestone.');
   deleteRows_('Milestones',x=>String(x.milestone_id)===id);
   return {ok:true};
+}
+
+
+function updateMember_(email,p){
+ const projectId=required_(p.project_id,'project'),memberId=required_(p.member_id,'member');
+ const {member:manager}=permit_(email,projectId,true);
+ const team=rows_('Project Team').find(x=>String(x.project_id)===projectId&&String(x.member_id)===memberId);
+ const member=rows_('Members').find(x=>String(x.member_id)===memberId);
+ if(!team||!member)throw Error('Team member not found');
+ if(team.project_role==='PM'&&memberId!==manager.member_id)throw Error('Another project manager cannot be edited here.');
+ const name=required_(p.display_name,'name',120);
+ const newEmail=optional_(p.google_email,254).toLowerCase();
+ if(newEmail&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail))throw Error('Invalid Google email.');
+ if(memberId===manager.member_id&&newEmail!==email)throw Error('You cannot change your own sign-in email here.');
+ if(newEmail&&rows_('Members').some(x=>x.member_id!==memberId&&String(x.google_email).trim().toLowerCase()===newEmail))throw Error('That Google email is already associated with another member.');
+ const memberships=rows_('Project Team').filter(x=>String(x.member_id)===memberId);
+ if(memberships.some(x=>String(x.project_id)!==projectId)&&String(member.google_email||'').toLowerCase()!==newEmail)
+   throw Error('This person belongs to another project. Their global sign-in email cannot be changed here.');
+ const nextStatus=newEmail?'Active':'Pending verification';
+ if(team.project_role==='PM'&&nextStatus!=='Active')throw Error('Project managers must keep an active Google account.');
+ patch_('Members',member,{display_name:name,google_email:newEmail,active:'Yes'},['display_name','google_email','active']);
+ patch_('Project Team',team,{discipline:optional_(p.discipline,80),membership_status:nextStatus},['discipline','membership_status']);
+ return {ok:true,status:nextStatus};
+}
+function removeMember_(email,p){
+ const projectId=required_(p.project_id,'project'),memberId=required_(p.member_id,'member');
+ const {member:manager}=permit_(email,projectId,true);
+ const team=rows_('Project Team').find(x=>String(x.project_id)===projectId&&String(x.member_id)===memberId);
+ if(!team)throw Error('Membership not found');
+ if(memberId===manager.member_id||team.project_role==='PM')throw Error('Project managers cannot be removed using this action.');
+ const assigned=rows_('Tasks').filter(t=>String(t.project_id)===projectId&&String(t.assignee_member_id)===memberId);
+ if(assigned.length)throw Error('Reassign '+assigned.length+' task(s) before removing this member.');
+ deleteRows_('Project Team',x=>String(x.project_id)===projectId&&String(x.member_id)===memberId);
+ // Keep the person and their historic time logs. Only project access is revoked.
+ return {ok:true};
 }
