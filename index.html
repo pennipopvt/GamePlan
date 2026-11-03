@@ -29,6 +29,10 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 .progress-line{height:5px;border-radius:8px;background:#deebe4;overflow:hidden;margin:7px 0 0;max-width:190px}
 .progress-line span{height:100%;background:#4d9989;display:block}
 .milestone-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.feature-hours{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;border:1px solid #bdddd0;background:#e7f4ec;color:#246d54;border-radius:18px;padding:7px 10px;font-size:12px;font-weight:750;font-variant-numeric:tabular-nums}
+.feature-hours::before{content:'◷';font-size:15px;font-weight:500}
+.feature-heading-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+@media(max-width:680px){.feature-heading-actions{gap:5px}.feature-hours{font-size:11px;padding:5px 7px}}
 .feature-section{border-top:1px solid #e8eee8}
 .feature-summary{display:flex;align-items:center;gap:10px;padding:13px 18px 13px 36px;cursor:pointer;list-style:none;background:#fbfcfb}
 .feature-summary strong{font-size:13px;color:#3c645c}
@@ -50,7 +54,7 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 @media(max-width:900px){.app{grid-template-columns:205px minmax(0,1fr)}.sidebar{padding:22px 10px}.task-entry{grid-template-columns:minmax(0,1fr) 125px;gap:10px;padding-left:33px}.task-entry .meta-person{display:none}}
 @media(max-width:680px){.app{display:block}.sidebar{display:none;position:fixed;z-index:5;inset:0 auto 0 0;width:255px;box-shadow:10px 0 30px #1233}.sidebar.visible{display:flex}.workspace{padding:16px 12px 40px}#menuToggle{display:inline-flex}.task-entry{grid-template-columns:minmax(0,1fr) 120px;padding:12px}.task-entry .actions{grid-column:1/-1;justify-content:flex-start}.feature-summary{padding-left:15px}.milestone-summary{padding:13px}.board-search{width:150px}}
 </style></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand">✳ Little <span>Dock</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav><div class="sidebar-foot">Local only · your board is saved in this browser.</div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Project <span>Planner</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser</div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import</button><input id="fileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Refresh</button></div></header>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand">✳ Little <span>Dock</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav><div class="sidebar-foot">Local only · your board is saved in this browser.</div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Project <span>Planner</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.03.2</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import</button><input id="fileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice">Your changes are saved instantly in this browser. Export a backup occasionally.</div>
 <section id="mainApp" hidden><div class="head"><div><h1 id="pageHeading" style="margin:0 0 8px;font:700 27px Georgia,serif">Project overview</h1><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter"><option value="">All assignees</option></select><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div class="grid"><div class="card stat"><span class="muted">Total tasks</span><b id="total">0</b></div><div class="card stat"><span class="muted">Completed</span><b id="completed">0</b></div><div class="card stat"><span class="muted">Logged hours</span><b id="hours">0h</b></div></div>
@@ -59,7 +63,7 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project';
+const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026-11-03-feature-hours-v2';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=['Ethan','Jerry','Jenny'];
@@ -262,7 +266,7 @@ function renderMilestones(){
    const tasks=shown.filter(t=>t.feature_id===f.feature_id);
    if(isFiltered&&!tasks.length)return '';
    const all=project.filter(t=>t.feature_id===f.feature_id),expanded=!collapsedFeatures.has(String(f.feature_id));
-   return `<details class="feature-section" data-feat="${e(f.feature_id)}" ${expanded?'open':''}><summary class="feature-summary"><span class="chevron">▸</span><div class="title-stack"><strong>${e(f.name)}</strong><div class="sub">${all.filter(t=>t.status==='Done').length}/${all.length} tasks complete · <strong>${formatHours(featureHours(f.feature_id))} logged</strong></div></div><button class="button" type="button" data-feature="${e(f.feature_id)}">Edit feature</button></summary>${tasks.map(taskRow).join('')||'<div class="empty-hierarchy">No tasks here yet.</div>'}</details>`;
+   return `<details class="feature-section" data-feat="${e(f.feature_id)}" ${expanded?'open':''}><summary class="feature-summary"><span class="chevron">▸</span><div class="title-stack"><strong>${e(f.name)}</strong><div class="sub">${all.filter(t=>t.status==='Done').length}/${all.length} tasks complete</div></div><div class="feature-heading-actions"><span class="feature-hours" title="Actual logged time across every task belonging to this feature">${formatHours(featureHours(f.feature_id))} logged</span><button class="button" type="button" data-feature="${e(f.feature_id)}">Edit feature</button></div></summary>${tasks.map(taskRow).join('')||'<div class="empty-hierarchy">No tasks here yet.</div>'}</details>`;
   }).join('')||'<div class="empty-hierarchy">No features here yet.</div>'}</details>`;
  }).join('')||'<div class="empty-hierarchy">Nothing matches this view. Try another filter, or create a milestone and feature.</div>';
  const root=$('#milestoneList');
@@ -348,7 +352,7 @@ function deleteItem(kind,id,name){
  rpc('delete'+kind[0].toUpperCase()+kind.slice(1),{[kind+'_id']:id}).then(async()=>{closeModal();await refresh()}).catch(err=>alert(err.message));
 }
 $('#inviteMember').onclick=ev=>{ev.preventDefault();ev.stopPropagation();quickCreate('member')};
-$('#newTask').onclick=()=>taskForm(null);$('#project').onchange=ev=>{activeProject=ev.target.value;activeView='all';saveProject();render()};$('#assigneeFilter').onchange=render;$('#searchTasks').oninput=render;$('#menuToggle').onclick=()=>$('#sidebar').classList.toggle('visible');$('#reload').onclick=refresh;
+$('#newTask').onclick=()=>taskForm(null);$('#project').onchange=ev=>{activeProject=ev.target.value;activeView='all';saveProject();render()};$('#assigneeFilter').onchange=render;$('#searchTasks').oninput=render;$('#menuToggle').onclick=()=>$('#sidebar').classList.toggle('visible');$('#reload').onclick=()=>{const url=new URL(location.href);url.searchParams.set('v',APP_VERSION);location.assign(url.toString())};
 
 function downloadBackup(){
  const blob=new Blob([JSON.stringify({version:2,exported_at:new Date().toISOString(),...data},null,2)],{type:'application/json'});
