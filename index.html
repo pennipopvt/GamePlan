@@ -1,12 +1,60 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Project Planner · Local</title>
 <style>
 :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;color:#273c43;background:#f7f8f5;font-size:14px}*{box-sizing:border-box}body{margin:0}button,input,textarea,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #4c9b97;outline-offset:2px}.app{min-height:100vh;max-width:1220px;margin:auto;padding:30px 22px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center}.brand{font:700 29px Georgia,serif;letter-spacing:-.7px}.brand span{color:#31847c}.sub{color:#778987;font-size:12px}.top-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.button{border:1px solid #c9d8d4;padding:10px 15px;border-radius:9px;background:white;color:#355951;font-weight:600}.button.main{background:#317d73;color:white;border-color:#317d73}.button:hover{filter:brightness(.96)}.button.danger{color:#9d3030;border-color:#e6bebe;background:#fff7f7}.card{background:white;border:1px solid #e0e7e3;border-radius:15px;padding:22px;box-shadow:0 5px 22px #152b2107}.banner{margin:22px 0}.muted{color:#758680}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:21px 0}.stat b{font-size:27px;display:block;margin-top:8px}.head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}.filters{display:flex;gap:9px;flex-wrap:wrap}select,input,textarea{border:1px solid #cbd9d5;background:white;border-radius:8px;padding:9px 11px;color:inherit;min-width:0}textarea{min-height:110px;resize:vertical}label{display:flex;flex-direction:column;gap:5px;color:#4d6563;font-size:12px;font-weight:650}.table-wrap{overflow-x:auto;margin-top:15px}table{border-collapse:collapse;width:100%;min-width:750px}th{text-align:left;background:#eef4f1;color:#56726c;font-size:11px;text-transform:uppercase;letter-spacing:.6px}td,th{padding:13px 11px;border-bottom:1px solid #ebefed;vertical-align:middle}.task-title{border:0;background:none;padding:0;text-align:left;color:#204e50;font-weight:700}.tag{font-size:11px;border-radius:50px;background:#eaf3ef;padding:4px 9px;display:inline-block}.actions{display:flex;gap:6px;flex-wrap:wrap}.actions .button{padding:6px 9px;font-size:12px}.empty{text-align:center;padding:50px 20px;color:#84918d}.modal-back{position:fixed;inset:0;background:#132d3199;display:none;align-items:center;justify-content:center;padding:20px;z-index:3}.modal-back.show{display:flex}.modal{background:white;border-radius:16px;width:min(620px,100%);max-height:90vh;overflow:auto;padding:25px}.modal h2{margin:0 0 12px;font:700 25px Georgia,serif}.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:15px 0}.fields .wide{grid-column:1/-1}.fields input,.fields textarea,.fields select{width:100%}.desc{white-space:pre-wrap;line-height:1.7;padding:10px 0;min-height:40px}.note{padding:9px 0;border-bottom:1px solid #e9efed}.controls{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:15px}.error{color:#ad3939}.success{color:#28796b}#connectFrame{display:none;width:1px;height:1px;border:0;position:absolute;pointer-events:none}.link{color:#287d73;text-decoration:none}.link:hover{text-decoration:underline}@media(max-width:700px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.fields{grid-template-columns:1fr}.fields .wide{grid-column:1}.app{padding:18px 12px}}
+
+/* Little Dock navigation and expandable task hierarchy */
+.app{max-width:none;margin:0;display:grid;grid-template-columns:250px minmax(0,1fr);align-items:start;padding:0;min-height:100vh}
+.sidebar{position:sticky;top:0;height:100vh;overflow:auto;background:#eaf0ec;border-right:1px solid #dce7df;padding:28px 16px;display:flex;flex-direction:column;gap:20px}
+.sidebar-brand{padding:0 12px 10px;font:700 25px Georgia,serif;color:#2b5f5b}
+.sidebar-brand span{color:#31847c}
+.side-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:750;color:#869994;padding:0 11px}
+.side-nav{display:grid;gap:4px}
+.side-link{width:100%;border:0;background:transparent;color:#476560;padding:12px 11px;border-radius:10px;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:9px}
+.side-link:hover{background:#dfeae3}.side-link.active{background:#fff;color:#226f69;font-weight:750;box-shadow:0 2px 12px #1232}
+.side-count{font-size:11px;color:#859c93}
+.sidebar-foot{margin-top:auto;font-size:12px;color:#77918a;padding:10px}
+.workspace{min-width:0;padding:27px clamp(18px,3.4vw,54px) 60px;max-width:1500px;width:100%;margin:0 auto}
+.workspace .top{margin-bottom:14px}
+.workspace .brand{font-size:22px}
+.banner{margin:12px 0 24px}
+#milestoneList{margin-top:14px}
+.milestone-section{border:1px solid #e2eae4;border-radius:12px;overflow:hidden;margin:13px 0;background:#fff}
+.milestone-summary{display:flex;align-items:center;gap:12px;padding:17px;background:#f0f6f2;cursor:pointer;list-style:none}
+.milestone-summary::-webkit-details-marker,.feature-summary::-webkit-details-marker{display:none}
+.milestone-summary:hover,.feature-summary:hover{filter:brightness(.986)}
+.chevron{font-size:15px;color:#63847c;display:inline-block;transition:transform .16s}
+details[open]>summary .chevron{transform:rotate(90deg)}
+.title-stack{min-width:0;flex:1}
+.title-stack strong{display:block;font-size:15px;color:#29564f}
+.progress-line{height:5px;border-radius:8px;background:#deebe4;overflow:hidden;margin:7px 0 0;max-width:190px}
+.progress-line span{height:100%;background:#4d9989;display:block}
+.milestone-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.feature-section{border-top:1px solid #e8eee8}
+.feature-summary{display:flex;align-items:center;gap:10px;padding:13px 18px 13px 36px;cursor:pointer;list-style:none;background:#fbfcfb}
+.feature-summary strong{font-size:13px;color:#3c645c}
+.task-entry{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(110px,.8fr) minmax(135px,.9fr) auto;align-items:center;gap:12px;padding:12px 18px 12px 68px;border-top:1px solid #edf0ed}
+.task-entry:hover{background:#fcfefc}
+.task-entry .sub{margin-top:4px}
+.task-entry .task-title{font-size:13px}
+.task-entry select{width:100%;font-size:12px;padding:8px}
+.task-entry .actions{justify-content:flex-end}
+.task-done{text-decoration:line-through;opacity:.63}
+.empty-hierarchy{padding:18px 34px;color:#8c9c94;font-size:12px}
+.section-actions{display:flex;flex-wrap:wrap;gap:7px}
+#teamSection{margin-top:18px}
+#teamSection>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:16px;align-items:center}
+#teamSection>summary::-webkit-details-marker{display:none}
+#teamSection>summary h2{margin:0}
+.board-search{width:190px}
+#menuToggle{display:none}
+@media(max-width:900px){.app{grid-template-columns:205px minmax(0,1fr)}.sidebar{padding:22px 10px}.task-entry{grid-template-columns:minmax(0,1fr) 125px;gap:10px;padding-left:33px}.task-entry .meta-person{display:none}}
+@media(max-width:680px){.app{display:block}.sidebar{display:none;position:fixed;z-index:5;inset:0 auto 0 0;width:255px;box-shadow:10px 0 30px #1233}.sidebar.visible{display:flex}.workspace{padding:16px 12px 40px}#menuToggle{display:inline-flex}.task-entry{grid-template-columns:minmax(0,1fr) 120px;padding:12px}.task-entry .actions{grid-column:1/-1;justify-content:flex-start}.feature-summary{padding-left:15px}.milestone-summary{padding:13px}.board-search{width:150px}}
 </style></head>
-<body><div class="app"><header class="top"><div><div class="brand">✳ Project <span>Planner</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser</div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import</button><input id="fileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Refresh</button></div></header>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand">✳ Little <span>Dock</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav><div class="sidebar-foot">Local only · your board is saved in this browser.</div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Project <span>Planner</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser</div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import</button><input id="fileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Refresh</button></div></header>
 <div class="card banner" id="notice">Your changes are saved instantly in this browser. Export a backup occasionally.</div>
-<section id="mainApp" hidden><div class="head"><div><h1 style="margin:0 0 8px;font:700 27px Georgia,serif">Tasks</h1><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><select id="assigneeFilter"><option value="">All assignees</option></select><button class="button main" id="newTask" hidden>+ Task</button></div></div>
+<section id="mainApp" hidden><div class="head"><div><h1 id="pageHeading" style="margin:0 0 8px;font:700 27px Georgia,serif">Project overview</h1><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter"><option value="">All assignees</option></select><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div class="grid"><div class="card stat"><span class="muted">Total tasks</span><b id="total">0</b></div><div class="card stat"><span class="muted">Completed</span><b id="completed">0</b></div><div class="card stat"><span class="muted">Logged hours</span><b id="hours">0h</b></div></div>
-<div class="card" style="margin-bottom:16px"><div class="head"><h2 style="font:700 19px Georgia,serif;margin:0">Milestones & features</h2></div><div id="milestoneList" style="margin-top:14px"></div></div><div class="card" style="margin-bottom:16px"><div class="head"><h2 style="font:700 19px Georgia,serif;margin:0">Project team</h2><button class="button main" id="inviteMember" hidden>+ Invite member</button></div><div id="teamList" style="margin-top:14px"></div></div><div class="card"><div class="head"><h2 style="font:700 19px Georgia,serif;margin:0">Project board</h2><div class="actions" id="pmActions"></div></div><div class="table-wrap"><table><thead><tr><th>Task</th><th>Feature / milestone</th><th>Assigned</th><th>Status</th><th>Est.</th><th>Logged</th><th>Actions</th></tr></thead><tbody id="tasks"></tbody></table></div></div></section></div>
+<div class="card" style="margin-bottom:16px"><div class="head"><h2 style="font:700 19px Georgia,serif;margin:0">Work breakdown</h2><div class="section-actions" id="pmActions"></div></div><div id="milestoneList"></div></div><details class="card" id="teamSection"><summary><h2 style="font:700 19px Georgia,serif">Project team</h2><div class="section-actions"><button class="button main" id="inviteMember" hidden>+ Add member</button><span class="sub">▸ Team details</span></div></summary><div id="teamList" style="margin-top:14px"></div></details></section></main></div>
 <div class="modal-back" id="back"><div class="modal" role="dialog" aria-modal="true"><div class="head"><h2 id="modalTitle"></h2><button class="button" id="close">×</button></div><div id="modalBody"></div></div></div>
 <script>
 'use strict';
@@ -15,7 +63,7 @@ const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=['Ethan','Jerry','Jenny'];
-let data=null,activeProject='',noticeTimer=null;
+let data=null,activeProject='',noticeTimer=null,activeView='all';const collapsedMilestones=new Set(),collapsedFeatures=new Set();
 function persist(){try{localStorage.setItem(LOCAL_KEY,JSON.stringify(data))}catch(err){alert('Could not save locally: '+err.message);throw err}}
 function readProject(){try{return localStorage.getItem(PROJECT_KEY)||''}catch{return ''}}
 function saveProject(){try{localStorage.setItem(PROJECT_KEY,activeProject)}catch{}}
@@ -149,21 +197,92 @@ function closeModal(){$('#back').classList.remove('show')}
 $('#close').onclick=closeModal;$('#back').addEventListener('click',ev=>{if(ev.target.id==='back')closeModal()});
 function projectFeatures(){return data.features.filter(x=>x.project_id===activeProject)}
 function projectMembers(){const ids=new Set((data.team||[]).filter(x=>x.project_id===activeProject&&x.membership_status==='Active').map(x=>String(x.member_id)));return data.members.filter(x=>ids.has(String(x.member_id)))}
-function render(){const proj=data.projects;$('#project').innerHTML=proj.map(p=>`<option value="${e(p.project_id)}" ${p.project_id===activeProject?'selected':''}>${e(p.project_name)}</option>`).join('');const who=projectMembers();$('#assigneeFilter').innerHTML='<option value="">All assignees</option>'+who.map(m=>`<option value="${e(m.member_id)}">${e(m.display_name)}</option>`).join('');$('#newTask').hidden=!isPM();$('#inviteMember').hidden=!isPM();$('#roleDescription').textContent=isPM()?'Project Manager · create, edit and assign tasks':'Team Member · update your assigned tasks and log work';const actions=$('#pmActions');actions.innerHTML=isPM()?'<button class="button" data-action="milestone">+ Milestone</button><button class="button" data-action="feature">+ Feature</button><button class="button" data-action="project">+ Project</button>':'';actions.onclick=ev=>{const a=ev.target.closest('[data-action]');if(a)quickCreate(a.dataset.action)};renderMilestones();renderTeam();renderTasks();}
 
+function projectTasks(){return data.tasks.filter(t=>t.project_id===activeProject)}
+function visibleTasks(){
+ const term=$('#searchTasks').value.trim().toLowerCase(),assignee=$('#assigneeFilter').value;
+ return projectTasks().filter(t=>{
+  if(activeView==='open'&&t.status==='Done')return false;
+  if(activeView==='done'&&t.status!=='Done')return false;
+  if(activeView.startsWith('m:')){
+   const f=feature(t.feature_id);
+   if(String(f?.milestone_id)!==activeView.slice(2))return false;
+  }
+  if(assignee&&String(t.assignee_member_id)!==assignee)return false;
+  const f=feature(t.feature_id),m=milestone(f);
+  return !term||[t.title,t.description,member(t.assignee_member_id),f?.name,m?.name].join(' ').toLowerCase().includes(term);
+ });
+}
+function renderNavigation(){
+ const total=projectTasks();
+ const items=[['all','All tasks',total.length],['open','Open tasks',total.filter(t=>t.status!=='Done').length],['done','Completed',total.filter(t=>t.status==='Done').length]];
+ $('#viewNav').innerHTML=items.map(([id,label,count])=>`<button class="side-link ${activeView===id?'active':''}" data-view="${id}"><span>${e(label)}</span><span class="side-count">${count}</span></button>`).join('');
+ $('#milestoneNav').innerHTML=data.milestones.filter(m=>m.project_id===activeProject).map(m=>{
+  const fids=new Set(data.features.filter(f=>f.milestone_id===m.milestone_id).map(f=>f.feature_id));
+  const count=total.filter(t=>fids.has(t.feature_id)).length;
+  return `<button class="side-link ${activeView==='m:'+m.milestone_id?'active':''}" data-view="m:${e(m.milestone_id)}"><span>${e(m.name)}</span><span class="side-count">${count}</span></button>`;
+ }).join('')||'<span class="sub" style="padding:10px">No milestones yet</span>';
+ const click=ev=>{const btn=ev.target.closest('[data-view]');if(!btn)return;activeView=btn.dataset.view;$('#sidebar').classList.remove('visible');render()};
+ $('#viewNav').onclick=click;$('#milestoneNav').onclick=click;
+}
+function render(){
+ const projectList=data.projects;
+ $('#project').innerHTML=projectList.map(p=>`<option value="${e(p.project_id)}" ${p.project_id===activeProject?'selected':''}>${e(p.project_name)}</option>`).join('');
+ const who=projectMembers(),oldAssignee=$('#assigneeFilter').value;
+ $('#assigneeFilter').innerHTML='<option value="">All assignees</option>'+who.map(m=>`<option value="${e(m.member_id)}">${e(m.display_name)}</option>`).join('');
+ $('#assigneeFilter').value=who.some(m=>String(m.member_id)===oldAssignee)?oldAssignee:'';
+ $('#newTask').hidden=false;$('#inviteMember').hidden=false;
+ const m=activeView.startsWith('m:')?find(data.milestones,activeView.slice(2),'milestone_id'):null;
+ $('#pageHeading').textContent=m?.name||({all:'Project overview',open:'Open tasks',done:'Completed tasks'}[activeView]||'Project overview');
+ $('#roleDescription').textContent=m?.description||'Organize milestones, features, and everyone’s assigned work · Local only';
+ const actions=$('#pmActions');
+ actions.innerHTML='<button class="button" data-action="milestone">+ Milestone</button><button class="button" data-action="feature">+ Feature</button><button class="button" data-action="project">+ Project</button>';
+ actions.onclick=ev=>{const a=ev.target.closest('[data-action]');if(a)quickCreate(a.dataset.action)};
+ renderNavigation();renderMilestones();renderTeam();
+}
+function taskRow(t){
+ const logs=taskHours(t);
+ return `<div class="task-entry"><div><button class="task-title ${t.status==='Done'?'task-done':''}" data-detail="${e(t.task_id)}">${e(t.title)}</button><div class="sub">${e(t.priority)} · ${formatHours(t.estimated_hours)} estimated · ${formatHours(logs)} logged</div></div><div class="meta-person sub">${e(member(t.assignee_member_id))}</div><select data-status="${e(t.task_id)}" aria-label="Status for ${e(t.title)}">${ST.map(status=>`<option value="${e(status)}" ${t.status===status?'selected':''}>${e(status)}</option>`).join('')}</select><div class="actions"><button class="button" data-edit="${e(t.task_id)}">Edit</button><button class="button" data-log="${e(t.task_id)}">+ Hours</button></div></div>`;
+}
 function renderMilestones(){
-  const ms=data.milestones.filter(m=>m.project_id===activeProject);
-  const fs=projectFeatures();
-  $('#milestoneList').innerHTML=ms.length?ms.map(m=>{
-    const child=fs.filter(f=>f.milestone_id===m.milestone_id);
-    const t=data.tasks.filter(x=>x.project_id===activeProject&&child.some(f=>f.feature_id===x.feature_id));
-    return '<div style="padding:13px 0;border-bottom:1px solid #e7eeeb"><div class="head"><div><strong>'+e(m.name)+'</strong> <span class="tag">'+e(m.status)+'</span><div class="sub">'+e(m.description||'No description')+' · '+t.filter(x=>x.status==='Done').length+'/'+t.length+' tasks complete'+(m.target_date?' · Target '+e(m.target_date):'')+'</div></div>'+(isPM()?'<button class="button" data-milestone="'+e(m.milestone_id)+'">Edit milestone</button>':'')+'</div><div style="margin:8px 0 0 15px">'+child.map(f=>'<div class="head" style="padding:6px 0"><div class="sub">'+e(f.name)+' · '+e(f.status)+'</div>'+(isPM()?'<button class="button" data-feature="'+e(f.feature_id)+'">Edit feature</button>':'')+'</div>').join('')+'</div></div>';
-  }).join(''):'<div class="sub">No milestones yet.</div>';
-  $('#milestoneList').onclick=ev=>{
-    const m=ev.target.closest('[data-milestone]'),f=ev.target.closest('[data-feature]');
-    if(m)editMilestone(m.dataset.milestone);
-    else if(f)editFeature(f.dataset.feature);
-  };
+ const filtered=visibleTasks(),project=projectTasks(),isFiltered=activeView==='open'||activeView==='done'||!!$('#assigneeFilter').value||!!$('#searchTasks').value;
+ $('#total').textContent=filtered.length;
+ $('#completed').textContent=filtered.filter(t=>t.status==='Done').length;
+ $('#hours').textContent=formatHours(filtered.reduce((n,t)=>n+taskHours(t),0));
+ const ms=data.milestones.filter(m=>m.project_id===activeProject&&(!activeView.startsWith('m:')||activeView.slice(2)===String(m.milestone_id)));
+ $('#milestoneList').innerHTML=ms.map(m=>{
+  const fs=data.features.filter(f=>f.project_id===activeProject&&f.milestone_id===m.milestone_id);
+  const allForMilestone=project.filter(t=>fs.some(f=>f.feature_id===t.feature_id));
+  const shown=filtered.filter(t=>fs.some(f=>f.feature_id===t.feature_id));
+  if(isFiltered&&!shown.length)return '';
+  const percent=allForMilestone.length?100*allForMilestone.filter(t=>t.status==='Done').length/allForMilestone.length:0;
+  const open=!collapsedMilestones.has(String(m.milestone_id));
+  return `<details class="milestone-section" data-ms="${e(m.milestone_id)}" ${open?'open':''}><summary class="milestone-summary"><span class="chevron">▸</span><div class="title-stack"><strong>${e(m.name)}</strong><div class="sub">${e(m.description||'')}${m.target_date?' · Target '+e(m.target_date):''}</div><div class="progress-line"><span style="width:${percent}%"></span></div></div><div class="milestone-tools"><span class="tag">${allForMilestone.filter(t=>t.status==='Done').length}/${allForMilestone.length} done</span><button class="button" type="button" data-milestone="${e(m.milestone_id)}">Edit</button></div></summary>${fs.map(f=>{
+   const tasks=shown.filter(t=>t.feature_id===f.feature_id);
+   if(isFiltered&&!tasks.length)return '';
+   const all=project.filter(t=>t.feature_id===f.feature_id),expanded=!collapsedFeatures.has(String(f.feature_id));
+   return `<details class="feature-section" data-feat="${e(f.feature_id)}" ${expanded?'open':''}><summary class="feature-summary"><span class="chevron">▸</span><div class="title-stack"><strong>${e(f.name)}</strong><div class="sub">${all.filter(t=>t.status==='Done').length}/${all.length} tasks complete</div></div><button class="button" type="button" data-feature="${e(f.feature_id)}">Edit feature</button></summary>${tasks.map(taskRow).join('')||'<div class="empty-hierarchy">No tasks here yet.</div>'}</details>`;
+  }).join('')||'<div class="empty-hierarchy">No features here yet.</div>'}</details>`;
+ }).join('')||'<div class="empty-hierarchy">Nothing matches this view. Try another filter, or create a milestone and feature.</div>';
+ const root=$('#milestoneList');
+ root.onclick=ev=>{
+  const btn=ev.target.closest('button');if(!btn)return;
+  ev.preventDefault();ev.stopPropagation();
+  if(btn.dataset.milestone)editMilestone(btn.dataset.milestone);
+  else if(btn.dataset.feature)editFeature(btn.dataset.feature);
+  else if(btn.dataset.detail)details(btn.dataset.detail);
+  else if(btn.dataset.edit)editTask(btn.dataset.edit);
+  else if(btn.dataset.log)logHours(btn.dataset.log);
+ };
+ root.onchange=async ev=>{
+  const sel=ev.target.closest('[data-status]');if(!sel)return;
+  sel.disabled=true;
+  try{await rpc('setStatus',{task_id:sel.dataset.status,status:sel.value});render()}catch(err){alert(err.message);render()}
+ };
+ root.querySelectorAll('details[data-ms],details[data-feat]').forEach(el=>el.addEventListener('toggle',()=>{
+  const set=el.dataset.ms?collapsedMilestones:collapsedFeatures,id=String(el.dataset.ms||el.dataset.feat);
+  if(el.open)set.delete(id);else set.add(id);
+ }));
 }
 function editMilestone(id){
   if(!isPM())return;
@@ -231,7 +350,7 @@ function deleteItem(kind,id,name){
  rpc('delete'+kind[0].toUpperCase()+kind.slice(1),{[kind+'_id']:id}).then(async()=>{closeModal();await refresh()}).catch(err=>alert(err.message));
 }
 $('#inviteMember').onclick=()=>quickCreate('member');
-$('#newTask').onclick=()=>taskForm(null);$('#project').onchange=ev=>{activeProject=ev.target.value;saveProject();render()};$('#assigneeFilter').onchange=renderTasks;$('#reload').onclick=refresh;
+$('#newTask').onclick=()=>taskForm(null);$('#project').onchange=ev=>{activeProject=ev.target.value;saveProject();render()};$('#assigneeFilter').onchange=render;$('#searchTasks').oninput=render;$('#menuToggle').onclick=()=>$('#sidebar').classList.toggle('visible');$('#reload').onclick=refresh;
 
 function downloadBackup(){
  const blob=new Blob([JSON.stringify({version:2,exported_at:new Date().toISOString(),...data},null,2)],{type:'application/json'});
