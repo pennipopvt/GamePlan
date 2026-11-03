@@ -41,6 +41,8 @@ function dispatch(request) {
     if (op === 'logHours') return logHours_(email, payload);
     if (op === 'createFeature') return createFeature_(email, payload);
     if (op === 'createMilestone') return createMilestone_(email, payload);
+    if (op === 'editMilestone') return editMilestone_(email, payload);
+    if (op === 'editFeature') return editFeature_(email, payload);
     if (op === 'addMember') return addMember_(email, payload);
     if (op === 'createProject') return createProject_(email, payload);
     throw Error('Unknown operation.');
@@ -99,11 +101,14 @@ function load_(email) {
   const projects=rows_('Projects').filter(p=>ids.has(String(p.project_id)));
   const teamMemberIds=new Set(rows_('Project Team').filter(x=>ids.has(String(x.project_id))&&String(x.membership_status).toLowerCase()==='active').map(x=>String(x.member_id)));
   const members=rows_('Members').filter(x=>teamMemberIds.has(String(x.member_id))).map(x=>({member_id:x.member_id,display_name:x.display_name}));
+  const teamForProjects=rows_('Project Team').filter(x=>ids.has(String(x.project_id)));
+  const allowedTeamIds=new Set(teamForProjects.map(x=>String(x.member_id)));
+  const roster=rows_('Members').filter(x=>allowedTeamIds.has(String(x.member_id))).map(x=>({member_id:x.member_id,display_name:x.display_name,google_email: x.member_id===me.member_id||teamForProjects.some(t=>t.member_id===x.member_id&&t.project_role==='PM'&&memberships.some(my=>my.project_id===t.project_id&&my.project_role==='PM'))?x.google_email:'',active:x.active}));
   const tasks=rows_('Tasks').filter(x=>ids.has(String(x.project_id)));
   const taskIds=new Set(tasks.map(x=>String(x.task_id)));
   const logs=rows_('Time Logs').filter(x=>taskIds.has(String(x.task_id)));
   return {email,me:{member_id:me.member_id,display_name:me.display_name},memberships:memberships.map(({_row,...m})=>m),
-    projects:projects.map(({_row,...x})=>x),members,
+    projects:projects.map(({_row,...x})=>x),members,roster:roster,team:teamForProjects.map(({_row,...x})=>x),
     milestones:rows_('Milestones').filter(x=>ids.has(String(x.project_id))).map(({_row,...x})=>x),
     features:rows_('Features').filter(x=>ids.has(String(x.project_id))).map(({_row,...x})=>x),
     tasks:tasks.map(({_row,...x})=>x),logs:logs.map(({_row,...x})=>x)};
@@ -131,3 +136,26 @@ function addMember_(email,p){const projectId=required_(p.project_id,'project');p
   if(pending){patch_('Project Team',pending,{membership_status:'Active',project_role:'Member',discipline:optional_(p.discipline,80)||pending.discipline},['membership_status','project_role','discipline']);return {ok:true};}
   insert_('Project Team',{project_id:projectId,member_id:m.member_id,project_role:'Member',discipline:optional_(p.discipline,80),membership_status:'Active'});return {ok:true};}
 function createProject_(email,p){const me=identity_(email), isPM=rows_('Project Team').some(x=>x.member_id===me.member_id&&x.project_role==='PM'&&String(x.membership_status).toLowerCase()==='active');if(!isPM)throw Error('Only a PM can create projects');const id=uid_();insert_('Projects',{project_id:id,project_name:required_(p.name,'project name',160),description:optional_(p.description),status:'Active',created_at:new Date().toISOString().slice(0,10),project_manager_member_id:me.member_id});insert_('Project Team',{project_id:id,member_id:me.member_id,project_role:'PM',discipline:'',membership_status:'Active'});return {ok:true};}
+
+function editMilestone_(email,p){
+  const id=required_(p.milestone_id,'milestone');
+  const m=rows_('Milestones').find(x=>String(x.milestone_id)===id);
+  if(!m)throw Error('Milestone not found');
+  permit_(email,m.project_id,true);
+  if(!STATUSES.includes(p.status))throw Error('Invalid milestone status');
+  const target=optional_(p.target_date,10);
+  if(target&&!/^\d{4}-\d{2}-\d{2}$/.test(target))throw Error('Invalid target date');
+  patch_('Milestones',m,{name:required_(p.name,'name',160),description:optional_(p.description),status:p.status,target_date:target},['name','description','status','target_date']);
+  return {ok:true};
+}
+function editFeature_(email,p){
+  const id=required_(p.feature_id,'feature');
+  const f=rows_('Features').find(x=>String(x.feature_id)===id);
+  if(!f)throw Error('Feature not found');
+  permit_(email,f.project_id,true);
+  const milestone=rows_('Milestones').find(x=>String(x.milestone_id)===String(p.milestone_id)&&String(x.project_id)===String(f.project_id));
+  if(!milestone)throw Error('Invalid parent milestone');
+  if(!STATUSES.includes(p.status))throw Error('Invalid feature status');
+  patch_('Features',f,{name:required_(p.name,'name',160),description:optional_(p.description),status:p.status,milestone_id:milestone.milestone_id,estimated_hours:hours_(p.estimated_hours||0)},['name','description','status','milestone_id','estimated_hours']);
+  return {ok:true};
+}
