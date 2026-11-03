@@ -52,3 +52,9 @@ The GitHub Pages UI updates after a refresh, but Apps Script does not automatica
 4. Verify with one member account: it should view tasks and update only its assigned tasks, and have no buttons to edit milestones/features or create/assign tasks.
 
 The PM can now edit milestone name, description, status and target date; edit feature name, description, parent milestone, status and estimated hours. These edits require the new Apps Script backend version.
+
+## Deleting tasks, features, and milestones
+
+The PM can delete a task from its Edit dialog. This permanently removes the task and its time logs after a confirmation. A feature cannot be deleted while it has tasks; a milestone cannot be deleted while it has features. Move or delete children first, then delete the parent. Non-PM members have no delete permission. Changes require saving the updated `apps-script/Code.gs` into Apps Script and publishing a new web-app version via Deploy → Manage deployments → Edit → New version; GitHub frontend changes appear after a hard refresh.
+
+The **+ Invite member** button is beside **Project team**, not in the Project board. Adding a member authorizes their Google email for that project; it does not send an invitation email automatically. Share the shared-board link yourself. In OAuth Testing mode, add the same email under Google Auth Platform → Audience → Test users.
