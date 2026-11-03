@@ -58,3 +58,12 @@ The PM can now edit milestone name, description, status and target date; edit fe
 The PM can delete a task from its Edit dialog. This permanently removes the task and its time logs after a confirmation. A feature cannot be deleted while it has tasks; a milestone cannot be deleted while it has features. Move or delete children first, then delete the parent. Non-PM members have no delete permission. Changes require saving the updated `apps-script/Code.gs` into Apps Script and publishing a new web-app version via Deploy → Manage deployments → Edit → New version; GitHub frontend changes appear after a hard refresh.
 
 The **+ Invite member** button is beside **Project team**, not in the Project board. Adding a member authorizes their Google email for that project; it does not send an invitation email automatically. Share the shared-board link yourself. In OAuth Testing mode, add the same email under Google Auth Platform → Audience → Test users.
+
+
+## Team management and performance update
+
+The PM can click **Verify / edit** beside a pending person in the **Project team** panel, enter their real Google sign-in email, and save to activate them. **Edit** also allows name and discipline changes. **Remove from project** revokes project membership, retaining the member record and historical time logs; reassign that person's tasks first. Project managers cannot remove themselves through this control. A globally shared member email cannot be changed from one project's editor when the member belongs to other projects.
+
+In OAuth **Testing** mode, an active member still needs to be added as a **Test user** in Google Auth Platform → Audience before using Google sign-in. The website does not automatically email invitations.
+
+The new backend reduces spreadsheet reads by caching tab data and sheet handles only within a request, and replaces per-field writes with a single row update. **The deployed Apps Script web app is NOT automatically updated by GitHub.** Copy the latest `apps-script/Code.gs` from this repository into the existing Apps Script editor; save and choose **Deploy → Manage deployments → Edit → New version → Deploy**. Keep the same deployment, so the `/exec` URL remains unchanged. Then hard-refresh the shared website. Avoid testing member editing/removal before updating the backend.
