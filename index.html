@@ -87,8 +87,24 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 .task-entry .actions{display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:nowrap}
 .task-entry .actions .icon-edit{flex:0 0 34px}
 @media(max-width:680px){.task-entry .actions{justify-content:flex-end}}
+
+/* Status colors: muted task row tint + matching status dropdown */
+.task-entry{border-left:4px solid transparent;transition:background-color .12s}
+.task-entry.status-todo{border-left-color:#b5c5c1;background:#fafcfb}
+.task-entry.status-progress{border-left-color:#639bd7;background:#f1f7fd}
+.task-entry.status-blocked{border-left-color:#d88d76;background:#fdf4f1}
+.task-entry.status-done{border-left-color:#5ba68c;background:#f0f8f3}
+.task-entry.status-todo:hover{background:#f0f5f2}
+.task-entry.status-progress:hover{background:#e7f1fb}
+.task-entry.status-blocked:hover{background:#faeae5}
+.task-entry.status-done:hover{background:#e7f3ea}
+.task-entry .status-select{border-width:1px;font-weight:650}
+.task-entry .status-select.status-todo{color:#526c69;border-color:#cbd8d2;background:#f6f9f7}
+.task-entry .status-select.status-progress{color:#2a659c;border-color:#bed8f4;background:#eaf3ff}
+.task-entry .status-select.status-blocked{color:#9d513f;border-color:#ebc3b8;background:#fff0e9}
+.task-entry .status-select.status-done{color:#2c7656;border-color:#b7dcc8;background:#e7f5ed}
 </style></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand">✳ Little <span>Dock</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav><div class="sidebar-foot">Local only · your board is saved in this browser.</div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Project <span>Planner</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.03.6</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand">✳ Little <span>Dock</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav><div class="sidebar-foot">Local only · your board is saved in this browser.</div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Project <span>Planner</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.03.7</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice">Your changes are saved instantly in this browser. Export a backup occasionally.</div>
 <section id="mainApp" hidden><div class="head"><div><h1 id="pageHeading" style="margin:0 0 8px;font:700 27px Georgia,serif">Project overview</h1><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter"><option value="">All assignees</option></select><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div class="grid"><div class="card stat"><span class="muted">Total tasks</span><b id="total">0</b></div><div class="card stat"><span class="muted">Completed</span><b id="completed">0</b></div><div class="card stat"><span class="muted">Logged hours</span><b id="hours">0h</b></div></div>
@@ -97,7 +113,7 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026-11-03-milestone-import-v6';
+const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026-11-03-cascade-status-v7';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=['Ethan','Jerry','Jenny'];
@@ -172,7 +188,12 @@ function rpc(op,p={}){
    const m=parent(data.milestones,'milestone_id',p.milestone_id);Object.assign(m,{name:required(p.name,'Milestone name'),description:p.description||'',status:p.status,target_date:p.target_date||''});
   }else if(op==='deleteMilestone'){
    const m=parent(data.milestones,'milestone_id',p.milestone_id);
-   if(data.features.some(f=>f.milestone_id===m.milestone_id))throw Error('Move or delete its features first');
+   // Delete only descendants of this milestone in the active project.
+   const ids=new Set(data.features.filter(f=>f.project_id===projectId&&f.milestone_id===m.milestone_id).map(f=>String(f.feature_id)));
+   const taskIds=new Set(data.tasks.filter(t=>t.project_id===projectId&&ids.has(String(t.feature_id))).map(t=>String(t.task_id)));
+   data.logs=data.logs.filter(l=>!taskIds.has(String(l.task_id)));
+   data.tasks=data.tasks.filter(t=>!taskIds.has(String(t.task_id)));
+   data.features=data.features.filter(f=>!ids.has(String(f.feature_id)));
    data.milestones=data.milestones.filter(x=>x!==m);
   }else if(op==='createFeature'){
    const m=parent(data.milestones,'milestone_id',p.milestone_id);
@@ -281,7 +302,8 @@ function render(){
 }
 function taskRow(t){
  const logs=taskHours(t);
- return `<div class="task-entry"><div><button class="task-title ${t.status==='Done'?'task-done':''}" data-detail="${e(t.task_id)}">${e(t.title)}</button><div class="sub">${e(t.priority)} · ${formatHours(t.estimated_hours)} estimated · ${formatHours(logs)} logged</div></div><div class="meta-person sub">${e(member(t.assignee_member_id))}</div><select data-status="${e(t.task_id)}" aria-label="Status for ${e(t.title)}">${ST.map(status=>`<option value="${e(status)}" ${t.status===status?'selected':''}>${e(status)}</option>`).join('')}</select><div class="actions"><button class="context-add" data-log="${e(t.task_id)}">+ Hours</button><button class="icon-edit" data-edit="${e(t.task_id)}" type="button" aria-label="Edit task: ${e(t.title)}" title="Edit task"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></div>`;
+ const statusClass=({'To do':'status-todo','In progress':'status-progress','Blocked':'status-blocked','Done':'status-done'})[t.status]||'status-todo';
+ return `<div class="task-entry ${statusClass}"><div><button class="task-title ${t.status==='Done'?'task-done':''}" data-detail="${e(t.task_id)}">${e(t.title)}</button><div class="sub">${e(t.priority)} · ${formatHours(t.estimated_hours)} estimated · ${formatHours(logs)} logged</div></div><div class="meta-person sub">${e(member(t.assignee_member_id))}</div><select class="status-select ${statusClass}" data-status="${e(t.task_id)}" aria-label="Status for ${e(t.title)}">${ST.map(status=>`<option value="${e(status)}" ${t.status===status?'selected':''}>${e(status)}</option>`).join('')}</select><div class="actions"><button class="context-add" data-log="${e(t.task_id)}">+ Hours</button><button class="icon-edit" data-edit="${e(t.task_id)}" type="button" aria-label="Edit task: ${e(t.title)}" title="Edit task"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></div>`;
 }
 function renderMilestones(){
  const filtered=visibleTasks(),project=projectTasks(),isFiltered=activeView==='open'||activeView==='done'||!!$('#assigneeFilter').value||!!$('#searchTasks').value;
@@ -328,7 +350,7 @@ function renderMilestones(){
 function editMilestone(id){
   if(!isPM())return;
   const m=find(data.milestones,id,'milestone_id');if(!m)return;
-  modal('Edit milestone',`<form id="actionForm"><div class="fields">${field('name','Milestone name',m.name,'text',true)}<label class="wide">Description<textarea name="description">${e(m.description||'')}</textarea></label>${select('status','Status',ST.map(x=>({value:x,label:x})),m.status)}${field('target_date','Target date',m.target_date||'','date')}</div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="button" class="button danger" id="deleteMilestone">Delete milestone</button><button type="submit" class="button main">Save milestone</button></div></form>`);
+  modal('Edit milestone',`<form id="actionForm"><div class="fields">${field('name','Milestone name',m.name,'text',true)}<label class="wide">Description<textarea name="description">${e(m.description||'')}</textarea></label>${select('status','Status',ST.map(x=>({value:x,label:x})),m.status)}${field('target_date','Target date',m.target_date||'','date')}</div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="button" class="button danger" id="deleteMilestone">Delete entire milestone</button><button type="submit" class="button main">Save milestone</button></div></form>`);
   $('#cancel').onclick=closeModal;
   $('#deleteMilestone').onclick=()=>deleteItem('milestone',id,m.name);
   $('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit('editMilestone',{milestone_id:id,...Object.fromEntries(new FormData(ev.currentTarget).entries())})};
@@ -380,8 +402,25 @@ function quickCreate(kind,preferredMilestoneId=''){const milestones=data.milesto
 async function submit(op,payload){const btn=$('#actionForm button[type="submit"],#actionForm button:not([type])');if(btn)btn.disabled=true;try{await rpc(op,payload);closeModal();await refresh()}catch(err){alert(err.message);if(btn)btn.disabled=false}}
 function deleteItem(kind,id,name){
  if(!isPM())return;
- const descendants=kind==='milestone'?data.features.filter(f=>f.milestone_id===id).length:kind==='feature'?data.tasks.filter(t=>t.feature_id===id).length:0;
- if(descendants){alert(`This ${kind} still has ${descendants} ${kind==='milestone'?'feature(s)':'task(s)'}. Move or delete them first.`);return;}
+ if(kind==='milestone'){
+  const milestone=data.milestones.find(m=>String(m.milestone_id)===String(id)&&m.project_id===activeProject);
+  if(!milestone)return;
+  const features=data.features.filter(f=>f.project_id===activeProject&&String(f.milestone_id)===String(id));
+  const featureIds=new Set(features.map(f=>String(f.feature_id)));
+  const tasks=data.tasks.filter(t=>t.project_id===activeProject&&featureIds.has(String(t.feature_id)));
+  const taskIds=new Set(tasks.map(t=>String(t.task_id)));
+  const logs=data.logs.filter(l=>taskIds.has(String(l.task_id)));
+  const message=`Permanently delete milestone “${name}” and ALL of its contents?\n\nThis deletes:\n• ${features.length} feature(s)\n• ${tasks.length} task(s)\n• ${logs.length} time log(s)\n\nThis cannot be undone. Other milestones will not be affected.`;
+  if(!confirm(message))return;
+  rpc('deleteMilestone',{milestone_id:id,project_id:activeProject}).then(async()=>{
+   if(activeView==='m:'+id)activeView='all';
+   collapsedMilestones.delete(String(id));
+   closeModal();await refresh();
+  }).catch(err=>alert(err.message));
+  return;
+ }
+ const descendants=kind==='feature'?data.tasks.filter(t=>t.feature_id===id).length:0;
+ if(descendants){alert('This feature still has '+descendants+' task(s). Move or delete them first.');return;}
  const logs=kind==='task'?data.logs.filter(l=>l.task_id===id).length:0;
  const message=`Permanently delete ${kind} “${name}”?`+(logs?` This also permanently deletes ${logs} time log(s).`:'')+' This cannot be undone.';
  if(!confirm(message))return;
