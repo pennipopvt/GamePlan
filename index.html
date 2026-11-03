@@ -113,6 +113,7 @@ const milestone=f=>find(data.milestones,f?.milestone_id,'milestone_id');
 const isPM=()=>true;
 const canUpdate=t=>isPM()||String(t.assignee_member_id)===String(data.me.member_id);
 const taskHours=t=>data.logs.filter(x=>x.task_id===t.task_id).reduce((n,x)=>n+Number(x.hours||0),0);
+const featureHours=id=>data.tasks.filter(t=>String(t.feature_id)===String(id)).reduce((sum,t)=>sum+taskHours(t),0);
 function setNotice(msg,bad=false){$('#notice').innerHTML=msg;$('#notice').className='card banner'+(bad?' error':'')}
 
 function rpc(op,p={}){
@@ -261,7 +262,7 @@ function renderMilestones(){
    const tasks=shown.filter(t=>t.feature_id===f.feature_id);
    if(isFiltered&&!tasks.length)return '';
    const all=project.filter(t=>t.feature_id===f.feature_id),expanded=!collapsedFeatures.has(String(f.feature_id));
-   return `<details class="feature-section" data-feat="${e(f.feature_id)}" ${expanded?'open':''}><summary class="feature-summary"><span class="chevron">▸</span><div class="title-stack"><strong>${e(f.name)}</strong><div class="sub">${all.filter(t=>t.status==='Done').length}/${all.length} tasks complete</div></div><button class="button" type="button" data-feature="${e(f.feature_id)}">Edit feature</button></summary>${tasks.map(taskRow).join('')||'<div class="empty-hierarchy">No tasks here yet.</div>'}</details>`;
+   return `<details class="feature-section" data-feat="${e(f.feature_id)}" ${expanded?'open':''}><summary class="feature-summary"><span class="chevron">▸</span><div class="title-stack"><strong>${e(f.name)}</strong><div class="sub">${all.filter(t=>t.status==='Done').length}/${all.length} tasks complete · <strong>${formatHours(featureHours(f.feature_id))} logged</strong></div></div><button class="button" type="button" data-feature="${e(f.feature_id)}">Edit feature</button></summary>${tasks.map(taskRow).join('')||'<div class="empty-hierarchy">No tasks here yet.</div>'}</details>`;
   }).join('')||'<div class="empty-hierarchy">No features here yet.</div>'}</details>`;
  }).join('')||'<div class="empty-hierarchy">Nothing matches this view. Try another filter, or create a milestone and feature.</div>';
  const root=$('#milestoneList');
@@ -296,7 +297,7 @@ function editFeature(id){
   if(!isPM())return;
   const f=find(data.features,id,'feature_id');if(!f)return;
   const milestones=data.milestones.filter(x=>x.project_id===activeProject);
-  modal('Edit feature',`<form id="actionForm"><div class="fields">${field('name','Feature name',f.name,'text',true)}<label class="wide">Description<textarea name="description">${e(f.description||'')}</textarea></label>${select('milestone_id','Milestone',milestones.map(x=>({value:x.milestone_id,label:x.name})),f.milestone_id)}${select('status','Status',ST.map(x=>({value:x,label:x})),f.status)}${field('estimated_hours','Estimated hours',f.estimated_hours||0,'number')}</div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="button" class="button danger" id="deleteFeature">Delete feature</button><button type="submit" class="button main">Save feature</button></div></form>`);
+  modal('Edit feature',`<form id="actionForm"><div class="fields">${field('name','Feature name',f.name,'text',true)}<label class="wide">Description<textarea name="description">${e(f.description||'')}</textarea></label>${select('milestone_id','Milestone',milestones.map(x=>({value:x.milestone_id,label:x.name})),f.milestone_id)}${select('status','Status',ST.map(x=>({value:x,label:x})),f.status)}<div class="wide sub">Total time logged on this feature: <strong>${formatHours(featureHours(f.feature_id))}</strong>. This is calculated from its tasks.</div></div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="button" class="button danger" id="deleteFeature">Delete feature</button><button type="submit" class="button main">Save feature</button></div></form>`);
   $('#cancel').onclick=closeModal;
   $('#deleteFeature').onclick=()=>deleteItem('feature',id,f.name);
   $('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit('editFeature',{feature_id:id,...Object.fromEntries(new FormData(ev.currentTarget).entries())})};
