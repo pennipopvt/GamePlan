@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html><head><base target="_top"></head><body>
+<script>
+// Apps Script HtmlService runs in an inner iframe. Transfer a MessagePort to the
+// GitHub Pages top window to establish a secure, bidirectional bridge.
+const ORIGIN='https://pennipopvt.github.io';
+const channel=new MessageChannel();
+channel.port1.onmessage=function(event){
+  const m=event.data;
+  if(!m||m.type!=='request'||typeof m.id!=='string')return;
+  google.script.run.withSuccessHandler(function(value){channel.port1.postMessage({id:m.id,ok:true,value});})
+    .withFailureHandler(function(err){channel.port1.postMessage({id:m.id,ok:false,error:String(err&&err.message||err)});})
+    .dispatch({idToken:m.idToken,op:m.op,payload:m.payload});
+};
+channel.port1.start();
+window.top.postMessage({type:'project-planner-bridge-ready',version:1},ORIGIN,[channel.port2]);
+</script>
+</body></html>
