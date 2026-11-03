@@ -62,7 +62,7 @@ function modal(title,body){$('#modalTitle').textContent=title;$('#modalBody').in
 function closeModal(){$('#back').classList.remove('show')}
 $('#close').onclick=closeModal;$('#back').addEventListener('click',ev=>{if(ev.target.id==='back')closeModal()});
 function projectFeatures(){return data.features.filter(x=>x.project_id===activeProject)}
-function projectMembers(){const ids=new Set(data.memberships.filter(x=>x.project_id===activeProject&&x.membership_status==='Active').map(x=>x.member_id));return data.members.filter(x=>ids.has(x.member_id))}
+function projectMembers(){const ids=new Set((data.team||[]).filter(x=>x.project_id===activeProject&&x.membership_status==='Active').map(x=>String(x.member_id)));return data.members.filter(x=>ids.has(String(x.member_id)))}
 function render(){const proj=data.projects.filter(p=>data.memberships.some(m=>m.project_id===p.project_id));$('#project').innerHTML=proj.map(p=>`<option value="${e(p.project_id)}" ${p.project_id===activeProject?'selected':''}>${e(p.project_name)}</option>`).join('');const who=projectMembers();$('#assigneeFilter').innerHTML='<option value="">All assignees</option>'+who.map(m=>`<option value="${e(m.member_id)}">${e(m.display_name)}</option>`).join('');$('#newTask').hidden=!isPM();$('#inviteMember').hidden=!isPM();$('#roleDescription').textContent=isPM()?'Project Manager · create, edit and assign tasks':'Team Member · update your assigned tasks and log work';const actions=$('#pmActions');actions.innerHTML=isPM()?'<button class="button" data-action="milestone">+ Milestone</button><button class="button" data-action="feature">+ Feature</button><button class="button" data-action="project">+ Project</button>':'';actions.onclick=ev=>{const a=ev.target.closest('[data-action]');if(a)quickCreate(a.dataset.action)};renderMilestones();renderTeam();renderTasks();}
 
 function renderMilestones(){
@@ -96,13 +96,34 @@ function editFeature(id){
   $('#deleteFeature').onclick=()=>deleteItem('feature',id,f.name);
   $('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit('editFeature',{feature_id:id,...Object.fromEntries(new FormData(ev.currentTarget).entries())})};
 }
+
 function renderTeam(){
-  const memberships=(data.team||[]).filter(x=>x.project_id===activeProject);
-  const roster=data.roster||data.members;
-  $('#teamList').innerHTML=memberships.map(m=>{
-    const p=roster.find(x=>x.member_id===m.member_id)||data.members.find(x=>x.member_id===m.member_id);
-    return '<div class="head" style="padding:9px 0;border-bottom:1px solid #edf0ef"><div><b>'+e(p?.display_name||'Unknown')+'</b> <span class="tag">'+e(m.project_role)+'</span><div class="sub">'+e(m.discipline||'')+'</div></div><div class="sub">'+e(m.membership_status)+(isPM()&&p?.google_email?' · '+e(p.google_email):'')+'</div></div>';
-  }).join('') + (isPM()?'<p class="sub" style="line-height:1.7;margin-top:14px">To invite someone, click <b>+ Invite member</b>, enter the Google email they will sign in with, and save. Then send them <a class="link" target="_blank" rel="noopener" href="https://pennipopvt.github.io/ProjectPlanner/shared.html">the shared board URL</a>. Existing pending team entries can be activated this way. If your Google OAuth app is in Testing, add their email under Google Auth Platform → Audience → Test users first. They do not need editing access to the Sheet.</p>':'');
+ const memberships=(data.team||[]).filter(x=>x.project_id===activeProject);
+ const roster=data.roster||data.members;
+ $('#teamList').innerHTML=memberships.map(m=>{
+  const p=roster.find(x=>x.member_id===m.member_id)||data.members.find(x=>x.member_id===m.member_id);
+  const pending=m.membership_status!=='Active';
+  return '<div class="head" style="padding:12px 0;border-bottom:1px solid #edf0ef"><div><b>'+e(p?.display_name||'Unknown')+'</b> <span class="tag">'+e(m.project_role)+'</span><div class="sub">'+e(m.discipline||'')+(isPM()&&p?.google_email?' · '+e(p.google_email):'')+'</div></div><div class="actions"><span class="tag" style="'+(pending?'background:#fff2d8;color:#865d18':'')+'">'+e(m.membership_status)+'</span>'+(isPM()?'<button class="button" data-member="'+e(m.member_id)+'">'+(pending?'Verify / edit':'Edit')+'</button>':'')+'</div></div>';
+ }).join('')+(isPM()?'<p class="sub" style="line-height:1.7;margin-top:14px">To activate someone marked Pending verification, click <b>Verify / edit</b> and enter the Google email they use to sign in. Save, then share <a class="link" href="https://pennipopvt.github.io/ProjectPlanner/shared.html" target="_blank" rel="noopener">this board link</a>. In Google OAuth Testing mode, add the email under Google Auth Platform → Audience → Test users. Removing someone only revokes access to this project; their history is retained.</p>':'');
+ $('#teamList').onclick=ev=>{const btn=ev.target.closest('[data-member]');if(btn)editMember(btn.dataset.member)};
+}
+function editMember(id){
+ if(!isPM())return;
+ const membership=(data.team||[]).find(m=>m.project_id===activeProject&&String(m.member_id)===String(id));
+ const person=(data.roster||[]).find(x=>String(x.member_id)===String(id))||data.members.find(x=>String(x.member_id)===String(id));
+ if(!membership||!person)return;
+ const canRemove=membership.project_role!=='PM'&&String(id)!==String(data.me.member_id);
+ modal('Edit team member',`<form id="actionForm"><div class="fields">${field('display_name','Name',person.display_name||'','text',true)}${field('google_email','Google sign-in email',person.google_email||'','email',true)}${field('discipline','Team responsibility',membership.discipline||'','text',true)}</div><p class="sub">Adding a valid Google email activates a pending member. Leaving the email blank keeps them pending. Changes to someone's email may affect other projects where they are a member.</p><div class="controls"><button type="button" class="button" id="cancel">Cancel</button>${canRemove?'<button type="button" class="button danger" id="removeMember">Remove from project</button>':''}<button type="submit" class="button main">Save member</button></div></form>`);
+ $('#cancel').onclick=closeModal;
+ if(canRemove)$('#removeMember').onclick=()=>removeMember(id,person.display_name);
+ $('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit('updateMember',{project_id:activeProject,member_id:id,...Object.fromEntries(new FormData(ev.currentTarget).entries())})};
+}
+async function removeMember(id,name){
+ if(!isPM())return;
+ const assigned=data.tasks.filter(t=>t.project_id===activeProject&&String(t.assignee_member_id)===String(id));
+ if(assigned.length){alert('Reassign '+assigned.length+' task(s) before removing '+name+'.');return;}
+ if(!confirm('Remove '+name+' from this project? They will lose access, but their historic work logs and member record will be preserved.'))return;
+ try{await rpc('removeMember',{project_id:activeProject,member_id:id});closeModal();await refresh()}catch(err){alert(err.message)}
 }
 
 function renderTasks(){let ts=data.tasks.filter(x=>x.project_id===activeProject);const filter=$('#assigneeFilter').value;if(filter)ts=ts.filter(x=>x.assignee_member_id===filter);$('#total').textContent=ts.length;$('#completed').textContent=ts.filter(x=>x.status==='Done').length;$('#hours').textContent=formatHours(ts.reduce((n,t)=>n+taskHours(t),0));$('#tasks').innerHTML=ts.length?ts.map(t=>{const f=feature(t.feature_id),m=milestone(f),update=canUpdate(t);return `<tr><td><button class="task-title" data-detail="${e(t.task_id)}">${e(t.title)}</button><div class="sub">${e(t.priority)}</div></td><td>${e(f?.name||'—')}<div class="sub">${e(m?.name||'')}</div></td><td>${e(member(t.assignee_member_id))}</td><td>${update?`<select data-status="${e(t.task_id)}" aria-label="Status for ${e(t.title)}">${ST.map(s=>`<option ${s===t.status?'selected':''}>${e(s)}</option>`).join('')}</select>`:`<span class="tag">${e(t.status)}</span>`}</td><td>${formatHours(t.estimated_hours)}</td><td>${formatHours(taskHours(t))}</td><td><div class="actions">${update?`<button class="button" data-log="${e(t.task_id)}">+ Hours</button>`:''}${isPM()?`<button class="button" data-edit="${e(t.task_id)}">Edit</button>`:''}</div></td></tr>`}).join(''):'<tr><td colspan="7" class="empty">No tasks yet. A PM can create the first one.</td></tr>';
