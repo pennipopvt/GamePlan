@@ -43,6 +43,9 @@ function dispatch(request) {
     if (op === 'createMilestone') return createMilestone_(email, payload);
     if (op === 'editMilestone') return editMilestone_(email, payload);
     if (op === 'editFeature') return editFeature_(email, payload);
+    if (op === 'deleteTask') return deleteTask_(email, payload);
+    if (op === 'deleteFeature') return deleteFeature_(email, payload);
+    if (op === 'deleteMilestone') return deleteMilestone_(email, payload);
     if (op === 'addMember') return addMember_(email, payload);
     if (op === 'createProject') return createProject_(email, payload);
     throw Error('Unknown operation.');
@@ -157,5 +160,41 @@ function editFeature_(email,p){
   if(!milestone)throw Error('Invalid parent milestone');
   if(!STATUSES.includes(p.status))throw Error('Invalid feature status');
   patch_('Features',f,{name:required_(p.name,'name',160),description:optional_(p.description),status:p.status,milestone_id:milestone.milestone_id,estimated_hours:hours_(p.estimated_hours||0)},['name','description','status','milestone_id','estimated_hours']);
+  return {ok:true};
+}
+
+/** Deletions are PM-only. Never cascade entire feature/milestone hierarchies implicitly. */
+function deleteRows_(sheetName,predicate){
+  const rows=rows_(sheetName).filter(predicate);
+  const sh=tab_(sheetName);
+  rows.sort((a,b)=>b._row-a._row).forEach(row=>sh.deleteRow(row._row));
+  return rows.length;
+}
+function deleteTask_(email,p){
+  const task=task_(required_(p.task_id,'task'));
+  permit_(email,task.project_id,true);
+  // Task deletion explicitly includes its time logs, as shown in confirmation.
+  const logs=deleteRows_('Time Logs',x=>String(x.task_id)===String(task.task_id));
+  deleteRows_('Tasks',x=>String(x.task_id)===String(task.task_id));
+  return {ok:true,deletedLogs:logs};
+}
+function deleteFeature_(email,p){
+  const id=required_(p.feature_id,'feature');
+  const f=rows_('Features').find(x=>String(x.feature_id)===id);
+  if(!f)throw Error('Feature not found');
+  permit_(email,f.project_id,true);
+  if(rows_('Tasks').some(t=>String(t.feature_id)===id))
+    throw Error('Move or delete this feature’s tasks before deleting the feature.');
+  deleteRows_('Features',x=>String(x.feature_id)===id);
+  return {ok:true};
+}
+function deleteMilestone_(email,p){
+  const id=required_(p.milestone_id,'milestone');
+  const m=rows_('Milestones').find(x=>String(x.milestone_id)===id);
+  if(!m)throw Error('Milestone not found');
+  permit_(email,m.project_id,true);
+  if(rows_('Features').some(f=>String(f.milestone_id)===id))
+    throw Error('Move or delete this milestone’s features before deleting the milestone.');
+  deleteRows_('Milestones',x=>String(x.milestone_id)===id);
   return {ok:true};
 }
