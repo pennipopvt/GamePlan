@@ -1,6 +1,6 @@
 'use strict';
 /* GamePlan extension: project tags, saved templates, analytics and navigation. */
-const GP_COLORS=['#729fd6','#db8bac','#ac91d6','#d8b56b','#68a992','#e18b71','#98aab6'];
+const GP_COLORS=[{name:'Blue',hex:'#729fd6'},{name:'Pink',hex:'#db8bac'},{name:'Purple',hex:'#ac91d6'},{name:'Yellow',hex:'#d8b56b'},{name:'Green',hex:'#68a992'},{name:'Orange',hex:'#e18b71'},{name:'Gray',hex:'#98aab6'}];
 let gpPage='board',gpSelecting=false;
 const gpSelected=new Set();
 const gpTags=()=>data.tags.filter(x=>x.project_id===activeProject);
@@ -94,9 +94,14 @@ function gpSettings(){
 }
 function gpEditTag(id=''){
  const tag=gpTags().find(t=>t.tag_id===id);
- modal(tag?'Edit tag':'Add tag','<form id="actionForm"><div class="fields">'+field('name','Tag name',tag?.name||'','text',true)+'<label class="wide">Color<select name="color">'+GP_COLORS.map(c=>'<option value="'+c+'" '+(tag?.color===c?'selected':'')+'>'+c+'</option>').join('')+'</select></label></div><div class="controls"><button type="button" class="button" id="gpCancel">Cancel</button><button type="submit" class="button main">Save tag</button></div></form>');
+ const selected=GP_COLORS.some(c=>c.hex===tag?.color)?tag.color:GP_COLORS[0].hex;
+ const colorChoices=GP_COLORS.map(c=>'<label class="gp-color-option"><input type="radio" name="color" value="'+c.hex+'" '+(selected===c.hex?'checked':'')+'><span class="gp-color-swatch" style="background:'+c.hex+'"></span><span>'+c.name+'</span></label>').join('');
+ modal(tag?'Edit tag':'Add tag','<form id="actionForm"><div class="fields">'+field('name','Tag name',tag?.name||'','text',true)+'<div class="wide"><strong>Tag color</strong><div class="gp-color-grid">'+colorChoices+'</div><div class="gp-color-preview"><span class="sub">Preview</span> <span id="gpPreviewTag" class="gp-tag"></span></div></div></div><div class="controls"><button type="button" class="button" id="gpCancel">Cancel</button><button type="submit" class="button main">Save tag</button></div></form>');
  $('#gpCancel').onclick=closeModal;
- $('#actionForm').onsubmit=ev=>{ev.preventDefault();const f=new FormData(ev.currentTarget),name=String(f.get('name')||'').trim();if(!name)return;if(gpTags().some(t=>t.name.toLowerCase()===name.toLowerCase()&&t!==tag)){alert('Tag name already exists');return}if(tag){tag.name=name;tag.color=f.get('color')}else data.tags.push({tag_id:uid(),project_id:activeProject,name,color:f.get('color')});persist();closeModal();render()};
+ const form=$('#actionForm');
+ const preview=()=>{const color=form.querySelector('[name=color]:checked')?.value||selected;$('#gpPreviewTag').style.setProperty('--tc',color);$('#gpPreviewTag').textContent=form.querySelector('[name=name]').value.trim()||'New tag'};
+ form.addEventListener('input',preview);form.addEventListener('change',preview);preview();
+ form.onsubmit=ev=>{ev.preventDefault();const fd=new FormData(ev.currentTarget),name=String(fd.get('name')||'').trim();if(!name)return;if(gpTags().some(t=>t.name.toLowerCase()===name.toLowerCase()&&t!==tag)){alert('Tag name already exists');return}if(tag){tag.name=name;tag.color=fd.get('color')}else data.tags.push({tag_id:uid(),project_id:activeProject,name,color:fd.get('color')});persist();closeModal();render()};
 }
 function gpDeleteTag(id){
  const tag=gpTags().find(t=>t.tag_id===id);if(!tag||!confirm('Delete '+tag.name+'? Tasks and templates will retain all other data.'))return;
