@@ -39,6 +39,11 @@ rpc=function(op,p={}){
   return result;
  });
 };
+const gpOriginalQuickCreate=quickCreate;
+quickCreate=function(kind,preferredMilestoneId=''){
+ if(kind==='feature')return gpFeatureCreate(preferredMilestoneId);
+ return gpOriginalQuickCreate(kind,preferredMilestoneId);
+};
 const gpOriginalRender=render;
 render=function(){
  gpOriginalRender();
@@ -62,11 +67,11 @@ function gpAddShell(){
  $('#gpSelectTasks').onclick=()=>{gpSelecting=!gpSelecting;gpSelected.clear();renderMilestones();gpSelectionBar()};
  $('#milestoneList').addEventListener('change',ev=>{const el=ev.target.closest('[data-gp-select]');if(!el)return;el.checked?gpSelected.add(el.dataset.gpSelect):gpSelected.delete(el.dataset.gpSelect);gpSelectionBar()});
  $('#menuToggle').onclick=()=>{
-  if(innerWidth<=680){$('#sidebar').classList.toggle('visible');return}
-  const collapsed=document.querySelector('.app').classList.toggle('gp-collapsed');
+  if(innerWidth<=680){const isOpen=$('#sidebar').classList.toggle('visible');$('#menuToggle').setAttribute('aria-expanded',String(isOpen));return}
+  const collapsed=document.querySelector('.app').classList.toggle('gp-collapsed');$('#menuToggle').setAttribute('aria-expanded',String(!collapsed));
   try{localStorage.setItem('gp-collapsed',collapsed?'1':'0')}catch{}
  };
- try{if(localStorage.getItem('gp-collapsed')==='1')document.querySelector('.app').classList.add('gp-collapsed')}catch{}
+ try{if(localStorage.getItem('gp-collapsed')==='1'){document.querySelector('.app').classList.add('gp-collapsed');$('#menuToggle').setAttribute('aria-expanded','false')}}catch{}
 }
 function gpSelectionBar(){
  const bar=$('#gpSelectionBar');bar.hidden=!gpSelecting;
@@ -210,11 +215,42 @@ function gpEditTemplate(id){
  const rows=[...$('#gpTemplateRows').querySelectorAll('.gp-template-task')],tasks=rows.map(row=>({title:row.querySelector('[name=task_title]').value.trim(),description:row.querySelector('[name=task_description]').value,priority:row.querySelector('[name=task_priority]').value,estimated_hours:Math.max(0,Number(row.querySelector('[name=task_minutes]').value)||0)/60,tag_ids:[...row.querySelector('[name=task_tags]').selectedOptions].map(o=>o.value)}));
  if(tasks.some(task=>!task.title)){alert('Task titles cannot be blank.');return}t.name=name;t.tasks=tasks;persist();closeModal();render()};
 }
-function gpUseTemplate(id){
- const t=gpTemplates().find(x=>x.template_id===id),ms=data.milestones.filter(m=>m.project_id===activeProject);if(!t)return;
+function gpFeatureCreate(preferredMilestoneId='',initialTemplateId=''){
+ const ms=data.milestones.filter(m=>m.project_id===activeProject),templates=gpTemplates();
  if(!ms.length){alert('Create a milestone first.');return}
- modal('Create feature from template','<form id="actionForm"><div class="fields">'+field('name','New feature name',t.name,'text',true)+select('milestone_id','Milestone',opts(ms,'milestone_id'),ms[0].milestone_id,true)+'</div><div class="controls"><button class="button" type="button" id="gpCancel">Cancel</button><button class="button main" type="submit">Create feature</button></div></form>');
- $('#gpCancel').onclick=closeModal;
- $('#actionForm').onsubmit=ev=>{ev.preventDefault();const f=new FormData(ev.currentTarget),name=String(f.get('name')||'').trim(),milestoneId=String(f.get('milestone_id'));if(!name||!ms.some(m=>String(m.milestone_id)===milestoneId))return;const featureId=uid();data.features.push({feature_id:featureId,project_id:activeProject,milestone_id:milestoneId,name,description:'',status:'To do'});for(const original of t.tasks){const h=Number(original.estimated_hours)||0;data.tasks.push({task_id:uid(),project_id:activeProject,feature_id:featureId,title:original.title,description:original.description||'',tag_ids:[...(original.tag_ids||[])],priority:original.priority||'Normal',assignee_member_id:'',status:'To do',estimated_hours:h,remaining_hours:h,created_by_member_id:'penni',updated_at:''})}persist();closeModal();activeView='m:'+milestoneId;gpNavigate('board')};
+ const defaultMilestone=ms.find(m=>String(m.milestone_id)===String(preferredMilestoneId))?.milestone_id||ms[0].milestone_id;
+ const usingTemplate=Boolean(initialTemplateId&&templates.some(t=>t.template_id===initialTemplateId));
+ const sourceOptions='<label class="wide">Create feature<select name="creation_source"><option value="blank" '+(!usingTemplate?'selected':'')+'>Blank feature</option>'+ (templates.length?'<option value="template" '+(usingTemplate?'selected':'')+'>Add from template</option>':'')+'</select></label>';
+ const templateOptions='<label class="wide" id="gpTemplateChoice">Choose template<select name="template_id">'+templates.map(t=>'<option value="'+e(t.template_id)+'" '+(t.template_id===initialTemplateId?'selected':'')+'>'+e(t.name)+' ('+t.tasks.length+' tasks)</option>').join('')+'</select></label>';
+ const defaultName=usingTemplate?templates.find(t=>t.template_id===initialTemplateId)?.name||'':'';
+ modal('Create feature','<form id="actionForm"><div class="fields">'+sourceOptions+templateOptions+field('name','New feature name',defaultName,'text',true)+select('milestone_id','Milestone',opts(ms,'milestone_id'),defaultMilestone,true)+'</div><div class="controls"><button type="button" class="button" id="gpCancel">Cancel</button><button type="submit" class="button main">Create feature</button></div></form>');
+ const form=$('#actionForm'),source=form.elements.creation_source,templateField=$('#gpTemplateChoice');
+ const sync=()=>{templateField.hidden=source.value!=='template'};
+ const selectedTemplate=()=>templates.find(t=>t.template_id===form.elements.template_id?.value);
+ source.onchange=()=>{sync();if(source.value==='template'&&!form.elements.name.value.trim())form.elements.name.value=selectedTemplate()?.name||''};
+ form.elements.template_id?.addEventListener('change',()=>{if(source.value==='template')form.elements.name.value=selectedTemplate()?.name||''});
+ sync();$('#gpCancel').onclick=closeModal;
+ form.onsubmit=async ev=>{
+  ev.preventDefault();
+  const name=String(form.elements.name.value||'').trim(),mid=String(form.elements.milestone_id.value);
+  if(!name||!ms.some(m=>String(m.milestone_id)===mid))return;
+  const button=form.querySelector('button[type=submit]');button.disabled=true;
+  try{
+   if(source.value==='blank'){
+    await rpc('createFeature',{project_id:activeProject,milestone_id:mid,name});
+   }else{
+    const template=selectedTemplate();if(!template)throw Error('Select a template first');
+    const fid=uid();
+    data.features.push({feature_id:fid,project_id:activeProject,milestone_id:mid,name,description:'',status:'To do'});
+    for(const original of template.tasks){
+     const h=Number(original.estimated_hours)||0;
+     data.tasks.push({task_id:uid(),project_id:activeProject,feature_id:fid,title:original.title,description:original.description||'',tag_ids:[...(original.tag_ids||[])],priority:original.priority||'Normal',assignee_member_id:'',status:'To do',estimated_hours:h,remaining_hours:h,created_by_member_id:'penni',updated_at:''});
+    }
+    persist();
+   }
+   closeModal();activeView='m:'+mid;gpNavigate('board');
+  }catch(err){alert('Could not create feature: '+err.message);button.disabled=false}
+ };
 }
+function gpUseTemplate(id){gpFeatureCreate('',id)}
 gpAddShell();gpRenderPage();
