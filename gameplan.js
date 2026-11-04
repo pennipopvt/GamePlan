@@ -1,5 +1,31 @@
 'use strict';
 /* GamePlan extension: project tags, saved templates, analytics and navigation. */
+/* GamePlan-styled confirmations and input prompts, layered over editing panels. */
+function gpDialog(message,{title='Please confirm',confirmLabel='Continue',danger=false,input=false,initialValue=''}={}){
+ return new Promise(resolve=>{
+  const old=document.getElementById('gpDialogOverlay');if(old)old.remove();
+  const overlay=document.createElement('div');overlay.id='gpDialogOverlay';overlay.className='gp-dialog-backdrop';
+  const card=document.createElement('div');card.className='gp-dialog-card';card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');
+  const heading=document.createElement('h2');heading.textContent=title;
+  const description=document.createElement('p');description.className='gp-dialog-message';description.textContent=String(message);
+  const actions=document.createElement('div');actions.className='gp-dialog-actions';
+  const cancel=document.createElement('button');cancel.type='button';cancel.className='button';cancel.textContent='Cancel';
+  const ok=document.createElement('button');ok.type='button';ok.className=danger?'button danger':'button main';ok.textContent=confirmLabel;
+  let field;
+  if(input){field=document.createElement('input');field.type='text';field.value=String(initialValue);field.setAttribute('aria-label',title)}
+  card.append(heading,description);if(field)card.append(field);actions.append(cancel,ok);card.append(actions);overlay.append(card);document.body.appendChild(overlay);
+  const previous=document.activeElement;
+  const finish=result=>{document.removeEventListener('keydown',keyHandler,true);overlay.remove();if(previous?.isConnected)previous.focus();resolve(result)};
+  const keyHandler=ev=>{if(ev.key==='Escape'){ev.preventDefault();finish(input?null:false)}else if(ev.key==='Enter'&&input){ev.preventDefault();finish(field.value)}};
+  document.addEventListener('keydown',keyHandler,true);
+  overlay.addEventListener('click',ev=>{if(ev.target===overlay)finish(input?null:false)});
+  cancel.onclick=()=>finish(input?null:false);ok.onclick=()=>finish(input?field.value:true);
+  (field||ok).focus();if(field)field.select();
+ });
+}
+function gpConfirm(message,options={}){return gpDialog(message,options)}
+function gpPrompt(message,initialValue=''){return gpDialog(message,{title:message.split('\\n')[0].replace(/:$/,''),confirmLabel:'Continue',input:true,initialValue})}
+
 const GP_COLORS=[{name:'Blue',hex:'#729fd6'},{name:'Pink',hex:'#db8bac'},{name:'Purple',hex:'#ac91d6'},{name:'Yellow',hex:'#d8b56b'},{name:'Green',hex:'#68a992'},{name:'Orange',hex:'#e18b71'},{name:'Gray',hex:'#98aab6'}];
 let gpPage='board',gpSelecting=false;
 const gpSelected=new Set();
@@ -106,7 +132,7 @@ function gpRenderPage(){
 function gpSettings(){
  const project=find(data.projects,activeProject,'project_id');
  $('#gpExtra').innerHTML='<div class="gp-flex"><div><h1>Project Settings</h1><p class="sub">'+e(project.project_name)+'</p></div><button class="button" id="gpRename">Edit project name</button></div><h2>Project tags</h2><p class="sub">Tags can be assigned to multiple tasks. For analytics, the first tag receives the logged time so hours are not counted twice.</p><div class="gp-list" id="gpTags">'+gpTags().map(t=>'<div class="gp-card gp-flex"><span class="gp-tag" style="--tc:'+e(t.color)+'">'+e(t.name)+'</span><div class="actions"><button class="button" data-tag-edit="'+e(t.tag_id)+'">Edit</button><button class="button danger" data-tag-delete="'+e(t.tag_id)+'">Delete</button></div></div>').join('')+'</div><p><button class="button main" id="gpAddTag">+ Add tag</button></p>';
- $('#gpRename').onclick=()=>{const name=prompt('Project name',project.project_name);if(name?.trim()){project.project_name=name.trim();persist();render()}};
+ $('#gpRename').onclick=async()=>{const name=await gpPrompt('Project name',project.project_name);if(name?.trim()){project.project_name=name.trim();persist();render()}};
  $('#gpAddTag').onclick=()=>gpEditTag();
  $('#gpTags').onclick=ev=>{const a=ev.target.closest('[data-tag-edit]'),b=ev.target.closest('[data-tag-delete]');if(a)gpEditTag(a.dataset.tagEdit);if(b)gpDeleteTag(b.dataset.tagDelete)};
 }
@@ -156,10 +182,10 @@ function gpEditTag(id=''){
  });
  $('#gpDeleteColor').onclick=()=>{if(contextColor)removeCustomColor(contextColor)};
  form.addEventListener('click',ev=>{if(!ev.target.closest('#gpColorContext')&&!ev.target.closest('[data-gp-color]'))closeContext()});
- $('#gpClearColors').onclick=()=>{
+ $('#gpClearColors').onclick=async()=>{
   const custom=[...grid.querySelectorAll('[data-gp-color]')].filter(tile=>!defaults.includes(tile.dataset.gpColor));
-  if(!custom.length){alert('There are no custom colors to clear.');return}
-  if(!confirm('Clear all custom colors from this project’s palette? Existing tags will keep their colors.'))return;
+  if(!custom.length){gpAlert('There are no custom colors to clear.');return}
+  if(!await gpConfirm('Clear all custom colors from this project’s palette? Existing tags will keep their colors.',{danger:true,confirmLabel:'Clear colors'}))return;
   data.custom_tag_colors=(data.custom_tag_colors||[]).filter(c=>c.project_id!==activeProject);
   const checked=form.querySelector('[name=color]:checked')?.value;
   custom.forEach(tile=>tile.remove());
@@ -188,10 +214,10 @@ function gpEditTag(id=''){
   panel.hidden=true;preview();
  };
  form.addEventListener('input',preview);form.addEventListener('change',preview);preview();
- form.onsubmit=ev=>{ev.preventDefault();const fd=new FormData(ev.currentTarget),name=String(fd.get('name')||'').trim();if(!name)return;if(gpTags().some(t=>t.name.toLowerCase()===name.toLowerCase()&&t!==tag)){alert('Tag name already exists');return}if(tag){tag.name=name;tag.color=fd.get('color')}else data.tags.push({tag_id:uid(),project_id:activeProject,name,color:fd.get('color')});persist();closeModal();render()};
+ form.onsubmit=ev=>{ev.preventDefault();const fd=new FormData(ev.currentTarget),name=String(fd.get('name')||'').trim();if(!name)return;if(gpTags().some(t=>t.name.toLowerCase()===name.toLowerCase()&&t!==tag)){gpAlert('Tag name already exists');return}if(tag){tag.name=name;tag.color=fd.get('color')}else data.tags.push({tag_id:uid(),project_id:activeProject,name,color:fd.get('color')});persist();closeModal();render()};
 }
-function gpDeleteTag(id){
- const tag=gpTags().find(t=>t.tag_id===id);if(!tag||!confirm('Delete '+tag.name+'? Tasks and templates will retain all other data.'))return;
+async function gpDeleteTag(id){
+ const tag=gpTags().find(t=>t.tag_id===id);if(!tag||!await gpConfirm('Delete '+tag.name+'? Tasks and templates will retain all other data.',{danger:true,confirmLabel:'Delete tag'}))return;
  data.tags=data.tags.filter(t=>t!==tag);
  data.tasks.forEach(t=>t.tag_ids=(t.tag_ids||[]).filter(x=>x!==id));
  data.templates.forEach(t=>t.tasks.forEach(item=>item.tag_ids=(item.tag_ids||[]).filter(x=>x!==id)));
@@ -203,18 +229,18 @@ function gpAnalytics(){
  const rows=[...groups].map(([key,h])=>({name:member(key.split('|')[0]),tag:key.split('|').slice(1).join('|'),hours:h})).sort((a,b)=>b.hours-a.hours);
  $('#gpExtra').innerHTML='<h1>Analytics</h1><p class="sub">Actual logged time by person and primary task tag.</p><h2>'+formatHours(total)+' total</h2><div class="table-wrap"><table><thead><tr><th>Team member</th><th>Tag</th><th>Logged time</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+e(r.name)+'</td><td>'+e(r.tag)+'</td><td>'+formatHours(r.hours)+'</td></tr>').join('')+'</tbody></table></div>';
 }
-function gpSaveTemplate(){
+async function gpSaveTemplate(){
  const selected=projectTasks().filter(t=>gpSelected.has(String(t.task_id)));if(!selected.length)return;
  const unfinished=selected.filter(t=>t.status!=='Done');
- if(unfinished.length&&!confirm(unfinished.length+' selected tasks are unfinished. Use their existing estimates instead of their logged time?'))return;
- const name=prompt('Template name');if(!name?.trim())return;
+ if(unfinished.length&&!await gpConfirm(unfinished.length+' selected tasks are unfinished. Use their existing estimates instead of their logged time?',{confirmLabel:'Use existing estimates'}))return;
+ const name=await gpPrompt('Template name');if(!name?.trim())return;
  const tasks=selected.map(t=>({title:t.title,description:t.description||'',priority:t.priority||'Normal',tag_ids:[...(t.tag_ids||[])],estimated_hours:t.status==='Done'?Math.ceil(Math.round(taskHours(t)*60)/10)*10/60:Number(t.estimated_hours||0)}));
  data.templates.push({template_id:uid(),project_id:activeProject,name:name.trim(),tasks});persist();gpNavigate('templates');
 }
 function gpTemplatesPage(){
  $('#gpExtra').innerHTML='<div class="gp-flex"><div><h1>Feature Templates</h1><p class="sub">Select tasks across features to save a reusable collection.</p></div><button class="button main" id="gpChoose">+ Select tasks</button></div><div class="gp-list" id="gpTemplateList">'+gpTemplates().map(t=>'<div class="gp-card gp-flex"><div><h3>'+e(t.name)+'</h3><p class="sub">'+t.tasks.length+' tasks · '+formatHours(t.tasks.reduce((s,x)=>s+Number(x.estimated_hours||0),0))+' estimated</p></div><div class="actions"><button class="button" data-t-edit="'+e(t.template_id)+'">Edit</button><button class="button danger" data-t-delete="'+e(t.template_id)+'">Delete</button><button class="button main" data-t-use="'+e(t.template_id)+'">Use template</button></div></div>').join('')+'</div>';
  $('#gpChoose').onclick=()=>{gpNavigate('board');gpSelecting=true;renderMilestones();gpSelectionBar()};
- $('#gpTemplateList').onclick=ev=>{const a=ev.target.closest('[data-t-edit]'),b=ev.target.closest('[data-t-delete]'),c=ev.target.closest('[data-t-use]');if(a)gpEditTemplate(a.dataset.tEdit);if(b){const t=gpTemplates().find(x=>x.template_id===b.dataset.tDelete);if(t&&confirm('Delete '+t.name+'?')){data.templates=data.templates.filter(x=>x!==t);persist();render()}}if(c)gpUseTemplate(c.dataset.tUse)};
+ $('#gpTemplateList').onclick=async ev=>{const a=ev.target.closest('[data-t-edit]'),b=ev.target.closest('[data-t-delete]'),c=ev.target.closest('[data-t-use]');if(a)gpEditTemplate(a.dataset.tEdit);if(b){const t=gpTemplates().find(x=>x.template_id===b.dataset.tDelete);if(t&&await gpConfirm('Delete '+t.name+'?',{danger:true,confirmLabel:'Delete template'})){data.templates=data.templates.filter(x=>x!==t);persist();render()}}if(c)gpUseTemplate(c.dataset.tUse)};
 }
 function gpTaskEditRow(task){
  return '<div class="gp-template-task"><label>Task title<input name="task_title" required value="'+e(task.title||'')+'"></label><label>Description<textarea name="task_description">'+e(task.description||'')+'</textarea></label><label>Estimate (minutes)<input type="number" min="0" step="1" name="task_minutes" value="'+Math.round(Number(task.estimated_hours||0)*60)+'"></label><label>Priority<select name="task_priority">'+PRI.map(x=>'<option '+(x===(task.priority||'Normal')?'selected':'')+'>'+x+'</option>').join('')+'</select></label><label>Tags<select name="task_tags" multiple size="3">'+gpTags().map(t=>'<option value="'+e(t.tag_id)+'" '+((task.tag_ids||[]).includes(t.tag_id)?'selected':'')+'>'+e(t.name)+'</option>').join('')+'</select></label><button class="button danger" type="button" data-remove-template-task>Remove task</button></div>';
@@ -226,11 +252,11 @@ function gpEditTemplate(id){
  $('#gpTemplateRows').onclick=ev=>{if(ev.target.closest('[data-remove-template-task]'))ev.target.closest('.gp-template-task').remove()};
  $('#actionForm').onsubmit=ev=>{ev.preventDefault();const name=ev.currentTarget.elements.name.value.trim();if(!name)return;
  const rows=[...$('#gpTemplateRows').querySelectorAll('.gp-template-task')],tasks=rows.map(row=>({title:row.querySelector('[name=task_title]').value.trim(),description:row.querySelector('[name=task_description]').value,priority:row.querySelector('[name=task_priority]').value,estimated_hours:Math.max(0,Number(row.querySelector('[name=task_minutes]').value)||0)/60,tag_ids:[...row.querySelector('[name=task_tags]').selectedOptions].map(o=>o.value)}));
- if(tasks.some(task=>!task.title)){alert('Task titles cannot be blank.');return}t.name=name;t.tasks=tasks;persist();closeModal();render()};
+ if(tasks.some(task=>!task.title)){gpAlert('Task titles cannot be blank.');return}t.name=name;t.tasks=tasks;persist();closeModal();render()};
 }
 function gpFeatureCreate(preferredMilestoneId='',initialTemplateId=''){
  const ms=data.milestones.filter(m=>m.project_id===activeProject),templates=gpTemplates();
- if(!ms.length){alert('Create a milestone first.');return}
+ if(!ms.length){gpAlert('Create a milestone first.');return}
  const defaultMilestone=ms.find(m=>String(m.milestone_id)===String(preferredMilestoneId))?.milestone_id||ms[0].milestone_id;
  const usingTemplate=Boolean(initialTemplateId&&templates.some(t=>t.template_id===initialTemplateId));
  const sourceOptions='<label class="wide">Create feature<select name="creation_source"><option value="blank" '+(!usingTemplate?'selected':'')+'>Blank feature</option>'+ (templates.length?'<option value="template" '+(usingTemplate?'selected':'')+'>Add from template</option>':'')+'</select></label>';
@@ -262,7 +288,7 @@ function gpFeatureCreate(preferredMilestoneId='',initialTemplateId=''){
     persist();
    }
    closeModal();activeView='m:'+mid;gpNavigate('board');
-  }catch(err){alert('Could not create feature: '+err.message);button.disabled=false}
+  }catch(err){gpAlert('Could not create feature: '+err.message);button.disabled=false}
  };
 }
 function gpUseTemplate(id){gpFeatureCreate('',id)}
