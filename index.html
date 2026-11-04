@@ -198,6 +198,36 @@ details[open]>summary .chevron{transform:rotate(90deg)}
   .feature-summary{padding:12px 11px}
   .task-entry{padding:11px 9px 11px 14px}
 }
+
+/* GamePlan navigation, analytics, and reusable task templates */
+.gp-short{display:none}.gp-pages{display:grid;gap:5px}
+.gp-nav{border:0;background:transparent;width:100%;padding:12px 10px;text-align:left;border-radius:9px;color:#476560;font-size:13px;font-weight:700;cursor:pointer}
+.gp-nav .gp-icon{font-size:18px;display:inline-block;width:28px;text-align:center}
+.gp-nav:hover{background:#dfeae3}.gp-nav.active{background:#fff;color:#226f69}
+#gpBoardNav{display:grid;gap:12px}
+.app.gp-collapsed{grid-template-columns:68px minmax(0,1fr)}
+.gp-collapsed .sidebar{padding:24px 7px;overflow:hidden}
+.gp-collapsed .gp-long,.gp-collapsed .gp-nav .gp-text,.gp-collapsed #gpBoardNav,.gp-collapsed .sidebar-foot{display:none}
+.gp-collapsed .gp-short{display:block;text-align:center}
+.gp-collapsed .sidebar-brand{padding:0;font-size:26px}
+.gp-collapsed .gp-nav{padding:12px 4px;text-align:center}
+.gp-collapsed .gp-nav .gp-icon{width:auto}
+.gp-flex{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.gp-list{display:grid;gap:11px;margin:17px 0}.gp-card{background:#fff;border:1px solid #dfebe4;border-radius:10px;padding:15px}
+.gp-card h3{margin:0 0 6px}.gp-card p{margin:0}
+.gp-tag{--tc:#88ada1;background:color-mix(in srgb,var(--tc),white 82%);border:1px solid color-mix(in srgb,var(--tc),white 48%);color:#31504a;border-radius:6px;padding:3px 7px;font-size:11px;font-weight:700;white-space:nowrap}
+.gp-badges{display:flex;gap:5px;flex-wrap:wrap;margin:4px 0}
+.gp-tag-editor{grid-column:1/-1;margin:10px 0}.gp-tag-list{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.gp-tag-list label{display:flex;flex-direction:row;gap:5px;align-items:center}
+#gpSelectionBar{background:#e7f4ec;border:1px solid #c7e4d6;border-radius:9px;padding:12px 16px;margin:12px 0}
+.gp-selectable{position:relative;padding-left:87px}
+.gp-task-select{position:absolute;left:55px;top:50%;transform:translateY(-50%);display:block}
+.gp-task-select input{width:17px;height:17px;accent-color:#317d73}
+.gp-template-task{padding:13px;border:1px solid #dce8df;background:#f8fbf9;border-radius:9px;margin:12px 0;display:grid;gap:10px}
+.gp-template-task input,.gp-template-task textarea,.gp-template-task select{width:100%}
+#gpExtra{margin-top:12px}
+@media(max-width:900px){.gp-selectable{padding-left:60px}.gp-task-select{left:25px}}
+@media(max-width:680px){.app.gp-collapsed{display:block}.gp-collapsed .sidebar{display:none}.gp-selectable{padding-left:42px}.gp-task-select{left:9px}}
 </style></head>
 <body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand">✳ Game<span>Plan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav><div class="sidebar-foot">Local only · your board is saved in this browser.</div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.4</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice">Your changes are saved instantly in this browser. Export a backup occasionally.</div>
@@ -694,4 +724,4 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script></body></html>
+</script><script src="gameplan.js"></script></body></html>
