@@ -250,6 +250,21 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 .gp-picker-hue-row input[type=range]{flex:1;min-width:0;accent-color:#548d85;background:linear-gradient(to right,red,#ff0,#0f0,#0ff,#00f,#f0f,red);height:14px;padding:0;border:0;cursor:pointer}
 .gp-picker-swatch{flex:0 0 35px;height:35px;border-radius:8px;border:1px solid #0002}
 .gp-picker-actions{display:flex;justify-content:flex-end;gap:8px}
+
+/* Custom palette management and a visible rainbow hue strip. */
+#actionForm{position:relative}
+.gp-palette-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 13px}
+.gp-palette-tools .button{font-size:12px;padding:7px 10px}
+.gp-color-context[hidden]{display:none}
+.gp-color-context{position:absolute;z-index:4;min-width:135px;padding:4px;background:white;border:1px solid #d6e3dc;border-radius:8px;box-shadow:0 7px 22px #213d3030}
+.gp-color-context button{display:block;width:100%;text-align:left;border:0;background:white;color:#a03f3f;padding:9px 11px;border-radius:5px;font-size:12px;font-weight:650}
+.gp-color-context button:hover{background:#fff1f1}
+.gp-hue-track{flex:1;position:relative;height:19px;display:flex;align-items:center;border-radius:7px;background:linear-gradient(to right,#ff0000 0%,#ffff00 16.67%,#00ff00 33.33%,#00ffff 50%,#0000ff 66.67%,#ff00ff 83.33%,#ff0000 100%);border:1px solid #0002}
+.gp-picker-hue-row .gp-hue-track input[type=range]{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;appearance:none;-webkit-appearance:none;background:transparent;border:0;cursor:pointer}
+.gp-hue-track input[type=range]::-webkit-slider-runnable-track{height:19px;background:transparent;border:0}
+.gp-hue-track input[type=range]::-moz-range-track{height:19px;background:transparent;border:0}
+.gp-hue-track input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:25px;margin-top:-3px;background:#fff;border:2px solid #38534c;border-radius:5px;box-shadow:0 1px 5px #0005}
+.gp-hue-track input[type=range]::-moz-range-thumb{width:12px;height:23px;background:#fff;border:2px solid #38534c;border-radius:5px;box-shadow:0 1px 5px #0005}
 </style></head>
 <body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand">✳ Game<span>Plan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav><div class="sidebar-foot">Local only · your board is saved in this browser.</div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.4</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice">Your changes are saved instantly in this browser. Export a backup occasionally.</div>
