@@ -275,6 +275,26 @@ details[open]>summary .chevron{transform:rotate(90deg)}
  #menuToggle{display:inline-flex}
  #gpBoardNav[hidden]{display:none!important}
 }
+
+/* Nested Board navigation and sidebar's own hamburger control */
+#gpPrimary{display:flex;flex-direction:column;gap:5px}
+#gpBoardNav{display:flex;flex-direction:column;gap:5px;margin:0 0 7px 17px;padding:3px 0 4px 11px;border-left:1px solid #c6d9cf}
+#gpBoardNav[hidden]{display:none!important}
+#gpBoardNav .side-label{font-size:9px;letter-spacing:1px;padding:8px 7px 2px}
+#gpBoardNav .side-link{font-size:12px;padding:9px 10px;gap:5px;border-radius:7px}
+#gpBoardNav .side-count{font-size:10px}
+.gp-sidebar-toggle{display:flex;align-items:center;gap:12px;width:100%;min-height:39px;margin:0 0 2px;padding:8px 12px;border:0;background:transparent;color:#517368;border-radius:9px;text-align:left;cursor:pointer;font-size:17px}
+.gp-sidebar-toggle:hover{background:#dce9e0;color:#246c60}
+.gp-toggle-text{font-size:12px;font-weight:650}
+#menuToggle{display:none}
+.gp-collapsed .gp-sidebar-toggle{justify-content:center;padding:8px 4px}
+.gp-collapsed .gp-toggle-text,.gp-collapsed #gpBoardNav{display:none!important}
+.gp-collapsed #gpPrimary{width:100%}
+@media(max-width:680px){
+ #menuToggle{display:inline-flex}
+ .gp-sidebar-toggle{display:none}
+ #gpBoardNav{margin-left:15px}
+}
 </style></head>
 <body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand">✳ Game<span>Plan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav><div class="sidebar-foot">Local only · your board is saved in this browser.</div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.4</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice">Your changes are saved instantly in this browser. Export a backup occasionally.</div>
