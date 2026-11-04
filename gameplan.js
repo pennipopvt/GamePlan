@@ -7,7 +7,7 @@ const gpTags=()=>data.tags.filter(x=>x.project_id===activeProject);
 const gpTemplates=()=>data.templates.filter(x=>x.project_id===activeProject);
 const gpTagBadges=task=>(task.tag_ids||[]).map(id=>gpTags().find(t=>t.tag_id===id)).filter(Boolean).map(t=>'<span class="gp-tag" style="--tc:'+e(t.color)+'">'+e(t.name)+'</span>').join('');
 const gpOriginalLoad=loadLocal;
-loadLocal=function(){const result=gpOriginalLoad();result.tags=Array.isArray(result.tags)?result.tags:[];result.templates=Array.isArray(result.templates)?result.templates:[];return result};
+loadLocal=function(){const result=gpOriginalLoad();result.tags=Array.isArray(result.tags)?result.tags:[];result.templates=Array.isArray(result.templates)?result.templates:[];result.custom_tag_colors=Array.isArray(result.custom_tag_colors)?result.custom_tag_colors:[];return result};
 data.tags=Array.isArray(data.tags)?data.tags:[];
 data.templates=Array.isArray(data.templates)?data.templates:[];
 const gpOriginalRow=taskRow;
@@ -94,13 +94,27 @@ function gpSettings(){
 }
 function gpEditTag(id=''){
  const tag=gpTags().find(t=>t.tag_id===id);
- const selected=GP_COLORS.some(c=>c.hex===tag?.color)?tag.color:GP_COLORS[0].hex;
- const colorChoices=GP_COLORS.map(c=>'<label class="gp-color-option"><input type="radio" name="color" value="'+c.hex+'" '+(selected===c.hex?'checked':'')+'><span class="gp-color-swatch" style="background:'+c.hex+'"></span><span>'+c.name+'</span></label>').join('');
- modal(tag?'Edit tag':'Add tag','<form id="actionForm"><div class="fields">'+field('name','Tag name',tag?.name||'','text',true)+'<div class="wide"><strong>Tag color</strong><div class="gp-color-grid">'+colorChoices+'</div><div class="gp-color-preview"><span class="sub">Preview</span> <span id="gpPreviewTag" class="gp-tag"></span></div></div></div><div class="controls"><button type="button" class="button" id="gpCancel">Cancel</button><button type="submit" class="button main">Save tag</button></div></form>');
+ const defaults=GP_COLORS.map(c=>c.hex);
+ const saved=(data.custom_tag_colors||[]).filter(c=>c.project_id===activeProject).map(c=>c.color);
+ const palette=[...new Set([...defaults,...saved,...(tag?.color?[tag.color]:[])])];
+ const selected=tag?.color||palette[0];
+ const colorTile=color=>'<label class="gp-color-tile" title="Select color" aria-label="Select '+e(color)+'"><input type="radio" name="color" value="'+e(color)+'" '+(selected===color?'checked':'')+'><span class="gp-color-fill" style="background:'+e(color)+'"></span></label>';
+ modal(tag?'Edit tag':'Add tag','<form id="actionForm"><div class="fields">'+field('name','Tag name',tag?.name||'','text',true)+'<div class="wide"><strong>Tag color</strong><div class="gp-color-grid" id="gpColorGrid">'+palette.map(colorTile).join('')+'<label class="gp-color-add" title="Choose custom color" aria-label="Choose custom color"><span aria-hidden="true">+</span><input id="gpCustomColor" type="color" value="'+e(selected)+'" aria-label="Choose custom tag color"></label></div><div class="gp-color-preview"><span class="sub">Preview</span> <span id="gpPreviewTag" class="gp-tag"></span></div></div></div><div class="controls"><button type="button" class="button" id="gpCancel">Cancel</button><button type="submit" class="button main">Save tag</button></div></form>');
  $('#gpCancel').onclick=closeModal;
- const form=$('#actionForm');
+ const form=$('#actionForm'),grid=$('#gpColorGrid'),picker=$('#gpCustomColor');
  const preview=()=>{const color=form.querySelector('[name=color]:checked')?.value||selected;$('#gpPreviewTag').style.setProperty('--tc',color);$('#gpPreviewTag').textContent=form.querySelector('[name=name]').value.trim()||'New tag'};
- form.addEventListener('input',preview);form.addEventListener('change',preview);preview();
+ const addCustom=()=>{
+  const color=picker.value.toLowerCase();
+  let radio=[...grid.querySelectorAll('[name=color]')].find(r=>r.value.toLowerCase()===color);
+  if(!radio){grid.querySelector('.gp-color-add').insertAdjacentHTML('beforebegin',colorTile(color));radio=[...grid.querySelectorAll('[name=color]')].find(r=>r.value===color)}
+  radio.checked=true;
+  if(!data.custom_tag_colors)data.custom_tag_colors=[];
+  if(!defaults.includes(color)&&!data.custom_tag_colors.some(c=>c.project_id===activeProject&&c.color===color)){data.custom_tag_colors.push({project_id:activeProject,color});persist()}
+  preview();
+ };
+ picker.addEventListener('input',addCustom);
+ form.addEventListener('input',ev=>{if(ev.target!==picker)preview()});
+ form.addEventListener('change',preview);preview();
  form.onsubmit=ev=>{ev.preventDefault();const fd=new FormData(ev.currentTarget),name=String(fd.get('name')||'').trim();if(!name)return;if(gpTags().some(t=>t.name.toLowerCase()===name.toLowerCase()&&t!==tag)){alert('Tag name already exists');return}if(tag){tag.name=name;tag.color=fd.get('color')}else data.tags.push({tag_id:uid(),project_id:activeProject,name,color:fd.get('color')});persist();closeModal();render()};
 }
 function gpDeleteTag(id){
