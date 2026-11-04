@@ -405,7 +405,10 @@ function rpc(op,p={}){
    Object.assign(f,{name:required(p.name,'Feature name'),description:p.description||'',milestone_id:m.milestone_id});
   }else if(op==='deleteFeature'){
    const f=parent(data.features,'feature_id',p.feature_id);
-   if(data.tasks.some(t=>t.feature_id===f.feature_id))throw Error('Move or delete its tasks first');
+   const removedTasks=data.tasks.filter(t=>t.project_id===projectId&&String(t.feature_id)===String(f.feature_id));
+   const ids=new Set(removedTasks.map(t=>String(t.task_id)));
+   data.logs=data.logs.filter(l=>!ids.has(String(l.task_id)));
+   data.tasks=data.tasks.filter(t=>!ids.has(String(t.task_id)));
    data.features=data.features.filter(x=>x!==f);
   }else if(op==='createTask'){
    const f=parent(data.features,'feature_id',p.feature_id);
@@ -605,7 +608,7 @@ async function removeMember(id,name){
  if(!isPM())return;
  const assigned=data.tasks.filter(t=>t.project_id===activeProject&&String(t.assignee_member_id)===String(id));
  if(assigned.length){alert('Reassign '+assigned.length+' task(s) before removing '+name+'.');return;}
- if(!confirm('Remove '+name+' from this project? They will lose access, but their historic work logs and member record will be preserved.'))return;
+ if(!await gpConfirm('Remove '+name+' from this project? They will lose access, but their historic work logs and member record will be preserved.',{danger:true,confirmLabel:'Remove member'}))return;
  try{await rpc('removeMember',{project_id:activeProject,member_id:id});closeModal();await refresh()}catch(err){alert(err.message)}
 }
 
@@ -632,7 +635,7 @@ function editLog(taskId,logId){
 async function deleteLog(taskId,logId,onDone=null){
  const task=find(data.tasks,taskId,'task_id'),log=find(data.logs,logId,'log_id');
  if(!task||!canUpdate(task)||!log||String(log.task_id)!==String(taskId))return;
- if(!confirm('Delete this '+formatHours(log.hours)+' time entry? This cannot be undone.'))return;
+ if(!await gpConfirm('Delete this '+formatHours(log.hours)+' time entry? This cannot be undone.',{danger:true,confirmLabel:'Delete time entry'}))return;
  try{await rpc('deleteLog',{task_id:taskId,log_id:logId});await refresh();if(onDone)onDone();else details(taskId)}catch(err){alert(err.message)}
 }
 function taskForm(t,preferredFeatureId=''){const fs=projectFeatures(),who=projectMembers(),f=fs.find(x=>String(x.feature_id)===String(t?.feature_id||preferredFeatureId));modal(t?'Edit task':'New task',`<form id="actionForm"><div class="fields">${field('title','Task title',t?.title||'','text',true)}<label class="wide">Description<textarea name="description">${e(t?.description||'')}</textarea></label>${select('feature_id','Feature',opts(fs,'feature_id'),f?.feature_id||fs[0]?.feature_id)}${select('assignee_member_id','Assigned to',opts(who,'member_id','display_name'),t?.assignee_member_id||who[0]?.member_id)}${select('status','Status',ST.map(x=>({value:x,label:x})),t?.status||'To do')}${select('priority','Priority',PRI.map(x=>({value:x,label:x})),t?.priority||'Normal')}${field('estimated_hours','Estimated hours',t?.estimated_hours||0,'number')}${field('remaining_hours','Remaining hours',t?.remaining_hours||0,'number')}</div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button>${t?'<button class="button danger" type="button" id="deleteTask">Delete task</button>':''}<button class="button main" type="submit">Save task</button></div></form>`);$('#cancel').onclick=closeModal;if(t)$('#deleteTask').onclick=()=>deleteItem('task',t.task_id,t.title);$('#actionForm').onsubmit=async ev=>{ev.preventDefault();const p=Object.fromEntries(new FormData(ev.currentTarget).entries());p.project_id=activeProject;if(t)p.task_id=t.task_id;await submit(t?'editTask':'createTask',p)}}
@@ -652,7 +655,7 @@ function logHours(id){
 }
 function quickCreate(kind,preferredMilestoneId=''){const milestones=data.milestones.filter(x=>x.project_id===activeProject);let body='',op='';if(kind==='milestone'){op='createMilestone';body=field('name','Milestone name','','text',true)+'<label class="wide">Description<textarea name="description"></textarea></label>'}else if(kind==='feature'){op='createFeature';body=field('name','Feature name','','text',true)+select('milestone_id','Milestone',opts(milestones,'milestone_id'),preferredMilestoneId||milestones[0]?.milestone_id)}else if(kind==='member'){op='addMember';body=field('display_name','Member name','','text',true)+field('google_email','Email (optional)','','email',true)+field('discipline','Discipline / role description')}else if(kind==='project'){op='createProject';body=field('name','Project name','','text',true)+'<label class="wide">Description<textarea name="description"></textarea></label>'}modal('Create '+kind,`<form id="actionForm"><div class="fields">${body}</div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button class="button main">Create</button></div></form>`);$('#cancel').onclick=closeModal;$('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit(op,{project_id:activeProject,...Object.fromEntries(new FormData(ev.currentTarget).entries())})}}
 async function submit(op,payload){const btn=$('#actionForm button[type="submit"],#actionForm button:not([type])');if(btn)btn.disabled=true;try{await rpc(op,payload);closeModal();await refresh()}catch(err){alert(err.message);if(btn)btn.disabled=false}}
-function deleteItem(kind,id,name){
+async function deleteItem(kind,id,name){
  if(!isPM())return;
  if(kind==='milestone'){
   const milestone=data.milestones.find(m=>String(m.milestone_id)===String(id)&&m.project_id===activeProject);
@@ -663,7 +666,7 @@ function deleteItem(kind,id,name){
   const taskIds=new Set(tasks.map(t=>String(t.task_id)));
   const logs=data.logs.filter(l=>taskIds.has(String(l.task_id)));
   const message=`Permanently delete milestone “${name}” and ALL of its contents?\n\nThis deletes:\n• ${features.length} feature(s)\n• ${tasks.length} task(s)\n• ${logs.length} time log(s)\n\nThis cannot be undone. Other milestones will not be affected.`;
-  if(!confirm(message))return;
+  if(!await gpConfirm(message,{danger:true,confirmLabel:'Delete milestone'}))return;
   rpc('deleteMilestone',{milestone_id:id,project_id:activeProject}).then(async()=>{
    if(activeView==='m:'+id)activeView='all';
    collapsedMilestones.delete(String(id));
@@ -671,11 +674,11 @@ function deleteItem(kind,id,name){
   }).catch(err=>alert(err.message));
   return;
  }
- const descendants=kind==='feature'?data.tasks.filter(t=>t.feature_id===id).length:0;
- if(descendants){alert('This feature still has '+descendants+' task(s). Move or delete them first.');return;}
- const logs=kind==='task'?data.logs.filter(l=>l.task_id===id).length:0;
- const message=`Permanently delete ${kind} “${name}”?`+(logs?` This also permanently deletes ${logs} time log(s).`:'')+' This cannot be undone.';
- if(!confirm(message))return;
+ const tasksInFeature=kind==='feature'?data.tasks.filter(t=>t.project_id===activeProject&&String(t.feature_id)===String(id)):[];
+ const taskIds=new Set(tasksInFeature.map(t=>String(t.task_id)));
+ const logs=kind==='feature'?data.logs.filter(l=>taskIds.has(String(l.task_id))).length:kind==='task'?data.logs.filter(l=>String(l.task_id)===String(id)).length:0;
+ const message=kind==='feature'? `Permanently delete feature “${name}” and everything inside it?\n\nThis deletes:\n• ${tasksInFeature.length} task(s)\n• ${logs} time log(s)\n\nThis cannot be undone. Other features will not be affected.`:`Permanently delete ${kind} “${name}”?\n\n${logs?'This also permanently deletes '+logs+' time log(s).\n\n':''}This cannot be undone.`;
+ if(!await gpConfirm(message,{danger:true,confirmLabel:'Delete '+kind}))return;
  rpc('delete'+kind[0].toUpperCase()+kind.slice(1),{[kind+'_id']:id}).then(async()=>{closeModal();await refresh()}).catch(err=>alert(err.message));
 }
 $('#inviteMember').onclick=ev=>{ev.preventDefault();ev.stopPropagation();quickCreate('member')};
@@ -690,13 +693,13 @@ function downloadBackup(){
 $('#export').onclick=downloadBackup;
 
 /* Milestone imports are additive. No existing projects, task logs or features are replaced. */
-function milestoneFromImport(source){
+async function milestoneFromImport(source){
  if(Array.isArray(source.projects)&&Array.isArray(source.milestones)){
   const list=source.milestones;
   if(!list.length)throw Error('This backup contains no milestones');
   let chosen=list[0];
   if(list.length>1){
-   const answer=prompt('Choose a milestone number to import:\n'+list.map((m,i)=>`${i+1}. ${m.name||m.title||'Untitled'}`).join('\n'),'1');
+   const answer=await gpPrompt('Choose a milestone number to import:\n'+list.map((m,i)=>`${i+1}. ${m.name||m.title||'Untitled'}`).join('\n'),'1');
    if(answer===null)return null;
    const index=Number(answer)-1;
    if(!Number.isInteger(index)||index<0||index>=list.length)throw Error('Please enter a valid milestone number');
@@ -715,8 +718,8 @@ function milestoneFromImport(source){
  }
  throw Error('Expected a milestone file or a full GamePlan backup');
 }
-function importOneMilestone(source){
- const parsed=milestoneFromImport(source);
+async function importOneMilestone(source){
+ const parsed=await milestoneFromImport(source);
  if(!parsed)return false;
  const {milestone,features,tasks,logs,members}=parsed;
  if(!Array.isArray(features)||!Array.isArray(tasks)||!Array.isArray(logs))throw Error('Malformed milestone contents');
@@ -734,7 +737,7 @@ function importOneMilestone(source){
  const loggedIds=new Set(taskKeys);
  if(logs.some(l=>!loggedIds.has(String(l.task_id))))throw Error('A time log refers to a missing task');
  const message=`Add milestone “${name}” with ${features.length} features and ${tasks.length} tasks to the current project? Existing board data will be kept.`;
- if(!confirm(message))return false;
+ if(!await gpConfirm(message,{confirmLabel:'Import milestone'}))return false;
  const next=structuredClone(data),newMilestoneId=uid();
  const memberById=id=>members.find(m=>String(m.member_id||m.id)===String(id))?.display_name;
  const memberByName=name=>next.members.find(m=>m.display_name.toLowerCase()===String(name).toLowerCase());
@@ -773,7 +776,7 @@ function importOneMilestone(source){
 $('#importMilestone').onclick=()=>$('#milestoneFileInput').click();
 $('#milestoneFileInput').onchange=async ev=>{
  const file=ev.target.files?.[0];if(!file)return;
- try{const source=JSON.parse(await file.text());if(importOneMilestone(source))setNotice('Milestone imported into this project · All your existing work was preserved.')}
+ try{const source=JSON.parse(await file.text());if(await importOneMilestone(source))setNotice('Milestone imported into this project · All your existing work was preserved.')}
  catch(err){alert('Could not import milestone: '+err.message)}
  finally{ev.target.value=''}
 };
@@ -784,7 +787,7 @@ $('#fileInput').onchange=async ev=>{
  try{
   const incoming=JSON.parse(await file.text());
   const next=Array.isArray(incoming.projects)?normalizeLocal(incoming):migrateLegacy(incoming);
-  if(!confirm('Replace all local projects and tasks with this backup? Export your current board first.'))return;
+  if(!await gpConfirm('Replace all local projects and tasks with this backup? Export your current board first.',{danger:true,confirmLabel:'Replace board'}))return;
   data=next;persist();activeProject='';saveProject();await refresh();
  }catch(err){alert('Import failed: '+err.message)}
  finally{ev.target.value=''}
