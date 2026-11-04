@@ -240,6 +240,16 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 .gp-color-add:hover{background:#e7f2eb;border-color:#478d78}
 .gp-color-add input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;padding:0;border:0}
 .gp-color-preview{display:flex;align-items:center;gap:12px;margin:14px 0 4px}
+
+/* Embedded custom tag picker; draft colors only become palette entries on confirmation. */
+.gp-inline-picker[hidden]{display:none}
+.gp-inline-picker{margin:8px 0 12px;padding:13px;max-width:340px;border:1px solid #dbe6df;border-radius:12px;background:#f9fbfa;box-shadow:0 3px 12px #17372a0b}
+.gp-picker-sv{position:relative;height:155px;border-radius:8px;background-image:linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,transparent);cursor:crosshair;touch-action:none;outline-offset:3px}
+.gp-picker-sv-cursor{position:absolute;width:15px;height:15px;transform:translate(-50%,-50%);border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px #0008,0 1px 4px #0005;pointer-events:none}
+.gp-picker-hue-row{display:flex;align-items:center;gap:12px;margin:15px 0}
+.gp-picker-hue-row input[type=range]{flex:1;min-width:0;accent-color:#548d85;background:linear-gradient(to right,red,#ff0,#0f0,#0ff,#00f,#f0f,red);height:14px;padding:0;border:0;cursor:pointer}
+.gp-picker-swatch{flex:0 0 35px;height:35px;border-radius:8px;border:1px solid #0002}
+.gp-picker-actions{display:flex;justify-content:flex-end;gap:8px}
 </style></head>
 <body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand">✳ Game<span>Plan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav><div class="sidebar-foot">Local only · your board is saved in this browser.</div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.4</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice">Your changes are saved instantly in this browser. Export a backup occasionally.</div>
