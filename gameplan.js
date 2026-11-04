@@ -55,10 +55,15 @@ function gpAddShell(){
  sidebar.querySelector('.sidebar-brand').innerHTML='<span class="gp-long">✳ Game<span>Plan</span></span><span class="gp-short">✳</span>';
  const nav=document.createElement('nav');nav.id='gpPrimary';nav.className='side-nav';
  nav.innerHTML=[['board','▦','Board'],['analytics','▥','Analytics'],['templates','▤','Templates'],['settings','⚙','Project Settings']].map(([v,icon,label])=>'<button class="gp-nav" data-page="'+v+'" title="'+label+'"><span class="gp-icon">'+icon+'</span><span class="gp-text">'+label+'</span></button>').join('');
- sidebar.querySelector('.sidebar-brand').after(nav);
+ const sidebarToggle=document.createElement('button');
+ sidebarToggle.id='gpSidebarToggle';sidebarToggle.type='button';sidebarToggle.className='gp-sidebar-toggle';
+ sidebarToggle.innerHTML='<span aria-hidden="true">☰</span><span class="gp-toggle-text">Collapse sidebar</span>';
+ sidebarToggle.setAttribute('aria-label','Collapse sidebar');
+ sidebar.querySelector('.sidebar-brand').after(sidebarToggle,nav);
  const boardNav=document.createElement('div');boardNav.id='gpBoardNav';
  const label=sidebar.querySelector('.side-label');const milestone=sidebar.querySelector('#milestoneNav');
  label.before(boardNav);boardNav.append(label,sidebar.querySelector('#viewNav'),milestone.previousElementSibling,milestone);
+ nav.insertBefore(boardNav,nav.children[1]);
  const main=$('#mainApp');const board=document.createElement('div');board.id='gpBoardView';while(main.firstChild)board.append(main.firstChild);main.append(board);
  const extra=document.createElement('section');extra.id='gpExtra';extra.className='card';main.append(extra);
  const selectButton=document.createElement('button');selectButton.id='gpSelectTasks';selectButton.className='button';selectButton.textContent='☑ Select tasks';$('#pmActions').before(selectButton);
@@ -66,12 +71,20 @@ function gpAddShell(){
  $('#gpPrimary').onclick=ev=>{const b=ev.target.closest('[data-page]');if(b)gpNavigate(b.dataset.page)};
  $('#gpSelectTasks').onclick=()=>{gpSelecting=!gpSelecting;gpSelected.clear();renderMilestones();gpSelectionBar()};
  $('#milestoneList').addEventListener('change',ev=>{const el=ev.target.closest('[data-gp-select]');if(!el)return;el.checked?gpSelected.add(el.dataset.gpSelect):gpSelected.delete(el.dataset.gpSelect);gpSelectionBar()});
- $('#menuToggle').onclick=()=>{
-  if(innerWidth<=680){const isOpen=$('#sidebar').classList.toggle('visible');$('#menuToggle').setAttribute('aria-expanded',String(isOpen));return}
-  const collapsed=document.querySelector('.app').classList.toggle('gp-collapsed');$('#menuToggle').setAttribute('aria-expanded',String(!collapsed));
+ const setSidebarState=collapsed=>{
+  document.querySelector('.app').classList.toggle('gp-collapsed',collapsed);
+  sidebarToggle.setAttribute('aria-expanded',String(!collapsed));
+  sidebarToggle.setAttribute('aria-label',collapsed?'Expand sidebar':'Collapse sidebar');
+  sidebarToggle.querySelector('.gp-toggle-text').textContent=collapsed?'Expand sidebar':'Collapse sidebar';
+  $('#menuToggle').setAttribute('aria-expanded',String(!collapsed));
   try{localStorage.setItem('gp-collapsed',collapsed?'1':'0')}catch{}
  };
- try{if(localStorage.getItem('gp-collapsed')==='1'){document.querySelector('.app').classList.add('gp-collapsed');$('#menuToggle').setAttribute('aria-expanded','false')}}catch{}
+ sidebarToggle.onclick=()=>{
+  if(innerWidth<=680){sidebar.classList.remove('visible');return}
+  setSidebarState(!document.querySelector('.app').classList.contains('gp-collapsed'));
+ };
+ $('#menuToggle').onclick=()=>{sidebar.classList.toggle('visible');$('#menuToggle').setAttribute('aria-expanded',String(sidebar.classList.contains('visible')))};
+ try{if(localStorage.getItem('gp-collapsed')==='1')setSidebarState(true)}catch{}
 }
 function gpSelectionBar(){
  const bar=$('#gpSelectionBar');bar.hidden=!gpSelecting;
