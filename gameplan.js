@@ -24,7 +24,7 @@ function gpDialog(message,{title='Please confirm',confirmLabel='Continue',danger
  });
 }
 function gpConfirm(message,options={}){return gpDialog(message,options)}
-function gpPrompt(message,initialValue=''){return gpDialog(message,{title:message.split('\\n')[0].replace(/:$/,''),confirmLabel:'Continue',input:true,initialValue})}
+function gpPrompt(message,initialValue=''){return gpDialog(message,{title:message.split('\n')[0].replace(/:$/,''),confirmLabel:'Continue',input:true,initialValue})}
 
 const GP_COLORS=[{name:'Blue',hex:'#729fd6'},{name:'Pink',hex:'#db8bac'},{name:'Purple',hex:'#ac91d6'},{name:'Yellow',hex:'#d8b56b'},{name:'Green',hex:'#68a992'},{name:'Orange',hex:'#e18b71'},{name:'Gray',hex:'#98aab6'}];
 let gpPage='board',gpSelecting=false;
