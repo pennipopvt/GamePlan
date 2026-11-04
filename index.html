@@ -88,6 +88,20 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 .task-entry .actions .icon-edit{flex:0 0 34px}
 @media(max-width:680px){.task-entry .actions{justify-content:flex-end}}
 
+/* Feature summaries inherit status from their tasks. */
+.feature-section{border-left:4px solid #b5c5c1}
+.feature-section.status-todo{border-left-color:#b5c5c1}
+.feature-section.status-progress{border-left-color:#639bd7}
+.feature-section.status-blocked{border-left-color:#d88d76}
+.feature-section.status-done{border-left-color:#5ba68c}
+.feature-section.status-todo>.feature-summary{background:#f7faf8}
+.feature-section.status-progress>.feature-summary{background:#edf5fd}
+.feature-section.status-blocked>.feature-summary{background:#fcf1ec}
+.feature-section.status-done>.feature-summary{background:#edf8f0}
+.feature-status-label{font-weight:700}
+.feature-section.status-progress .feature-status-label{color:#2a659c}
+.feature-section.status-blocked .feature-status-label{color:#9d513f}
+.feature-section.status-done .feature-status-label{color:#2c7656}
 /* Status colors: muted task row tint + matching status dropdown */
 .task-entry{border-left:4px solid transparent;transition:background-color .12s}
 .task-entry.status-todo{border-left-color:#b5c5c1;background:#fafcfb}
@@ -104,7 +118,7 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 .task-entry .status-select.status-blocked{color:#9d513f;border-color:#ebc3b8;background:#fff0e9}
 .task-entry .status-select.status-done{color:#2c7656;border-color:#b7dcc8;background:#e7f5ed}
 </style></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand">✳ Little <span>Dock</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav><div class="sidebar-foot">Local only · your board is saved in this browser.</div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Project <span>Planner</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.1</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand">✳ Little <span>Dock</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav><div class="sidebar-foot">Local only · your board is saved in this browser.</div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Project <span>Planner</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.2</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice">Your changes are saved instantly in this browser. Export a backup occasionally.</div>
 <section id="mainApp" hidden><div class="head"><div><h1 id="pageHeading" style="margin:0 0 8px;font:700 27px Georgia,serif">Project overview</h1><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter"><option value="">All assignees</option></select><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div class="grid"><div class="card stat"><span class="muted">Total tasks</span><b id="total">0</b></div><div class="card stat"><span class="muted">Completed</span><b id="completed">0</b></div><div class="card stat"><span class="muted">Time logged</span><b id="hours">0h</b></div></div>
@@ -113,7 +127,7 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026-11-04-minute-logging-v1';
+const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026-11-04-edit-logs-feature-status-v2';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=['Ethan','Jerry','Jenny'];
@@ -168,6 +182,16 @@ const isPM=()=>true;
 const canUpdate=t=>isPM()||String(t.assignee_member_id)===String(data.me.member_id);
 const taskHours=t=>data.logs.filter(x=>x.task_id===t.task_id).reduce((n,x)=>n+Number(x.hours||0),0);
 const featureHours=id=>data.tasks.filter(t=>String(t.feature_id)===String(id)).reduce((sum,t)=>sum+taskHours(t),0);
+// Feature status is derived from ALL of its tasks, never from a manual field.
+// Blocked takes precedence unless every task is done. Partial completion counts as in progress.
+const featureStatus=id=>{
+ const tasks=data.tasks.filter(t=>String(t.feature_id)===String(id));
+ if(!tasks.length||tasks.every(t=>t.status==='To do'))return 'To do';
+ if(tasks.every(t=>t.status==='Done'))return 'Done';
+ if(tasks.some(t=>t.status==='Blocked'))return 'Blocked';
+ return 'In progress';
+};
+const statusClass=status=>({'To do':'status-todo','In progress':'status-progress','Blocked':'status-blocked','Done':'status-done'})[status]||'status-todo';
 function setNotice(msg,bad=false){$('#notice').innerHTML=msg;$('#notice').className='card banner'+(bad?' error':'')}
 
 function rpc(op,p={}){
@@ -200,7 +224,7 @@ function rpc(op,p={}){
    data.features.push({feature_id:uid(),project_id:projectId,milestone_id:m.milestone_id,name:required(p.name,'Feature name'),description:p.description||'',status:'To do',estimated_hours:0});
   }else if(op==='editFeature'){
    const f=parent(data.features,'feature_id',p.feature_id),m=parent(data.milestones,'milestone_id',p.milestone_id);
-   Object.assign(f,{name:required(p.name,'Feature name'),description:p.description||'',milestone_id:m.milestone_id,status:p.status,estimated_hours:hours(p.estimated_hours)});
+   Object.assign(f,{name:required(p.name,'Feature name'),description:p.description||'',milestone_id:m.milestone_id});
   }else if(op==='deleteFeature'){
    const f=parent(data.features,'feature_id',p.feature_id);
    if(data.tasks.some(t=>t.feature_id===f.feature_id))throw Error('Move or delete its tasks first');
@@ -222,6 +246,18 @@ function rpc(op,p={}){
    const minutes=Number(p.minutes);if(!Number.isSafeInteger(minutes)||minutes<=0)throw Error('Enter a positive whole number of minutes');
    const h=minutes/60;
    data.logs.push({log_id:uid(),task_id:task.task_id,member_id:task.assignee_member_id||'penni',hours:h,work_date:p.work_date||new Date().toISOString().slice(0,10),note:p.note||'',created_at:new Date().toISOString()});
+  }else if(op==='editLog'){
+   if(!task)throw Error('Task not found');
+   const log=get(data.logs,'log_id',p.log_id);
+   if(!log || String(log.task_id)!==String(task.task_id))throw Error('Time entry not found');
+   const minutes=Number(p.minutes);
+   if(!Number.isSafeInteger(minutes)||minutes<=0)throw Error('Enter a positive whole number of minutes');
+   Object.assign(log,{hours:minutes/60,work_date:p.work_date||log.work_date,note:p.note||''});
+  }else if(op==='deleteLog'){
+   if(!task)throw Error('Task not found');
+   const log=get(data.logs,'log_id',p.log_id);
+   if(!log || String(log.task_id)!==String(task.task_id))throw Error('Time entry not found');
+   data.logs=data.logs.filter(x=>x!==log);
   }else if(op==='addMember'){
    const name=required(p.display_name,'Member name'),email=(p.google_email||'').trim().toLowerCase();
    let m=data.members.find(x=>x.display_name.toLowerCase()===name.toLowerCase());
@@ -322,8 +358,8 @@ function renderMilestones(){
   return `<details class="milestone-section" data-ms="${e(m.milestone_id)}" ${open?'open':''}><summary class="milestone-summary"><span class="chevron">▸</span><div class="title-stack"><strong>${e(m.name)}</strong><div class="sub">${e(m.description||'')}${m.target_date?' · Target '+e(m.target_date):''}</div><div class="progress-line"><span style="width:${percent}%"></span></div></div><div class="milestone-tools"><span class="tag">${allForMilestone.filter(t=>t.status==='Done').length}/${allForMilestone.length} done</span><button class="context-add" type="button" data-add-feature="${e(m.milestone_id)}" title="Add a feature to this milestone">+ Feature</button><button class="icon-edit" type="button" data-milestone="${e(m.milestone_id)}" aria-label="Edit milestone: ${e(m.name)}" title="Edit milestone"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></summary>${fs.map(f=>{
    const tasks=shown.filter(t=>t.feature_id===f.feature_id);
    if(isFiltered&&!tasks.length)return '';
-   const all=project.filter(t=>t.feature_id===f.feature_id),expanded=!collapsedFeatures.has(String(f.feature_id));
-   return `<details class="feature-section" data-feat="${e(f.feature_id)}" ${expanded?'open':''}><summary class="feature-summary"><span class="chevron">▸</span><div class="title-stack"><strong>${e(f.name)} <span class="feature-hours" title="Total logged time across this feature">${nice(featureHours(f.feature_id))} hrs</span></strong><div class="sub">${all.filter(t=>t.status==='Done').length}/${all.length} tasks complete</div></div><div class="feature-heading-actions"><button class="context-add" type="button" data-add-task="${e(f.feature_id)}" title="Add a task to this feature">+ Task</button><button class="icon-edit" type="button" data-feature="${e(f.feature_id)}" aria-label="Edit feature: ${e(f.name)}" title="Edit feature"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></summary>${tasks.map(taskRow).join('')||'<div class="empty-hierarchy">No tasks here yet.</div>'}</details>`;
+   const all=project.filter(t=>t.feature_id===f.feature_id),expanded=!collapsedFeatures.has(String(f.feature_id)),derivedStatus=featureStatus(f.feature_id);
+   return `<details class="feature-section ${statusClass(derivedStatus)}" data-feat="${e(f.feature_id)}" ${expanded?'open':''}><summary class="feature-summary"><span class="chevron">▸</span><div class="title-stack"><strong>${e(f.name)} <span class="feature-hours" title="Total logged time across this feature">${formatHours(featureHours(f.feature_id))}</span></strong><div class="sub">${all.filter(t=>t.status==='Done').length}/${all.length} tasks complete · <span class="feature-status-label">${e(derivedStatus)}</span></div></div><div class="feature-heading-actions"><button class="context-add" type="button" data-add-task="${e(f.feature_id)}" title="Add a task to this feature">+ Task</button><button class="icon-edit" type="button" data-feature="${e(f.feature_id)}" aria-label="Edit feature: ${e(f.name)}" title="Edit feature"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></summary>${tasks.map(taskRow).join('')||'<div class="empty-hierarchy">No tasks here yet.</div>'}</details>`;
   }).join('')||'<div class="empty-hierarchy">No features here yet.</div>'}</details>`;
  }).join('')||'<div class="empty-hierarchy">Nothing matches this view. Try another filter, or create a milestone and feature.</div>';
  const root=$('#milestoneList');
@@ -360,7 +396,7 @@ function editFeature(id){
   if(!isPM())return;
   const f=find(data.features,id,'feature_id');if(!f)return;
   const milestones=data.milestones.filter(x=>x.project_id===activeProject);
-  modal('Edit feature',`<form id="actionForm"><div class="fields">${field('name','Feature name',f.name,'text',true)}<label class="wide">Description<textarea name="description">${e(f.description||'')}</textarea></label>${select('milestone_id','Milestone',milestones.map(x=>({value:x.milestone_id,label:x.name})),f.milestone_id)}${select('status','Status',ST.map(x=>({value:x,label:x})),f.status)}<div class="wide sub">Total time logged on this feature: <strong>${formatHours(featureHours(f.feature_id))}</strong>. This is calculated from its tasks.</div></div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="button" class="button danger" id="deleteFeature">Delete feature</button><button type="submit" class="button main">Save feature</button></div></form>`);
+  modal('Edit feature',`<form id="actionForm"><div class="fields">${field('name','Feature name',f.name,'text',true)}<label class="wide">Description<textarea name="description">${e(f.description||'')}</textarea></label>${select('milestone_id','Milestone',milestones.map(x=>({value:x.milestone_id,label:x.name})),f.milestone_id)}<div class="wide sub">Feature status: <strong>${featureStatus(f.feature_id)}</strong> (calculated automatically from tasks).</div><div class="wide sub">Total time logged on this feature: <strong>${formatHours(featureHours(f.feature_id))}</strong>. This is calculated from its tasks.</div></div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="button" class="button danger" id="deleteFeature">Delete feature</button><button type="submit" class="button main">Save feature</button></div></form>`);
   $('#cancel').onclick=closeModal;
   $('#deleteFeature').onclick=()=>deleteItem('feature',id,f.name);
   $('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit('editFeature',{feature_id:id,...Object.fromEntries(new FormData(ev.currentTarget).entries())})};
@@ -395,7 +431,32 @@ async function removeMember(id,name){
  try{await rpc('removeMember',{project_id:activeProject,member_id:id});closeModal();await refresh()}catch(err){alert(err.message)}
 }
 
-function details(id){const t=find(data.tasks,id,'task_id');if(!t)return;const f=feature(t.feature_id),m=milestone(f);const logs=data.logs.filter(x=>x.task_id===id);modal(t.title,`<div class="sub">${e(m?.name||'No milestone')} / ${e(f?.name||'No feature')}</div><p class="desc">${e(t.description||'No description yet.')}</p><p><b>Assigned:</b> ${e(member(t.assignee_member_id))} · <b>Status:</b> ${e(t.status)} · <b>Remaining:</b> ${formatHours(t.remaining_hours)}</p><h3>Time entries</h3>${logs.length?logs.map(l=>`<div class="note">${e(member(l.member_id))} · ${e(l.work_date)} · <b>${formatHours(l.hours)}</b><div class="sub">${e(l.note)}</div></div>`).join(''):'<p class="muted">No work logged yet.</p>'}<div class="controls">${canUpdate(t)?'<button class="button main" id="detailLog">Log time</button>':''}${isPM()?'<button class="button" id="detailEdit">Edit</button>':''}</div>`);if($('#detailLog'))$('#detailLog').onclick=()=>logHours(id);if($('#detailEdit'))$('#detailEdit').onclick=()=>editTask(id)}
+function details(id){
+ const t=find(data.tasks,id,'task_id');if(!t)return;
+ const f=feature(t.feature_id),m=milestone(f),logs=data.logs.filter(x=>String(x.task_id)===String(id));
+ modal(t.title,`<div class="sub">${e(m?.name||'No milestone')} / ${e(f?.name||'No feature')}</div><p class="desc">${e(t.description||'No description yet.')}</p><p><b>Assigned:</b> ${e(member(t.assignee_member_id))} · <b>Status:</b> ${e(t.status)} · <b>Remaining:</b> ${formatHours(t.remaining_hours)}</p><h3>Time entries</h3>${logs.length?logs.map(l=>`<div class="note"><div class="head"><div>${e(member(l.member_id))} · ${e(l.work_date)} · <b>${formatHours(l.hours)}</b></div>${canUpdate(t)?`<div class="actions"><button class="button" type="button" data-edit-log="${e(l.log_id)}">Edit</button><button class="button danger" type="button" data-delete-log="${e(l.log_id)}">Delete</button></div>`:''}</div><div class="sub">${e(l.note)}</div></div>`).join(''):'<p class="muted">No work logged yet.</p>'}<div class="controls">${canUpdate(t)?'<button class="button main" id="detailLog">Log time</button>':''}${isPM()?'<button class="button" id="detailEdit">Edit task</button>':''}</div>`);
+ if($('#detailLog'))$('#detailLog').onclick=()=>logHours(id);
+ if($('#detailEdit'))$('#detailEdit').onclick=()=>editTask(id);
+ $('#modalBody').onclick=ev=>{
+  const edit=ev.target.closest('[data-edit-log]'),del=ev.target.closest('[data-delete-log]');
+  if(edit)editLog(id,edit.dataset.editLog);
+  if(del)deleteLog(id,del.dataset.deleteLog);
+ };
+}
+function editLog(taskId,logId){
+ const task=find(data.tasks,taskId,'task_id'),log=find(data.logs,logId,'log_id');
+ if(!task||!canUpdate(task)||!log||String(log.task_id)!==String(taskId))return;
+ const minutes=Math.round(Number(log.hours||0)*60);
+ modal('Edit time · '+task.title,`<form id="actionForm"><div class="fields"><label>Minutes worked<input name="minutes" type="number" min="1" step="1" value="${minutes}" required></label>${field('work_date','Work date',log.work_date||'','date')}<label class="wide">Notes<textarea name="note">${e(log.note||'')}</textarea></label></div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="submit" class="button main">Save time</button></div></form>`);
+ $('#cancel').onclick=()=>details(taskId);
+ $('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit('editLog',{task_id:taskId,log_id:logId,...Object.fromEntries(new FormData(ev.currentTarget).entries())})};
+}
+async function deleteLog(taskId,logId){
+ const task=find(data.tasks,taskId,'task_id'),log=find(data.logs,logId,'log_id');
+ if(!task||!canUpdate(task)||!log||String(log.task_id)!==String(taskId))return;
+ if(!confirm('Delete this '+formatHours(log.hours)+' time entry? This cannot be undone.'))return;
+ try{await rpc('deleteLog',{task_id:taskId,log_id:logId});await refresh();details(taskId)}catch(err){alert(err.message)}
+}
 function taskForm(t,preferredFeatureId=''){const fs=projectFeatures(),who=projectMembers(),f=fs.find(x=>String(x.feature_id)===String(t?.feature_id||preferredFeatureId));modal(t?'Edit task':'New task',`<form id="actionForm"><div class="fields">${field('title','Task title',t?.title||'','text',true)}<label class="wide">Description<textarea name="description">${e(t?.description||'')}</textarea></label>${select('feature_id','Feature',opts(fs,'feature_id'),f?.feature_id||fs[0]?.feature_id)}${select('assignee_member_id','Assigned to',opts(who,'member_id','display_name'),t?.assignee_member_id||who[0]?.member_id)}${select('status','Status',ST.map(x=>({value:x,label:x})),t?.status||'To do')}${select('priority','Priority',PRI.map(x=>({value:x,label:x})),t?.priority||'Normal')}${field('estimated_hours','Estimated hours',t?.estimated_hours||0,'number')}${field('remaining_hours','Remaining hours',t?.remaining_hours||0,'number')}</div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button>${t?'<button class="button danger" type="button" id="deleteTask">Delete task</button>':''}<button class="button main" type="submit">Save task</button></div></form>`);$('#cancel').onclick=closeModal;if(t)$('#deleteTask').onclick=()=>deleteItem('task',t.task_id,t.title);$('#actionForm').onsubmit=async ev=>{ev.preventDefault();const p=Object.fromEntries(new FormData(ev.currentTarget).entries());p.project_id=activeProject;if(t)p.task_id=t.task_id;await submit(t?'editTask':'createTask',p)}}
 function editTask(id){const t=find(data.tasks,id,'task_id');if(t&&isPM())taskForm(t)}
 function logHours(id){const t=find(data.tasks,id,'task_id');if(!t||!canUpdate(t))return;modal('Log work · '+t.title,`<form id="actionForm"><div class="fields"><label>Minutes worked<input name="minutes" type="number" min="1" step="1" value="17" required></label>${field('work_date','Work date',new Date().toLocaleDateString('en-CA'),'date')}<label class="wide">Notes<textarea name="note" placeholder="What did you complete?"></textarea></label></div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="submit" class="button main">Add work log</button></div></form>`);$('#cancel').onclick=closeModal;$('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit('logHours',{task_id:id,...Object.fromEntries(new FormData(ev.currentTarget).entries())})}}
