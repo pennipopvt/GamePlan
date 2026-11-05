@@ -198,7 +198,7 @@ function gpAddShell(){
  const version=document.createElement('p');version.appendChild(versionLabel);
  siteFooter.appendChild(version);
  main.append(siteFooter);
- const selectButton=document.createElement('button');selectButton.id='gpSelectTasks';selectButton.className='button';selectButton.textContent='☑ Select tasks';$('#pmActions').before(selectButton);
+ const selectButton=document.createElement('button');selectButton.id='gpSelectTasks';selectButton.className='button';selectButton.textContent='Create Template';$('#pmActions').after(selectButton);
  const bar=document.createElement('div');bar.id='gpSelectionBar';bar.hidden=true;$('#milestoneList').before(bar);
  $('#gpPrimary').onclick=ev=>{const b=ev.target.closest('[data-page]');if(b)gpNavigate(b.dataset.page)};
  $('#gpSelectTasks').onclick=()=>{gpSelecting=!gpSelecting;gpSelected.clear();renderMilestones();gpSelectionBar()};
@@ -220,7 +220,7 @@ function gpAddShell(){
 }
 function gpSelectionBar(){
  const bar=$('#gpSelectionBar');bar.hidden=!gpSelecting;
- $('#gpSelectTasks').textContent=gpSelecting?'✕ Stop selecting':'☑ Select tasks';
+ $('#gpSelectTasks').textContent=gpSelecting?'Cancel Template':'Create Template';
  if(!gpSelecting)return;
  bar.innerHTML='<div class="gp-flex">'+gpSelected.size+' tasks selected <button class="button main" id="gpSaveSelection" '+(gpSelected.size?'':'disabled')+'>Save as Template</button></div>';
  $('#gpSaveSelection').onclick=gpSaveTemplate;
