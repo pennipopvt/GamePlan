@@ -558,7 +558,13 @@ controls();
 window.addEventListener('online',()=>{void initialize().then(()=>{schedule();refreshStatus()})});
 window.addEventListener('offline',refreshStatus);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){void initialize().then(schedule)}});
-setInterval(()=>{if(!document.hidden&&navigator.onLine)void initialize().then(schedule)},25000);
+// Realtime is the fast path. A lightweight refresh every 12 seconds is a
+// fallback when a browser silently loses its websocket connection.
+setInterval(()=>{
+ if(document.hidden||!navigator.onLine)return;
+ if(ready&&api&&user&&current()){void reconcile(String(activeProject));return}
+ void initialize().then(schedule);
+},12000);
 async function initialize(){
  if(!navigator.onLine){refreshStatus();return}
  try{
