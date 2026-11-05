@@ -472,7 +472,8 @@ function gpOpenProjectDialog(){
   gpSwitchProject(id);
  }));
  body.querySelector('#gpProjectCreate').onclick=()=>{closeModal();quickCreate('project')};
- body.querySelector('[aria-current="true"]')?.focus()||body.querySelector('[data-gp-project]')?.focus();
+ body.addEventListener('keydown',ev=>{if(ev.key==='Escape'){ev.preventDefault();closeModal();$('#gpProjectTrigger').focus()}});
+ (body.querySelector('[aria-current="true"]')||body.querySelector('[data-gp-project]'))?.focus();
 }
 
 function gpTeamPage(){
