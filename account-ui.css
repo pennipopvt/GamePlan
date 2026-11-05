@@ -142,3 +142,13 @@ body.gp-readonly #gpProjectTitle{pointer-events:none;opacity:.52}
 @media(prefers-reduced-motion:reduce){
  button,.button,.gp-nav,.gp-project-trigger,button.gp-auth-method{transition:none}
 }
+
+/* One-time, nonintrusive prompt for linking a second sign-in method. */
+.gp-account-nudge{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+ background:#fdf4fa;border:1px solid #efd3e5;border-radius:10px;
+ padding:10px 12px;margin-bottom:14px;color:#7d4f6f;font-size:12px;line-height:1.5}
+.gp-account-nudge>span{flex:1;min-width:230px}
+.gp-account-nudge .button{font-size:12px;white-space:nowrap}
+.gp-nudge-dismiss{border:0;background:transparent;cursor:pointer;font-size:19px;
+ color:#967b8b;padding:3px 7px}
+.gp-nudge-dismiss:hover{color:#a61976}
