@@ -185,19 +185,22 @@ async function reconcile(pid,{allowWrites=true}={}){
  if(isEditing())return;
  busy=true;refreshStatus();
  try{
-  const cloudId=links[pid],base=bases[pid]||{},before=projectRows(pid);
+  const cloudId=links[pid],base=bases[pid]||{};
   const visible=await api.listProjects();
   if(!visible.some(p=>p.id===cloudId))throw Error('Cloud project is not accessible. Local data is safe.');
   const remote=await remoteSnapshot(cloudId,pid);
   // First linked sync may not run until a baseline is saved by link/share flow.
   if(!Object.prototype.hasOwnProperty.call(bases,pid))throw Error('Project is not initialized for syncing. Reconnect from Account.');
-  const missing=Object.keys(base).filter(k=>base[k]&&!remote[k]&&before[k]);
+  // Re-read the local board after network I/O so edits saved during the
+  // remote fetch cannot be overwritten by an older pre-request snapshot.
+  const liveLocal=projectRows(pid);
+  const missing=Object.keys(base).filter(k=>base[k]&&!remote[k]&&liveLocal[k]);
   remoteMissingCount=missing.length;
   // Retain local rows missing remotely without re-uploading them automatically.
   // Other local edits should still be allowed to sync.
   const safeRemote={...remote};
   for(const k of missing)safeRemote[k]=base[k];
-  mergeRemote(pid,safeRemote,base,before);
+  mergeRemote(pid,safeRemote,base,liveLocal);
   persistBaseline(pid,safeRemote);
   const local=projectRows(pid),pending=changesSince(safeRemote,local);
   if(!allowWrites||!Object.keys(pending).length){
@@ -251,18 +254,21 @@ persist=function(){oldPersist();schedule()};
 const originalHistory=gpHistoryNavigate;
 gpHistoryNavigate=function(...args){const result=originalHistory(...args);schedule();return result};
 const oldSwitch=gpSwitchProject;
-gpSwitchProject=function(pid){oldSwitch(pid);watch();schedule()};
+gpSwitchProject=function(pid){oldSwitch(pid);void watch();schedule()};
+const previousCloseModal=closeModal;
+closeModal=function(...args){const value=previousCloseModal(...args);schedule();return value};
 async function watch(){
  const id=current();
- if(id===watched)return;
+ if(id===watched&&subscription)return;
  remoteMissingCount=0;lastSyncError=null;
- subscription?.();subscription=null;watched=id;
+ subscription?.();subscription=null;watched='';
  if(!api||!id)return;
  subscription=api.subscribeProject(id,()=>{
-  if(isEditing())return;
   clearTimeout(debounce);
+  // When the edit dialog is open, reconcile safely defers until close.
   debounce=setTimeout(()=>void reconcile(String(activeProject)),850);
  });
+ watched=id;
 }
 function downloadBackup(){
  const stamp=new Date().toISOString().slice(0,19).replaceAll(':','-');
