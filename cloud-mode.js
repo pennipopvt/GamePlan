@@ -63,6 +63,12 @@ function saveLater(){
  if(loading||!api||!currentProjectId)return;
  if(role==='viewer'){gpAlert('This project is read-only for your account.');void loadProject(currentProjectId);return}
  const projectId=currentProjectId;
+ // Persist display names inside project team rows; the base app keeps its
+ // roster separately, while the cloud schema stores project-scoped items.
+ for(const member of data.team||[]){
+  const profile=data.members.find(x=>String(x.member_id)===String(member.member_id));
+  if(profile)member.display_name=profile.display_name;
+ }
  const snapshot=existingSnapshot(projectId);
  const currentName=data.projects.find(p=>p.project_id===projectId)?.project_name||'Untitled';
  localVersion++;
@@ -94,7 +100,7 @@ function constructMembers(items,memberships){
  for(const m of memberships)ids.add(String(m.user_id));
  return [...ids].map(id=>({
   member_id:id,
-  display_name:id===me.id?(me.user_metadata?.full_name||me.user_metadata?.name||me.user_metadata?.preferred_username||me.email||'You'):memberLabel(id),
+  display_name:id===me.id?(me.user_metadata?.full_name||me.user_metadata?.name||me.user_metadata?.preferred_username||me.email||'You'):(items.team||[]).find(t=>String(t.member_id)===id)?.display_name||memberLabel(id),
   google_email:id===me.id?me.email||'':'',
   active:'Yes'
  }));
@@ -165,6 +171,13 @@ const previousRpc=rpc;
 rpc=async function(op,p={}){
  if(!api)return Promise.reject(Error('Cloud connection is unavailable'));
  if(role==='viewer')throw Error('You have view-only access to this project.');
+ if(op==='removeMember'&&knownMembers.some(m=>String(m.user_id)===String(p.member_id))){
+  if(role!=='owner')throw Error('Only project owners can remove a teammate’s cloud access.');
+  if(data.tasks.some(t=>t.project_id===currentProjectId&&String(t.assignee_member_id)===String(p.member_id)))throw Error('Reassign the member’s tasks before removing access.');
+  const {error}=await api.client.from('gp_members').delete().eq('project_id',currentProjectId).eq('user_id',p.member_id);
+  if(error)throw error;
+  knownMembers=knownMembers.filter(m=>String(m.user_id)!==String(p.member_id));
+ }
  if(op==='createProject'){
   await queue;
   const created=await api.createProject(p.name);
