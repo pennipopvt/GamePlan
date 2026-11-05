@@ -160,7 +160,7 @@ function gpAddShell(){
  const logo=sidebar.querySelector('.sidebar-brand');
  const topRow=document.createElement('div');topRow.id='gpSidebarTop';
  logo.before(topRow);topRow.append(sidebarToggle,logo);
- topRow.after(nav);
+ topRow.after(projectSwitcher,nav);
  const trigger=$('#gpProjectTrigger'),menu=$('#gpProjectMenu');
  const closeMenu=()=>{menu.hidden=true;trigger.setAttribute('aria-expanded','false')};
  trigger.onclick=()=>{const open=menu.hidden;menu.hidden=!open;trigger.setAttribute('aria-expanded',String(open));if(open)menu.querySelector('[aria-current="true"]')?.focus()};
