@@ -7,12 +7,13 @@
 'use strict';
 const $s=q=>document.querySelector(q);
 const CFG='gameplan-cloud-config-v1',LAST='gp-sync-backup-import-v1',PENDING_INVITE='gp-pending-link-invite';
-let LINKS='gp-sync-links-v1',BASE='gp-sync-baselines-v1',DELETED='gp-sync-deleted-v1';
+let LINKS='gp-sync-links-v1',BASE='gp-sync-baselines-v1',DELETED='gp-sync-deleted-v1',NAME_DIRTY='gp-sync-name-dirty-v1',NAME_KNOWN='gp-sync-name-known-v1';
 const KINDS=['milestones','features','tasks','logs','tags','templates','team','custom_tag_colors'];
 const IDS={milestones:'milestone_id',features:'feature_id',tasks:'task_id',logs:'log_id',tags:'tag_id',templates:'template_id',team:'member_id'};
 let api=null,user=null,links=read(LINKS,{}),bases=read(BASE,{}),busy=false,loop=null,subscription=null,watched='',ready=false,blocked=false,inviteAttempted=false;
 let lastSyncError=null,lastSyncAt=0,remoteMissingCount=0,deletedIntents=read(DELETED,{}),copyMessageTimer=null;
 let activatedUserId='',activating=null,cloudProjectList=[],teamByProject={},teamUpgradeNeeded=false;
+let nameDirty=read(NAME_DIRTY,{}),knownNames=read(NAME_KNOWN,{}),nameConflictBusy=false;
 const unique=(kind,obj)=>kind==='team'?'member:'+obj.member_id:kind==='custom_tag_colors'?'color:'+obj.color:String(obj[IDS[kind]]||'');
 const key=(kind,id)=>kind+'\u0000'+id;
 // PostgreSQL JSONB may reorder object keys without changing record values.
@@ -115,7 +116,7 @@ function pendingChanges(pid,base,local){
 }
 function counts(pid){
  const snap=projectRows(pid),base=bases[pid]||{};
- return Object.keys(pendingChanges(pid,base,snap)).length;
+ return Object.keys(pendingChanges(pid,base,snap)).length+(nameDirty[pid]?1:0);
 }
 function refreshStatus(){
  const pid=String(activeProject||''),linked=!!links[pid];
@@ -195,6 +196,8 @@ async function activateAccount(){
   const linksKey='gp-account-links-v1:'+id;
   const baseKey='gp-account-baselines-v1:'+id;
   const deletedKey='gp-account-deletes-v1:'+id;
+  const nameDirtyKey='gp-account-name-dirty-v1:'+id;
+  const knownNameKey='gp-account-name-known-v1:'+id;
   let saved=read(accountKey,null);
   let choseLegacy=false;
   if(!saved){
@@ -228,8 +231,9 @@ async function activateAccount(){
    }
   }
   LOCAL_KEY=accountKey;PROJECT_KEY=projectKey;
-  LINKS=linksKey;BASE=baseKey;DELETED=deletedKey;
+  LINKS=linksKey;BASE=baseKey;DELETED=deletedKey;NAME_DIRTY=nameDirtyKey;NAME_KNOWN=knownNameKey;
   links=read(LINKS,{});bases=read(BASE,{});deletedIntents=read(DELETED,{});
+  nameDirty=read(NAME_DIRTY,{});knownNames=read(NAME_KNOWN,{});
   data=loadLocal();
   const cloudCacheKey='gp-account-cloud-projects-v1:'+id;
   cloudProjectList=navigator.onLine
@@ -261,10 +265,56 @@ async function activateAccount(){
  })().finally(()=>{activating=null});
  return activating;
 }
+async function syncProjectName(pid,cloudProjects){
+ if(!user||!api||!links[String(pid)])return;
+ const cloud=cloudProjects.find(p=>p.id===links[String(pid)]);
+ const local=data.projects.find(p=>String(p.project_id)===String(pid));
+ if(!cloud||!local)return;
+ const owner=cloud.owner_id===user.id;
+ const desired=nameDirty[pid];
+ if(desired&&owner){
+  // Project title sync works even when no tasks have been changed.
+  if(cloud.name!==desired){
+   const changed=await api.renameProject(cloud.id,desired);
+   cloud.name=changed?.name||desired;
+  }
+  if(nameDirty[pid]===desired){delete nameDirty[pid];store(NAME_DIRTY,nameDirty)}
+  knownNames[pid]=cloud.name;store(NAME_KNOWN,knownNames);
+  return;
+ }
+ if(local.project_name===cloud.name){
+  if(nameDirty[pid]){delete nameDirty[pid];store(NAME_DIRTY,nameDirty)}
+  if(knownNames[pid]!==cloud.name){knownNames[pid]=cloud.name;store(NAME_KNOWN,knownNames)}
+  return;
+ }
+ if(owner&&!Object.prototype.hasOwnProperty.call(knownNames,pid)&&!nameConflictBusy){
+  // Older versions saved project renames only locally. Resolve once safely.
+  nameConflictBusy=true;
+  try{
+   const useLocal=await gpConfirm('Two project names were found.\n\nOn this device: “'+local.project_name+'”\nIn the cloud: “'+cloud.name+'”\n\nUse this device’s name for everyone? Choose Cancel to keep the cloud name.',{confirmLabel:'Use device name'});
+   if(useLocal){
+    nameDirty[pid]=local.project_name;store(NAME_DIRTY,nameDirty);
+    const renamed=await api.renameProject(cloud.id,local.project_name);
+    cloud.name=renamed?.name||local.project_name;
+    delete nameDirty[pid];store(NAME_DIRTY,nameDirty);
+   }else{
+    local.project_name=cloud.name;oldPersist();
+    if(String(activeProject)===String(pid))render();
+   }
+   knownNames[pid]=cloud.name;store(NAME_KNOWN,knownNames);
+  }finally{nameConflictBusy=false}
+  return;
+ }
+ if(nameDirty[pid]&&!owner){delete nameDirty[pid];store(NAME_DIRTY,nameDirty)}
+ local.project_name=cloud.name;knownNames[pid]=cloud.name;
+ store(NAME_KNOWN,knownNames);oldPersist();
+ if(String(activeProject)===String(pid))render();
+}
 async function refreshProjectList(){
  if(!api||!user)return;
  cloudProjectList=await api.listProjects();
  if(user)store('gp-account-cloud-projects-v1:'+user.id,cloudProjectList);
+ for(const pid of Object.keys(links))await syncProjectName(pid,cloudProjectList);
  // Import projects that this authenticated account can read and does not
  // already have locally. No existing project or local cache is replaced.
  for(const project of cloudProjectList){
@@ -337,6 +387,7 @@ async function createAuthenticatedProject(name){
  const pid='cloud-'+created.id,memberId=data.me.member_id;
  data.projects.push({project_id:pid,project_name:created.name,description:'',
   status:'Active',project_manager_member_id:memberId});
+ knownNames[pid]=created.name;store(NAME_KNOWN,knownNames);
  data.team.push({project_id:pid,member_id:memberId,project_role:'Owner',
   membership_status:'Active',discipline:'',linked_user_id:user.id,__gp_account_shadow:true});
  cloudProjectList.push(created);saveLink(pid,created.id);persistBaseline(pid,{});
@@ -416,6 +467,7 @@ async function reconcile(pid,{allowWrites=true}={}){
   const cloudId=links[pid],base=bases[pid]||{};
   const visible=await api.listProjects();
   if(!visible.some(p=>p.id===cloudId))throw Error('Cloud project is not accessible. Local data is safe.');
+  await syncProjectName(pid,visible);
   const remote=await remoteSnapshot(cloudId,pid);
   // First linked sync may not run until a baseline is saved by link/share flow.
   if(!Object.prototype.hasOwnProperty.call(bases,pid))throw Error('Project is not initialized for syncing. Reconnect from Account.');
@@ -510,13 +562,6 @@ async function reconcile(pid,{allowWrites=true}={}){
     delete deletedIntents[pid][k];store(DELETED,deletedIntents);
    }
   }
-  // A project rename is explicit, not a bulk overwrite.
-  const cloudProjects=await api.listProjects();
-  const cloud=cloudProjects.find(p=>p.id===cloudId);
-  const localProject=data.projects.find(p=>String(p.project_id)===String(pid));
-  if(cloud&&cloud.owner_id===user.id&&localProject&&cloud.name!==localProject.project_name){
-   await api.renameProject(cloudId,localProject.project_name);
-  }
   lastSyncError=null;lastSyncAt=Date.now();
  }catch(err){
   lastSyncError=err?.message||String(err);
@@ -541,6 +586,11 @@ persist=function(){
  // first realtime update hasn't yet reached our saved cloud baseline.
  const before=read(LOCAL_KEY,null);
  if(before){
+  for(const pid of Object.keys(links)){
+   const previous=before.projects?.find(p=>String(p.project_id)===String(pid))?.project_name;
+   const current=data.projects.find(p=>String(p.project_id)===String(pid))?.project_name;
+   if(previous!==undefined&&current!==undefined&&previous!==current){nameDirty[pid]=current;store(NAME_DIRTY,nameDirty)}
+  }
   for(const pid of Object.keys(links)){
    const previous=projectRows(pid,before),now=projectRows(pid,data);
    const intents=deletedIntents[pid]||(deletedIntents[pid]={});
@@ -816,6 +866,7 @@ async function joinShared(cloudId){
  }
  const draft=clone(data);
  draft.projects.push({project_id:pid,project_name:found.name,description:'',status:'Active',project_manager_member_id:accountMemberId(found.owner_id)});
+ knownNames[pid]=found.name;store(NAME_KNOWN,knownNames);
  const imported=remoteRows(items,pid);
  for(const row of Object.values(imported)){
   // New teammates should never see intentionally deleted features or tasks.
@@ -978,6 +1029,15 @@ window.GamePlanSync={
  connect,shareCurrent,shareInvite,schedule,backup:downloadBackup,
  isLinked:pid=>!!links[String(pid)],status:refreshStatus,
  currentUser:()=>user,api:()=>api,roleFor,
+ ownAssigneeIds(pid=activeProject){
+  if(!user||activatedUserId!==user.id)return [];
+  const ids=new Set([accountMemberId(user.id),user.id]);
+  const profile=teamByProject[String(pid)]?.find(m=>m.member_user_id===user.id);
+  if(profile?.legacy_member_id)ids.add(String(profile.legacy_member_id));
+  if(roleFor(pid)==='owner'&&data.me?.member_id)ids.add(String(data.me.member_id));
+  return [...ids];
+ },
+ isMine(task){return !!task&&this.ownAssigneeIds(task.project_id).includes(String(task.assignee_member_id))},
  async signInProvider(provider){
   if(!config()?.url||!config()?.key)throw Error('Connect a GamePlan workspace first.');
   api=null;await checkAccount();
