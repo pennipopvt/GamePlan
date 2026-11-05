@@ -43,7 +43,7 @@ taskRow=function(t){
  const strips=tags.map(tag=>'<span class="gp-tag-rail" style="--tc:'+e(tag.color||'#b18aa6')+'"><span class="gp-tag-rail-mark" aria-hidden="true"></span><span class="gp-tag-rail-name">'+e(tag.name)+'</span></span>').join('');
  const tagMarkup='<div class="gp-task-tags'+(tags.length?'':' gp-no-tags')+'">'+
  (tags.length?'<button type="button" class="gp-tag-peek" aria-label="'+e('Task tags: '+tags.map(tag=>tag.name).join(', '))+'" aria-expanded="false" title="'+e(tags.map(tag=>tag.name).join(', '))+'">'+strips+'</button>':'')+
- '<button type="button" class="gp-tag-add" data-gp-tag-add="'+e(t.task_id)+'" aria-label="Add or remove tags for '+e(t.title)+'" title="Add tags">+</button></div>';
+ '<button type="button" class="gp-tag-add icon-edit" data-gp-tag-add="'+e(t.task_id)+'" aria-label="Add or remove tags for '+e(t.title)+'" title="Add tags">+</button></div>';
  html=html.replace('<div class="meta-person sub">',tagMarkup+'<div class="meta-person sub">');
  if(gpSelecting)html=html.replace(/(<div class="task-entry [^"]*)(")/,(_match,classes,quote)=>classes+' gp-template-selectable'+(gpSelected.has(String(t.task_id))?' gp-template-selected':'')+quote+' data-gp-template-task="'+e(t.task_id)+'" aria-selected="'+String(gpSelected.has(String(t.task_id)))+'"');
  return html;
