@@ -19,9 +19,9 @@ export function createGamePlanCloud({url,publishableKey}){
  };
  return {
   client,
-  async signInWithGoogle(){
+  async signInWithDiscord(){
    const {data,error}=await client.auth.signInWithOAuth({
-    provider:'google',
+    provider:'discord',
     options:{redirectTo:location.origin+location.pathname}
    });
    check(error);return data;
@@ -92,7 +92,7 @@ export function createGamePlanCloud({url,publishableKey}){
   /* Copies a local project into a NEW cloud project, without deleting the original.
      Each item is stored as its own database row, preserving task sort order.
      Team assignments keep their existing local IDs; connecting them to signed-in
-     Google accounts is a separate step in the collaboration UI. */
+     Discord accounts is a separate step in the collaboration UI. */
   async importLocalProject(localData,localProjectId){
    const source=localData.projects?.find(p=>String(p.project_id)===String(localProjectId));
    if(!source)throw Error('Local project not found.');
