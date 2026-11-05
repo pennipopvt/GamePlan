@@ -2002,21 +2002,18 @@ a:hover,.link:hover{color:#80115c}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.05.60';
+let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.05.61';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
-const defaultTeam=['Ethan','Jerry','Jenny'];
+const defaultTeam=[];
 let data=null,activeProject='',noticeTimer=null,activeView='all';const collapsedMilestones=new Set(),collapsedFeatures=new Set();
 function persist(){try{localStorage.setItem(LOCAL_KEY,JSON.stringify(data))}catch(err){gpAlert('Could not save locally: '+err.message);throw err}}
 function readProject(){try{return localStorage.getItem(PROJECT_KEY)||''}catch{return ''}}
 function saveProject(){try{localStorage.setItem(PROJECT_KEY,activeProject)}catch{}}
 function seedData(){
- const project_id='fish-poc';
- const members=[pm,...defaultTeam.map(name=>({member_id:name.toLowerCase(),display_name:name,google_email:'',active:'Yes'}))];
- return {me:{member_id:'penni',display_name:'Penni'},email:'',projects:[{project_id,project_name:'Fishing Game — Proof of Concept',description:'',status:'Active',project_manager_member_id:'penni'}],members,roster:members.map(m=>({...m})),
- memberships:[{project_id,member_id:'penni',project_role:'PM',discipline:'Project management',membership_status:'Active'}],
- team:members.map(m=>({project_id,member_id:m.member_id,project_role:m.member_id==='penni'?'PM':'Member',discipline:'',membership_status:'Active'})),
- milestones:[],features:[],tasks:[],logs:[]};
+ return {me:{member_id:'',display_name:''},email:'',projects:[],
+ members:[],roster:[],memberships:[],team:[],milestones:[],features:[],
+ tasks:[],logs:[],tags:[],templates:[],custom_tag_colors:[]};
 }
 function migrateLegacy(legacy){
  const next=seedData();const id='fish-poc';
@@ -2038,7 +2035,7 @@ function normalizeLocal(x){
  x.roster=Array.isArray(x.roster)?x.roster:x.members.map(m=>({...m}));
  x.memberships=Array.isArray(x.memberships)?x.memberships:[];
  x.logs=Array.isArray(x.logs)?x.logs:[];
- x.me={member_id:'penni',display_name:'Penni'};
+ x.me=x.me||{member_id:'',display_name:''};
  return x;
 }
 function loadLocal(){
@@ -2053,7 +2050,7 @@ const find=(arr,id,key)=>arr.find(x=>String(x[key])===String(id));
 const member=id=>find(data.members,id,'member_id')?.display_name||'Unassigned';
 const feature=id=>find(data.features,id,'feature_id');
 const milestone=f=>find(data.milestones,f?.milestone_id,'milestone_id');
-const isPM=()=>true;
+const isPM=()=>window.GamePlanAuth?.canEdit?.(activeProject)??false;
 const canUpdate=t=>isPM()||String(t.assignee_member_id)===String(data.me.member_id);
 const taskHours=t=>data.logs.filter(x=>x.task_id===t.task_id).reduce((n,x)=>n+Number(x.hours||0),0);
 const featureHours=id=>data.tasks.filter(t=>String(t.feature_id)===String(id)).reduce((sum,t)=>sum+taskHours(t),0);
@@ -2087,8 +2084,8 @@ function rpc(op,p={}){
   const parent=(arr,key,id)=>{const item=get(arr,key,id);if(!item||item.project_id!==projectId)throw Error('Invalid parent');return item};
   const task=get(data.tasks,'task_id',p.task_id);
   if(op==='createProject'){
-   const id=uid();data.projects.push({project_id:id,project_name:required(p.name,'Project name'),description:p.description||'',status:'Active',project_manager_member_id:'penni'});
-   data.team.push({project_id:id,member_id:'penni',project_role:'PM',discipline:'',membership_status:'Active'});activeProject=id;saveProject();
+   const id=uid();data.projects.push({project_id:id,project_name:required(p.name,'Project name'),description:p.description||'',status:'Active',project_manager_member_id:data.me.member_id});
+   data.team.push({project_id:id,member_id:data.me.member_id,project_role:'Owner',discipline:'',membership_status:'Active'});activeProject=id;saveProject();
   }else if(op==='createMilestone'){
    data.milestones.push({milestone_id:uid(),project_id:projectId,name:required(p.name,'Milestone name'),description:p.description||'',status:'To do',target_date:''});
   }else if(op==='editMilestone'){
@@ -2124,7 +2121,7 @@ function rpc(op,p={}){
    return Promise.resolve({ok:true});
   }else if(op==='createTask'){
    const f=parent(data.features,'feature_id',p.feature_id);
-   data.tasks.push({task_id:uid(),project_id:projectId,feature_id:f.feature_id,title:required(p.title,'Task title'),description:p.description||'',assignee_member_id:p.assignee_member_id||'',status:p.status||'To do',priority:p.priority||'Normal',estimated_hours:hours(p.estimated_hours),remaining_hours:hours(p.remaining_hours),created_by_member_id:'penni',updated_at:new Date().toISOString()});
+   data.tasks.push({task_id:uid(),project_id:projectId,feature_id:f.feature_id,title:required(p.title,'Task title'),description:p.description||'',assignee_member_id:p.assignee_member_id||'',status:p.status||'To do',priority:p.priority||'Normal',estimated_hours:hours(p.estimated_hours),remaining_hours:hours(p.remaining_hours),created_by_member_id:data.me.member_id,updated_at:new Date().toISOString()});
   }else if(op==='editTask'){
    if(!task)throw Error('Task not found');
    parent(data.features,'feature_id',p.feature_id);
@@ -2138,7 +2135,7 @@ function rpc(op,p={}){
    if(!task)throw Error('Task not found');
    const minutes=Number(p.minutes);if(!Number.isSafeInteger(minutes)||minutes<=0)throw Error('Enter a positive whole number of minutes');
    const h=minutes/60;
-   data.logs.push({log_id:uid(),task_id:task.task_id,member_id:task.assignee_member_id||'penni',hours:h,work_date:p.work_date||new Date().toISOString().slice(0,10),note:p.note||'',created_at:new Date().toISOString()});
+   data.logs.push({log_id:uid(),task_id:task.task_id,member_id:task.assignee_member_id||data.me.member_id,hours:h,work_date:p.work_date||new Date().toISOString().slice(0,10),note:p.note||'',created_at:new Date().toISOString()});
   }else if(op==='editLog'){
    if(!task)throw Error('Task not found');
    const log=get(data.logs,'log_id',p.log_id);
@@ -2163,7 +2160,7 @@ function rpc(op,p={}){
    m.display_name=required(p.display_name,'Member name');m.google_email=p.google_email||'';team.discipline=p.discipline||'';team.membership_status='Active';
    const roster=get(data.roster,'member_id',m.member_id);if(roster)Object.assign(roster,m);
   }else if(op==='removeMember'){
-   if(p.member_id==='penni')throw Error('Cannot remove project manager');
+   if(p.member_id===data.me.member_id)throw Error('Cannot remove project owner');
    if(data.tasks.some(t=>t.project_id===projectId&&t.assignee_member_id===p.member_id))throw Error('Reassign this member’s tasks first');
    data.team=data.team.filter(t=>!(t.project_id===projectId&&t.member_id===p.member_id));
   }else throw Error('Unknown operation '+op);
