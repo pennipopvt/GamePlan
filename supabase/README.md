@@ -31,6 +31,28 @@ The preview stores the Supabase URL and publishable key in **this browser's loca
 5. After signing in, the invitation is claimed automatically. Open the project in both browsers; changing task status should update in both.
 6. For migration testing, use **Copy a local project into the cloud**. The source remains in your original local browser storage.
 
+## Full shared GamePlan interface (Cloud beta)
+
+The **complete local layout and features** now run in a second mode on the *same* `index.html` and `gameplan.js`:
+
+- **Local:** https://pennipopvt.github.io/ProjectPlanner/index.html
+- **Cloud beta:** https://pennipopvt.github.io/ProjectPlanner/index.html?cloud=1
+
+After signing in via `supabase/discord.html` and importing a local project, open the full cloud page. It reuses the exact board, filters, task editing, templates, analytics, time logs, and drag handles. The additional `cloud-mode.js` adapter loads the signed-in user's cloud projects, writes changed rows individually to Supabase, listens for team changes, and exposes a **Share project** button for owners.
+
+Cloud mode uses a **different localStorage key**, so it does not overwrite your original local Fishing Game project. Supabase remains authoritative for cloud data. The original Google Sheets site is not required.
+
+### Important beta notes
+
+- **Test on a small project first.** Cloud mode passed JavaScript syntax checks, but realtime collaboration and every complex editing path have **not yet** been verified in a browser with multiple accounts.
+- Cloud synchronization is *optimistic* and queued. The status near the header reports sync errors. Do not treat unsynced changes as saved; retry after fixing errors.
+- Updates to *different* items are independent, but concurrent edits to the same item are **last-write-wins**.
+- Offline editing and reliable conflict merging aren't implemented.
+- Project invites use the teammate's **Discord account email**, which must match their sign-in email. Share the GamePlan URL yourself; inviting doesn't automatically send an email.
+- Existing imported task assignees use their original legacy IDs. Invited Discord users are distinct account members until explicitly assigned; the member display names are stored with project team items on subsequent saves.
+- Viewers have database-enforced read-only access. For now, use **Editor** invitations for actual collaborators.
+- A manual **Sync** button is available if an incoming update couldn't be shown during a modal edit.
+
 ## Current limitations
 
 - This is a **backend and collaboration smoke test** with a small UI, not the finished GamePlan interface. The original local page remains authoritative until migration is complete.
