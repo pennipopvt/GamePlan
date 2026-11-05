@@ -388,6 +388,19 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 .gp-collapsed #gpProjectSwitcher .gp-project-trigger{gap:0}
 .gp-collapsed .sidebar{gap:12px}
 @media(max-width:680px){#gpSidebarToggle{display:none}#gpPrimary>.gp-nav{width:100%}#gpProjectSwitcher .gp-project-trigger{width:100%}}
+
+/* Anchor primary icons to one fixed rail in both sidebar states. */
+@media(min-width:681px){
+ .sidebar{padding-left:12px}
+ #gpSidebarToggle,#gpPrimary>.gp-nav{display:grid;grid-template-columns:44px minmax(0,1fr);gap:0;padding:0;justify-items:stretch}
+ #gpSidebarToggle>span:first-child,#gpPrimary>.gp-nav .gp-icon{width:44px;min-width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+ #gpSidebarToggle .gp-toggle-text,#gpPrimary>.gp-nav .gp-text{align-self:center;min-width:0}
+ #gpProjectSwitcher .gp-project-trigger{display:grid;grid-template-columns:44px minmax(0,1fr);gap:0;padding:0;text-align:left}
+ #gpProjectSwitcher .gp-project-switch-icon{grid-column:1;grid-row:1;justify-self:center;align-self:center}
+ #gpProjectSwitcher .gp-project-trigger-name{grid-column:2;grid-row:1;align-self:center}
+ .gp-collapsed #gpSidebarToggle,.gp-collapsed #gpProjectSwitcher .gp-project-trigger,.gp-collapsed #gpPrimary>.gp-nav{width:44px;padding:0;margin-left:auto;margin-right:auto;display:flex;align-items:center;justify-content:center}
+ .gp-collapsed #gpProjectSwitcher .gp-project-switch-icon{flex-shrink:0}
+}
 </style></head>
 <body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand">✳ Game<span>Plan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav><div class="sidebar-foot">Local only · your board is saved in this browser.</div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.4</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice">Your changes are saved instantly in this browser. Export a backup occasionally.</div>
