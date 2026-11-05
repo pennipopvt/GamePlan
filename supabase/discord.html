@@ -3,7 +3,7 @@
 <style>body{font:15px system-ui,sans-serif;background:#faf7fa;color:#342638;display:grid;place-items:center;min-height:95vh}main{max-width:500px;padding:24px;text-align:center}a{color:#a81578}</style></head>
 <body><main><p>Connecting Discord to GamePlan…</p><p id="message"></p><a href="../index.html">Return to GamePlan</a></main>
 <script type="module">
-import {createGamePlanCloud} from './gameplan-cloud.js?v=2026.11.05.54';
+import {createGamePlanCloud} from './gameplan-cloud.js?v=2026.11.05.62';
 const next=()=>{history.replaceState(null,'',location.pathname);location.replace('../index.html')};
 try{
  const cfg=JSON.parse(localStorage.getItem('gameplan-cloud-config-v1')||'null');
