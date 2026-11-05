@@ -27,7 +27,7 @@ function gpConfirm(message,options={}){return gpDialog(message,options)}
 function gpPrompt(message,initialValue=''){return gpDialog(message,{title:message.split('\n')[0].replace(/:$/,''),confirmLabel:'Continue',input:true,initialValue})}
 
 const GP_COLORS=[{name:'Blue',hex:'#729fd6'},{name:'Pink',hex:'#db8bac'},{name:'Purple',hex:'#ac91d6'},{name:'Yellow',hex:'#d8b56b'},{name:'Green',hex:'#68a992'},{name:'Orange',hex:'#e18b71'},{name:'Gray',hex:'#98aab6'}];
-let gpPage='board',gpSelecting=false;
+let gpPage='board',gpSelecting=false,gpBoardSubtabsOpen=true;
 const gpSelected=new Set();
 const gpTags=()=>data.tags.filter(x=>x.project_id===activeProject);
 const gpTemplates=()=>data.templates.filter(x=>x.project_id===activeProject);
@@ -77,7 +77,15 @@ render=function(){
  gpRenderProjectControls();
  gpDecorateDeletes();
 };
-function gpNavigate(page){gpPage=page;gpSelected.clear();gpSelecting=false;$('#sidebar').classList.remove('visible');render()}
+function gpNavigate(page){
+ if(page==='board'&&gpPage==='board'&&!document.querySelector('.app').classList.contains('gp-collapsed')){
+  gpBoardSubtabsOpen=!gpBoardSubtabsOpen;
+  gpRenderPage();
+  return;
+ }
+ if(page==='board'&&gpPage!=='board')gpBoardSubtabsOpen=true;
+ gpPage=page;gpSelected.clear();gpSelecting=false;$('#sidebar').classList.remove('visible');render();
+}
 function gpAddShell(){
  const sidebar=$('#sidebar');
  sidebar.querySelector('.sidebar-brand').innerHTML='<img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span>';
@@ -165,7 +173,9 @@ function gpSelectionBar(){
 function gpRenderPage(){
  $('#gpBoardView').hidden=gpPage!=='board';
  $('#gpExtra').hidden=gpPage==='board';
- $('#gpBoardNav').hidden=gpPage!=='board';
+ $('#gpBoardNav').hidden=gpPage!=='board'||!gpBoardSubtabsOpen;
+ const boardTab=$('#gpPrimary [data-page="board"]');
+ if(boardTab)boardTab.setAttribute('aria-expanded',String(gpPage==='board'&&gpBoardSubtabsOpen));
  document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===gpPage));
  gpSelectionBar();
  if(gpPage==='settings')gpSettings();
