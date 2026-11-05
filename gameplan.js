@@ -634,7 +634,7 @@ function gpFacetOptions(key){
   ...gpTags().map(t=>({id:String(t.tag_id),name:t.name,color:t.color})),
   {id:'__untagged',name:'Untagged',color:'#a6adb8'}
  ];
- if(key==='status')return ST.map((name,i)=>({id:name,name,color:['#a6adb8','#7775cf','#db4aa7','#32956d'][i]}));
+ if(key==='status')return ST.map((name,i)=>({id:name,name,color:['#a6adb8','#7775cf','#d94b58','#32956d'][i]}));
  if(key==='priority')return PRI.map(name=>({id:name,name}));
  if(key==='milestone')return data.milestones.filter(m=>m.project_id===activeProject).map(m=>({id:String(m.milestone_id),name:m.name}));
  return [];
