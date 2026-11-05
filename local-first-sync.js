@@ -6,11 +6,13 @@
 (function(){
 'use strict';
 const $s=q=>document.querySelector(q);
-const CFG='gameplan-cloud-config-v1',LINKS='gp-sync-links-v1',BASE='gp-sync-baselines-v1',LAST='gp-sync-backup-import-v1',PENDING_INVITE='gp-pending-link-invite',DELETED='gp-sync-deleted-v1';
+const CFG='gameplan-cloud-config-v1',LAST='gp-sync-backup-import-v1',PENDING_INVITE='gp-pending-link-invite';
+let LINKS='gp-sync-links-v1',BASE='gp-sync-baselines-v1',DELETED='gp-sync-deleted-v1';
 const KINDS=['milestones','features','tasks','logs','tags','templates','team','custom_tag_colors'];
 const IDS={milestones:'milestone_id',features:'feature_id',tasks:'task_id',logs:'log_id',tags:'tag_id',templates:'template_id',team:'member_id'};
 let api=null,user=null,links=read(LINKS,{}),bases=read(BASE,{}),busy=false,loop=null,subscription=null,watched='',ready=false,blocked=false,inviteAttempted=false;
 let lastSyncError=null,lastSyncAt=0,remoteMissingCount=0,deletedIntents=read(DELETED,{});
+let activatedUserId='',activating=null,cloudProjectList=[],teamByProject={},teamUpgradeNeeded=false;
 const unique=(kind,obj)=>kind==='team'?'member:'+obj.member_id:kind==='custom_tag_colors'?'color:'+obj.color:String(obj[IDS[kind]]||'');
 const key=(kind,id)=>kind+'\u0000'+id;
 // PostgreSQL JSONB may reorder object keys without changing record values.
@@ -49,7 +51,7 @@ function projectRows(pid,source=data){
  const taskIds=new Set((source.tasks||[]).filter(x=>String(x.project_id)===String(pid)).map(x=>String(x.task_id)));
  const out={};
  for(const kind of KINDS){
-  const arr=(source[kind]||[]).filter(x=>kind==='logs'?taskIds.has(String(x.task_id)):String(x.project_id)===String(pid));
+  const arr=(source[kind]||[]).filter(x=>(kind==='logs'?taskIds.has(String(x.task_id)):String(x.project_id)===String(pid))&&!(kind==='team'&&x.__gp_account_shadow));
   for(const [sort_order,obj] of arr.entries()){
    const id=unique(kind,obj);if(!id)continue;
    // Time logs are linked to a project through their task in local data.
@@ -140,11 +142,14 @@ function saveLink(pid,cloudId){
  // should briefly defer reconciliation of incoming cloud changes.
 function isEditing(){return !!($s('#back.show')||$s('#gpDialogOverlay'))}
 async function checkAccount(){
- if(!navigator.onLine)return false;
  const cfg=config();if(!cfg?.url||!cfg?.key)return false;
  if(!api){
   const module=await import('./supabase/gameplan-cloud.js?v=2026.11.05.60');
   api=module.createGamePlanCloud({url:cfg.url,publishableKey:cfg.key});
+ }
+ if(!navigator.onLine){
+  const session=await api.getSession().catch(()=>null);
+  user=session?.user||null;return !!user;
  }
  const {data:result,error}=await api.client.auth.getUser();
  if(error||!result.user){user=null;return false}
