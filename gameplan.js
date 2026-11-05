@@ -74,18 +74,31 @@ const gpOriginalRender=render;
 render=function(){
  gpOriginalRender();
  gpRenderPage();
+ gpRenderProjectControls();
+ gpDecorateDeletes();
 };
 function gpNavigate(page){gpPage=page;gpSelected.clear();gpSelecting=false;$('#sidebar').classList.remove('visible');render()}
 function gpAddShell(){
  const sidebar=$('#sidebar');
  sidebar.querySelector('.sidebar-brand').innerHTML='<span class="gp-long">✳ Game<span>Plan</span></span><span class="gp-short">✳</span>';
  const nav=document.createElement('nav');nav.id='gpPrimary';nav.className='side-nav';
- nav.innerHTML=[['board','▦','Board'],['analytics','▥','Analytics'],['templates','▤','Templates'],['settings','⚙','Project Settings']].map(([v,icon,label])=>'<button class="gp-nav" data-page="'+v+'" title="'+label+'"><span class="gp-icon">'+icon+'</span><span class="gp-text">'+label+'</span></button>').join('');
+ nav.innerHTML=[['board','▦','Board'],['analytics','▥','Analytics'],['templates','▤','Templates'],['team','♙','Team'],['settings','⚙','Project Settings']].map(([v,icon,label])=>'<button class="gp-nav" data-page="'+v+'" title="'+label+'"><span class="gp-icon">'+icon+'</span><span class="gp-text">'+label+'</span></button>').join('');
  const sidebarToggle=document.createElement('button');
  sidebarToggle.id='gpSidebarToggle';sidebarToggle.type='button';sidebarToggle.className='gp-sidebar-toggle';
  sidebarToggle.innerHTML='<span aria-hidden="true">☰</span><span class="gp-toggle-text">Collapse sidebar</span>';
  sidebarToggle.setAttribute('aria-label','Collapse sidebar');
- sidebar.querySelector('.sidebar-brand').after(sidebarToggle,nav);
+ const projectSwitcher=document.createElement('div');projectSwitcher.id='gpProjectSwitcher';
+ projectSwitcher.innerHTML='<label for="gpProjectSelect" class="gp-project-label">CURRENT PROJECT</label><select id="gpProjectSelect" aria-label="Switch project"></select><button id="gpNewProject" class="gp-project-add" type="button" title="New project">+</button>';
+ sidebar.querySelector('.sidebar-brand').after(projectSwitcher,sidebarToggle,nav);
+ $('#gpProjectSelect').onchange=ev=>gpSwitchProject(ev.target.value);
+ $('#gpNewProject').onclick=()=>quickCreate('project');
+ const header=$('.workspace .top .brand');
+ const titleWrap=document.createElement('div');titleWrap.className='gp-header-project';
+ titleWrap.innerHTML='<label for="gpProjectTitle" class="gp-project-label">CURRENT PROJECT</label><input id="gpProjectTitle" aria-label="Edit current project name" autocomplete="off" spellcheck="false" title="Click to rename project">';
+ header.parentElement.appendChild(titleWrap);
+ $('#gpProjectTitle').addEventListener('change',gpRenameProjectInline);
+ $('#gpProjectTitle').addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();ev.currentTarget.blur()}if(ev.key==='Escape'){ev.currentTarget.value=find(data.projects,activeProject,'project_id')?.project_name||'';ev.currentTarget.blur()}});
+
  const boardNav=document.createElement('div');boardNav.id='gpBoardNav';
  const label=sidebar.querySelector('.side-label');const milestone=sidebar.querySelector('#milestoneNav');
  label.before(boardNav);boardNav.append(label,sidebar.querySelector('#viewNav'),milestone.previousElementSibling,milestone);
@@ -128,6 +141,7 @@ function gpRenderPage(){
  if(gpPage==='settings')gpSettings();
  if(gpPage==='analytics')gpAnalytics();
  if(gpPage==='templates')gpTemplatesPage();
+ if(gpPage==='team')gpTeamPage();
 }
 function gpSettings(){
  const project=find(data.projects,activeProject,'project_id');
@@ -292,4 +306,56 @@ function gpFeatureCreate(preferredMilestoneId='',initialTemplateId=''){
  };
 }
 function gpUseTemplate(id){gpFeatureCreate('',id)}
-gpAddShell();gpRenderPage();
+
+function gpSwitchProject(id){
+ if(!data.projects.some(p=>String(p.project_id)===String(id)))return;
+ activeProject=id;activeView='all';gpSelected.clear();gpSelecting=false;saveProject();
+ $('#assigneeFilter').value='';$('#searchTasks').value='';
+ render();
+}
+function gpRenameProjectInline(){
+ const input=$('#gpProjectTitle'),project=find(data.projects,activeProject,'project_id');if(!project)return;
+ const name=input.value.trim();if(!name){input.value=project.project_name;gpAlert('Project name cannot be empty.');return}
+ if(name===project.project_name)return;
+ project.project_name=name;persist();render();
+}
+function gpRenderProjectControls(){
+ const project=find(data.projects,activeProject,'project_id');
+ const options=data.projects.map(p=>'<option value="'+e(p.project_id)+'" '+(String(p.project_id)===String(activeProject)?'selected':'')+'>'+e(p.project_name)+'</option>').join('');
+ const picker=$('#gpProjectSelect');if(picker)picker.innerHTML=options;
+ const title=$('#gpProjectTitle');if(title&&document.activeElement!==title)title.value=project?.project_name||'';
+}
+function gpTeamPage(){
+ const memberships=(data.team||[]).filter(m=>m.project_id===activeProject);
+ const roster=data.roster||data.members;
+ $('#gpExtra').innerHTML='<div class="gp-flex"><div><h1>Project Team</h1><p class="sub">Members of '+e(find(data.projects,activeProject,'project_id')?.project_name||'this project')+'</p></div><button id="gpAddMember" class="button main">+ Add member</button></div><div id="gpTeamRows" class="gp-list">'+memberships.map(m=>{
+  const person=roster.find(p=>String(p.member_id)===String(m.member_id))||data.members.find(p=>String(p.member_id)===String(m.member_id));
+  return '<div class="gp-card gp-flex"><div><strong>'+e(person?.display_name||'Unknown')+'</strong><div class="sub">'+e(m.project_role||'Member')+(m.discipline?' · '+e(m.discipline):'')+'</div></div><button type="button" class="button" data-gp-member="'+e(m.member_id)+'">Edit</button></div>';
+ }).join('')+'</div>';
+ $('#gpAddMember').onclick=()=>quickCreate('member');
+ $('#gpTeamRows').onclick=ev=>{const btn=ev.target.closest('[data-gp-member]');if(btn)editMember(btn.dataset.gpMember)};
+}
+const gpTrashSVG='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v7M14 10v7"/></svg>';
+function gpDecorateDeletes(){
+ const root=$('#milestoneList');if(!root)return;
+ const targets=[['[data-milestone]','milestone'],['[data-feature]','feature'],['[data-edit]','task']];
+ for(const [selector,kind] of targets){
+  root.querySelectorAll(selector).forEach(editButton=>{
+   const id=editButton.dataset[kind==='task'?'edit':kind],name=kind==='milestone'?find(data.milestones,id,'milestone_id')?.name:kind==='feature'?find(data.features,id,'feature_id')?.name:find(data.tasks,id,'task_id')?.title;
+   if(!name||editButton.parentElement.querySelector('[data-gp-delete="'+kind+':'+id+'"]'))return;
+   const button=document.createElement('button');
+   button.type='button';button.className='icon-edit gp-delete-icon';button.dataset.gpDelete=kind+':'+id;
+   button.title='Delete '+kind;button.setAttribute('aria-label','Delete '+kind+': '+name);button.innerHTML=gpTrashSVG;
+   editButton.after(button);
+  });
+ }
+}
+$('#milestoneList').addEventListener('click',ev=>{
+ const button=ev.target.closest('[data-gp-delete]');if(!button)return;
+ ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation();
+ const [kind,id]=button.dataset.gpDelete.split(':');
+ const object=kind==='milestone'?find(data.milestones,id,'milestone_id'):kind==='feature'?find(data.features,id,'feature_id'):find(data.tasks,id,'task_id');
+ if(object&&object.project_id===activeProject)deleteItem(kind,id,object.name||object.title);
+},true);
+
+gpAddShell();gpRenderPage();gpRenderProjectControls();
