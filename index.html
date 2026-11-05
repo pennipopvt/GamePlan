@@ -758,8 +758,124 @@ body{background:#fbfcfc}
 .gp-board-footer h2{color:#426c79}
 .gp-header-project #gpProjectTrigger{color:#4c879d}
 .gp-header-project #gpProjectTrigger:hover{background:#e5f0f4;color:#2b728d}
+
+/* Calm shared surfaces + semantically distinct task status colors. */
+:root{--gp-slate:#52676b;--gp-line:#dee7e4;--gp-green:#4f9977;--gp-yellow:#bb9233;--gp-magenta:#b46789;--gp-cyan:#478ba2;color:#384b4c;background:#fbfcfa}
+body{background:#fbfcfa}
+.sidebar{background:#fafbf9;border-right-color:#e4ebe7}
+#gpPrimary>.gp-nav{color:#5b706b}
+#gpPrimary>.gp-nav.active{background:#e5f0e9;color:#386e59}
+#gpPrimary>.gp-nav:hover{background:#eef4ef;color:#365e4e}
+#gpBoardNav{border-left-color:#d2e0d8}
+#gpBoardNav .side-link{color:#688079}
+#gpBoardNav .side-link.active{background:#e6f1e9;color:#366d57;box-shadow:none;font-weight:600}
+#gpBoardNav .side-link:hover{background:#eff5f0}
+#gpBoardNav .side-count{color:#6f8d7d}
+.gp-header-actions .button{color:#5e8276}
+.gp-header-actions .button:hover{color:#386e58}
+.gp-overview-heading #pmActions .button,.gp-overview-heading #gpSelectTasks{color:#477c67}
+.gp-overview-heading #pmActions .button:hover,.gp-overview-heading #gpSelectTasks:hover{color:#2f6250}
+.button.main{background:#508b70;border-color:#508b70;color:white}
+.button.main:hover{background:#3d755d}
+.gp-board-footer{background:#f7faf7;border-color:#e0e9e2}
+.gp-board-footer h2{color:#426b58}
+.gp-header-project #gpProjectTrigger{color:#5a8270}
+.gp-header-project #gpProjectTrigger:hover{background:#e9f3ed;color:#326d51}
+#milestoneList .milestone-section{border-color:#d9e5de}
+#milestoneList .milestone-summary{background:#e9f1eb;border-bottom-color:#d5e4d8}
+#milestoneList .milestone-summary .title-stack strong{color:#365647}
+#milestoneList .milestone-summary .title-stack .sub{color:#687f73}
+#milestoneList .milestone-summary .progress-line{
+ width:100%;max-width:210px;height:6px;margin-top:15px;
+ border-radius:999px;background:#d1e1d6
+}
+#milestoneList .milestone-summary .progress-line span{background:#56a080;border-radius:999px}
+#milestoneList .milestone-tools .tag{background:#dcece1;color:#48755b}
+#milestoneList .gp-milestone-time{color:#607f6e}
+#milestoneList .feature-section{border-color:#dce7e1;background:#f8faf8}
+#milestoneList .feature-summary,#milestoneList .feature-section.status-todo>.feature-summary{background:#eef3ef;border-bottom-color:#dfe9e1}
+#milestoneList .feature-section.status-progress>.feature-summary{background:#f7efd8}
+#milestoneList .feature-section.status-blocked>.feature-summary{background:#f4e6ed}
+#milestoneList .feature-section.status-done>.feature-summary{background:#e3f1e8}
+#milestoneList .feature-section.status-todo{border-left-color:#b5c0ba}
+#milestoneList .feature-section.status-progress{border-left-color:#c7a24b}
+#milestoneList .feature-section.status-blocked{border-left-color:#be7899}
+#milestoneList .feature-section.status-done{border-left-color:#67a989}
+#milestoneList .feature-summary .title-stack strong{color:#415e51}
+#milestoneList .feature-summary .title-stack .sub{color:#73867c}
+#milestoneList .feature-section.status-todo .feature-status-label{color:#6b7e75}
+#milestoneList .feature-section.status-progress .feature-status-label{color:#96711f}
+#milestoneList .feature-section.status-blocked .feature-status-label{color:#a25579}
+#milestoneList .feature-section.status-done .feature-status-label{color:#3e815e}
+#milestoneList .task-entry.status-todo{background:#f4f6f5;border-left-color:#adbab4}
+#milestoneList .task-entry.status-progress{background:#faf1d9;border-left-color:#c5a04b}
+#milestoneList .task-entry.status-blocked{background:#f7e9f0;border-left-color:#b8698c}
+#milestoneList .task-entry.status-done{background:#e3f2e9;border-left-color:#4c9b73}
+#milestoneList .task-entry.status-todo:hover{background:#eaf0ed}
+#milestoneList .task-entry.status-progress:hover{background:#f5e9c9}
+#milestoneList .task-entry.status-blocked:hover{background:#f0dce7}
+#milestoneList .task-entry.status-done:hover{background:#d3eadc}
+#milestoneList .task-entry .status-select.status-todo{background:#e9edeb;color:#62756c;border-color:#cdd6d0}
+#milestoneList .task-entry .status-select.status-progress{background:#f4e5b9;color:#876616;border-color:#e7cb81}
+#milestoneList .task-entry .status-select.status-blocked{background:#f2dce7;color:#95476b;border-color:#e1b9cc}
+#milestoneList .task-entry .status-select.status-done{background:#d1e9d9;color:#306d4d;border-color:#acd3b9}
+#milestoneList .task-entry:not(.gp-template-selectable){cursor:pointer}
+#milestoneList .task-entry:not(.gp-template-selectable) .gp-task-drag-handle{cursor:grab}
+#milestoneList .gp-template-selectable.gp-template-selected,
+#milestoneList .gp-template-selectable.gp-template-selected.status-todo,
+#milestoneList .gp-template-selectable.gp-template-selected.status-progress,
+#milestoneList .gp-template-selectable.gp-template-selected.status-blocked,
+#milestoneList .gp-template-selectable.gp-template-selected.status-done{
+ background:#d9eee6;border-left-color:#4c9b73;box-shadow:inset 0 0 0 2px #559e7b
+}
+#milestoneList .gp-template-selectable.gp-template-selected .task-title{color:#2e6950}
+#milestoneList .gp-template-selectable.gp-template-selected:hover{background:#c9e8d9}
+#gpSelectionBar{background:#e6f1e9;border-color:#c9e1d1;color:#3c6c50}
+/* Shared dialog placement: close stays pinned top right, even with wrapping titles. */
+#back .modal{position:relative;width:min(680px,100%);padding:30px 34px 28px;border:1px solid #e1e8e3;box-shadow:0 20px 70px #233b3026}
+#back .modal>.head{display:block;margin-bottom:15px;padding-right:49px;min-height:34px}
+#back .modal #modalTitle{font-family:inherit;font-size:24px;font-weight:550;line-height:1.3;letter-spacing:-.55px;overflow-wrap:anywhere;color:#344f43;margin:0}
+#back .modal #close{
+ position:absolute;top:19px;right:19px;display:flex;align-items:center;justify-content:center;
+ width:35px;height:35px;padding:0;background:transparent;border:0;border-radius:7px;
+ color:#748b7b;font:400 27px/1 Arial,sans-serif
+}
+#back .modal #close:hover{background:#edf4ef;color:#3a7057}
+#back .modal #modalBody{font-size:14px;line-height:1.55;color:#40564b}
+/* The task description dialog uses the same hierarchy as the board. */
+#back.gp-task-detail .modal{width:min(710px,100%)}
+.gp-detail-path{font-size:12px;line-height:1.6;color:#81978a;padding:0 0 22px;border-bottom:1px solid #e6ede8}
+.gp-detail-path span{margin:0 8px;color:#bdc9c1}
+.gp-detail-section{margin-top:26px}
+.gp-detail-section h3{margin:0 0 11px;color:#486456;font:600 12px/1.4 Arial,Helvetica,sans-serif;letter-spacing:.07em;text-transform:uppercase}
+.gp-detail-description{background:#f6faf7;border:1px solid #e2ebe5;border-radius:10px;min-height:90px;padding:19px 21px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.75;color:#3d5346}
+.gp-detail-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:23px}
+.gp-detail-meta>div{display:flex;flex-direction:column;align-items:flex-start;gap:8px;background:#f7f9f7;border:1px solid #e5ebe6;border-radius:9px;padding:15px 17px;min-width:0}
+.gp-detail-meta-label{color:#829589;font-size:11px}
+.gp-detail-meta strong{font-size:13px;font-weight:600;color:#3d5a4a;overflow-wrap:anywhere}
+.gp-detail-status{display:inline-flex;padding:4px 10px;border-radius:6px}
+.gp-detail-status.gp-detail-todo{background:#e8eeea;color:#5b7063}
+.gp-detail-status.gp-detail-progress{background:#f7e9c3;color:#8d6c20}
+.gp-detail-status.gp-detail-blocked{background:#f2dfea;color:#9b4c73}
+.gp-detail-status.gp-detail-done{background:#d9ecdf;color:#3d7b55}
+.gp-detail-logs{padding-top:22px;border-top:1px solid #e6ede8}
+.gp-detail-logs .note{padding:14px 0}
+.gp-detail-logs .note .head{align-items:center;gap:12px}
+.gp-detail-logs .note strong{font-size:13px;font-weight:600}
+.gp-detail-logs .note .sub{font-size:12px;margin-top:8px}
+.gp-detail-log-meta{display:block;color:#8a9a8d;font-size:12px;margin-top:4px}
+.gp-detail-logs .note .actions .button{font-size:12px;padding:7px 10px}
+.gp-detail-controls{padding-top:20px;border-top:1px solid #e7eee9;margin-top:29px;justify-content:flex-start;gap:11px}
+@media(max-width:600px){
+ #back .modal{padding:23px 19px 21px}
+ #back .modal #close{top:12px;right:11px}
+ #back .modal #modalTitle{font-size:21px}
+ .gp-detail-meta{grid-template-columns:1fr}
+ .gp-detail-meta>div{padding:12px 14px}
+ .gp-detail-description{padding:15px}
+}
 </style></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.15</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.16</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter"><option value="">All assignees</option></select><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div class="grid"><div class="card stat"><span class="muted">Total tasks</span><b id="total">0</b></div><div class="card stat"><span class="muted">Completed</span><b id="completed">0</b></div><div class="card stat"><span class="muted">Time logged</span><b id="hours">0h</b></div></div>
@@ -768,7 +884,7 @@ body{background:#fbfcfc}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.04.15';
+const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.04.16';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=['Ethan','Jerry','Jenny'];
@@ -1287,4 +1403,4 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="gameplan.js?v=2026.11.04.15"></script></body></html>
+</script><script src="gameplan.js?v=2026.11.04.16"></script></body></html>
