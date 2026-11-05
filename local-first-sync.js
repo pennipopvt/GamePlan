@@ -115,7 +115,11 @@ function mergeRemote(pid,remote,base,local){
      draft.members.push(newMember);draft.roster.push({...newMember});
     }
    }
-  }else if(findIndex>=0){arr.splice(findIndex,1)}
+   }else if(findIndex>=0){
+   // A server-side omission alone is not proof of deletion.
+   // Keep the browser record until a deletion can be verified safely.
+   continue;
+  }
  }
  // Restore task order based on remote sort_order while retaining locally pending rows.
  for(const kind of KINDS){
@@ -144,7 +148,11 @@ async function reconcile(pid,{allowWrites=true}={}){
  busy=true;refreshStatus();
  try{
   const cloudId=links[pid],base=bases[pid]||{},before=projectRows(pid);
+  const visible=await api.listProjects();
+  if(!visible.some(p=>p.id===cloudId))throw Error('Cloud project is not accessible. Local data is safe.');
   const remote=await remoteSnapshot(cloudId,pid);
+  const missing=Object.keys(base).filter(k=>base[k]&&!remote[k]&&before[k]);
+  if(missing.length)throw Error(missing.length+' cloud items are missing. Local copy preserved; sync paused for review.');
   // First linked sync may not run until a baseline is saved by link/share flow.
   if(!Object.prototype.hasOwnProperty.call(bases,pid))throw Error('Project is not initialized for syncing. Reconnect from Account.');
   mergeRemote(pid,remote,base,before);
@@ -258,13 +266,17 @@ async function shareCurrent(){
  if(current())return shareInvite();
  let existing;
  try{existing=await api.listProjects()}catch(err){return gpAlert(err.message)}
+ const matching=existing.find(p=>p.name===local.project_name);
  const options=existing.length
-  ?'<label class="wide">Link to an existing shared project<select id="gpCloudExisting"><option value="">Create a new shared project</option>'+choice(existing)+'</select></label>'
+  ?'<label class="wide">Cloud destination<select id="gpCloudExisting">'+
+    (matching?'<option value="'+e(matching.id)+'">Use existing “'+e(matching.name)+'” (recommended)</option>':'')+
+    choice(existing.filter(p=>!matching||p.id!==matching.id))+
+    '<option value="">Create new shared project</option></select></label>'
   :'';
  modal('Share this project','<p class="sub">Your browser copy stays intact. Connect it to a cloud project to enable team syncing.</p>'+
   '<p class="sub">Before linking an existing project, its cloud items will be backed up in your browser and your local items uploaded without deleting any cloud items.</p>'+
   '<div class="fields">'+options+'</div><div class="controls"><button type="button" class="button" id="gpLinkCancel">Cancel</button>'+
-  '<button type="button" class="button main" id="gpLinkConfirm">Connect project</button></div>');
+  '<button type="button" class="button main" id="gpLinkConfirm">Copy browser project &amp; enable sync</button></div>');
  $s('#gpLinkCancel').onclick=closeModal;
  $s('#gpLinkConfirm').onclick=async()=>{
   const btn=$s('#gpLinkConfirm');btn.disabled=true;
