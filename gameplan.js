@@ -113,6 +113,7 @@ function gpAddShell(){
  const titleWrap=document.createElement('div');titleWrap.className='gp-header-project';
  titleWrap.innerHTML='<label for="gpProjectTitle" class="gp-project-label">CURRENT PROJECT</label><input id="gpProjectTitle" aria-label="Edit current project name" autocomplete="off" spellcheck="false" title="Click to rename project">';
  const oldHeader=header.firstElementChild;
+ const versionLabel=$('#appVersion');
  const mobileToggle=$('#menuToggle');
  header.prepend(mobileToggle,titleWrap);
  oldHeader.remove();
@@ -131,7 +132,7 @@ function gpAddShell(){
  board.append(boardFooter);
  const siteFooter=document.createElement('footer');siteFooter.className='gp-site-footer';
  siteFooter.innerHTML='<p>Local projects, teams, and hours · Saved in this browser</p>';
- const version=document.createElement('p');version.appendChild($('#appVersion'));
+ const version=document.createElement('p');version.appendChild(versionLabel);
  siteFooter.appendChild(version);
  main.append(siteFooter);
  const selectButton=document.createElement('button');selectButton.id='gpSelectTasks';selectButton.className='button';selectButton.textContent='☑ Select tasks';$('#pmActions').before(selectButton);
