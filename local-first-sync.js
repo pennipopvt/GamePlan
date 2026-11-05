@@ -250,12 +250,25 @@ async function reconcile(pid,{allowWrites=true}={}){
    }
    persistBaseline(pid,safeRemote);
   }
+  // Explicit deletion markers are ordinary upserts, not empty server rows.
+  // They survive reconnects and tell every teammate the item was removed.
   for(const [k,v] of Object.entries(pending)){
    if(v)continue;
-   const item=safeRemote[k];if(!item)continue;
-   const {error}=await api.client.from('gp_items').delete().eq('project_id',cloudId).eq('kind',item.kind).eq('item_id',item.item_id);
+   const source=safeRemote[k]||deletedIntents[pid]?.[k];
+   if(!source)continue;
+   const mark=deletedMarker(source,pid);
+   const row={project_id:cloudId,kind:mark.kind,item_id:mark.item_id,
+    payload:{...mark.payload,project_id:cloudId},sort_order:mark.sort_order,
+    updated_at:new Date().toISOString(),updated_by:auth.user.id};
+   const {data:saved,error}=await api.client.from('gp_items')
+    .upsert(row,{onConflict:'project_id,kind,item_id'}).select('kind,item_id');
    if(error)throw error;
-   delete safeRemote[k];persistBaseline(pid,safeRemote);
+   if(!Array.isArray(saved)||saved.length!==1)
+    throw Error('Cloud did not confirm the deletion of '+mark.kind+'. The deletion is still saved on this device.');
+   safeRemote[k]=mark;persistBaseline(pid,safeRemote);
+   if(deletedIntents[pid]?.[k]){
+    delete deletedIntents[pid][k];store(DELETED,deletedIntents);
+   }
   }
   // A project rename is explicit, not a bulk overwrite.
   const cloudProjects=await api.listProjects();
@@ -278,7 +291,23 @@ function schedule(){
  debounce=setTimeout(()=>void reconcile(String(activeProject)),650);
 }
 const oldPersist=persist;
-persist=function(){oldPersist();schedule()};
+persist=function(){
+ // Capture user-initiated removals BEFORE overwriting the previous browser
+ // snapshot. A deletion of a teammate-created item is retained even if its
+ // first realtime update hasn't yet reached our saved cloud baseline.
+ const before=read(LOCAL_KEY,null);
+ if(before){
+  for(const pid of Object.keys(links)){
+   const previous=projectRows(pid,before),now=projectRows(pid,data);
+   const intents=deletedIntents[pid]||(deletedIntents[pid]={});
+   for(const [k,item] of Object.entries(previous))
+    if(!now[k])intents[k]=item;
+   for(const k of Object.keys(now))delete intents[k];
+  }
+  store(DELETED,deletedIntents);
+ }
+ oldPersist();schedule();
+};
 const originalHistory=gpHistoryNavigate;
 gpHistoryNavigate=function(...args){const result=originalHistory(...args);schedule();return result};
 const oldSwitch=gpSwitchProject;
