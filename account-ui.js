@@ -241,5 +241,9 @@ window.GamePlanAccounts={
  showLogin,showWorkspace,requestMigration,emptyWorkspace,hideEmpty,onAuthenticated,accountDialog,
  setTeam,renderTeamPage,teamRole:currentTeamRole,createProjectDialog,loginMessage
 };
+// The Team tab is driven by Supabase's authenticated gp_members, not the old
+// manually entered local names. Historical assignees remain in saved data.
+gpTeamPage=function(){renderTeamPage()};
+
 showLogin({configured:!!(function(){try{const x=JSON.parse(localStorage.getItem('gameplan-cloud-config-v1')||'null');return x?.url&&x?.key}catch{return false}})()});
 })();
