@@ -239,7 +239,7 @@ function gpRenderPage(){
  const boardSubtabs=$('#gpBoardNav');
  boardSubtabs.hidden=gpPage!=='board';
  if(gpPage==='board'){
-  boardSubtabs.style.setProperty('--gp-board-nav-height',boardSubtabs.scrollHeight+'px');
+  if(boardSubtabs.scrollHeight>0)boardSubtabs.style.setProperty('--gp-board-nav-height',boardSubtabs.scrollHeight+'px');
   boardSubtabs.classList.toggle('gp-subtabs-closed',!gpBoardSubtabsOpen);
  }
  const boardTab=$('#gpPrimary [data-page="board"]');
