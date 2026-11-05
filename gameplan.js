@@ -194,10 +194,9 @@ function gpAddShell(){
   if(control)headerActions.appendChild(control);
  }
  header.appendChild(headerActions);
- const boardFooter=document.createElement('section');boardFooter.className='gp-board-footer';
- boardFooter.innerHTML='<h2>Board Tools</h2><p>Undo changes, reload, or open the online board.</p>';
- boardFooter.appendChild($('.top-actions'));
- board.append(boardFooter);
+ // Keep legacy controls available to existing handlers without showing a Board Tools panel.
+ const legacyActions=$('.top-actions');
+ if(legacyActions){legacyActions.hidden=true;legacyActions.style.display='none';main.append(legacyActions)}
  const siteFooter=document.createElement('footer');siteFooter.className='gp-site-footer';
  siteFooter.innerHTML='<p>Local projects, teams, and hours · Saved in this browser</p>';
  const version=document.createElement('p');version.appendChild(versionLabel);
@@ -563,7 +562,7 @@ function gpHistoryNavigate(direction){
  gpUpdateHistoryControls();
 }
 function gpSetupHistoryControls(){
- const area=document.querySelector('.gp-board-footer .top-actions');
+ const area=document.querySelector('.gp-header-actions');
  if(!area)return;
  const undo=document.createElement('button'),redo=document.createElement('button');
  undo.type='button';undo.id='gpUndoAction';undo.className='button';undo.textContent='↶ Undo';
