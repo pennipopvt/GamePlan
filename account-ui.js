@@ -119,10 +119,33 @@ function authName(u){
  u?.user_metadata?.full_name||u?.user_metadata?.user_name||u?.email?.split('@')[0]||'Your account';
 }
 function onAuthenticated(user){
- currentUser=user;localStorage.setItem('gp-known-account-v1','1');
+ currentUser=user;
+ const previousAccount=localStorage.getItem('gp-previous-auth-id');
+ localStorage.setItem('gp-known-account-v1','1');
+ localStorage.setItem('gp-previous-auth-id',user.id);
  showWorkspace();
  const trigger=$a('#gpSyncConnect');
  if(trigger){trigger.textContent=authName(user);trigger.title='Account and connected sign-in methods'}
+ if(previousAccount&&!$a('#gpAccountLinkPrompt')){
+  const alreadyOffered=localStorage.getItem('gp-account-link-offer-v1:'+user.id);
+  if(previousAccount===user.id&&!alreadyOffered){
+   localStorage.setItem('gp-account-link-offer-v1:'+user.id,'1');
+   accountNudge('Using more than one login? You can connect Google, Discord, or email to this same account.',true);
+  }else if(previousAccount!==user.id){
+   accountNudge('This is a different account than the one previously used in this browser. Projects stay separate. To link logins, sign into the original account first.',false);
+  }
+ }
+}
+function accountNudge(message,canLink){
+ const main=$a('#mainApp'),work=$a('.workspace');if(!work)return;
+ const banner=document.createElement('div');banner.id='gpAccountLinkPrompt';banner.className='gp-account-nudge';
+ banner.innerHTML='<span>'+html(message)+'</span>'+
+  (canLink?'<button type="button" class="button" id="gpNudgeLink">Link logins</button>':'')+
+  '<button type="button" class="gp-nudge-dismiss" id="gpNudgeDismiss" aria-label="Dismiss">×</button>';
+ const target=main?.hidden?work:main;
+ target.prepend(banner);
+ $a('#gpNudgeLink')?.addEventListener('click',()=>{banner.remove();void accountDialog()});
+ $a('#gpNudgeDismiss').onclick=()=>banner.remove();
 }
 async function accountDialog(){
  if(!currentUser)return;
