@@ -1,4 +1,4 @@
-name: Clear stuck GitHub Pages deployment
+name: Check and recover GitHub Pages deployment
 on:
   push:
     paths:
@@ -13,9 +13,16 @@ jobs:
   clear-stale-pages:
     runs-on: ubuntu-latest
     steps:
-      - name: Cancel the stale Pages deployment
+      - name: Inspect and retry cancellation of the stale Pages deployment
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh api --method POST \
-            "repos/${GITHUB_REPOSITORY}/pages/deployments/1ae2a120eb7b1111a639b366a527822ca0be84f3/cancel"
+          set -e
+          endpoint="repos/${GITHUB_REPOSITORY}/pages/deployments/1ae2a120eb7b1111a639b366a527822ca0be84f3"
+          echo "BEFORE:"
+          gh api "$endpoint" || true
+          echo "CANCEL:"
+          gh api --method POST "$endpoint/cancel"
+          sleep 7
+          echo "AFTER:"
+          gh api "$endpoint" || true
