@@ -43,6 +43,61 @@ taskRow=function(t){
  if(gpSelecting)html=html.replace('<div class="task-entry ', '<div class="task-entry gp-selectable ').replace('"><div><button class="task-title','"><label class="gp-task-select"><input type="checkbox" data-gp-select="'+e(t.task_id)+'" '+(gpSelected.has(String(t.task_id))?'checked':'')+' aria-label="Select task"></label><div><button class="task-title');
  return html;
 };
+/* Drag-and-drop task reassignment: only the feature ID changes, preserving logs and metadata. */
+const gpDragTaskRow=taskRow;
+taskRow=function(task){
+ let html=gpDragTaskRow(task);
+ if(!isPM())return html;
+ const handle='<span class="gp-task-drag-handle" draggable="true" data-gp-drag-task="'+e(task.task_id)+'" title="Drag to another feature" aria-label="Drag '+e(task.title)+' to another feature" role="img"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="currentColor"><circle cx="8" cy="5" r="1.7"/><circle cx="16" cy="5" r="1.7"/><circle cx="8" cy="12" r="1.7"/><circle cx="16" cy="12" r="1.7"/><circle cx="8" cy="19" r="1.7"/><circle cx="16" cy="19" r="1.7"/></svg></span>';
+ return html.replace(/(<div class="task-entry [^"]*">)/, '$1'+handle);
+};
+const gpOriginalRenderMilestones=renderMilestones;
+renderMilestones=function(){gpOriginalRenderMilestones();gpWireTaskDrag()};
+let gpDraggingTaskId=null;
+function gpWireTaskDrag(){
+ const root=$('#milestoneList');
+ const clear=()=>{
+  gpDraggingTaskId=null;
+  root.querySelectorAll('.gp-task-dragging,.gp-feature-drop-target').forEach(el=>el.classList.remove('gp-task-dragging','gp-feature-drop-target'));
+ };
+ root.ondragstart=ev=>{
+  const handle=ev.target.closest?.('[data-gp-drag-task]');
+  if(!handle||!isPM()||gpSelecting){ev.preventDefault();return}
+  const task=data.tasks.find(t=>String(t.task_id)===String(handle.dataset.gpDragTask));
+  if(!task||task.project_id!==activeProject){ev.preventDefault();return}
+  gpDraggingTaskId=String(task.task_id);
+  ev.dataTransfer.effectAllowed='move';
+  ev.dataTransfer.setData('text/plain',gpDraggingTaskId);
+  handle.closest('.task-entry')?.classList.add('gp-task-dragging');
+ };
+ root.ondragover=ev=>{
+  const target=ev.target.closest?.('.feature-section[data-feat]');
+  const task=data.tasks.find(t=>String(t.task_id)===gpDraggingTaskId);
+  const feature=target&&data.features.find(f=>String(f.feature_id)===String(target.dataset.feat));
+  root.querySelectorAll('.gp-feature-drop-target').forEach(el=>{if(el!==target)el.classList.remove('gp-feature-drop-target')});
+  if(!task||!feature||task.project_id!==activeProject||feature.project_id!==activeProject||String(task.feature_id)===String(feature.feature_id))return;
+  ev.preventDefault();
+  ev.dataTransfer.dropEffect='move';
+  target.classList.add('gp-feature-drop-target');
+ };
+ root.ondragleave=ev=>{
+  const feature=ev.target.closest?.('.feature-section[data-feat]');
+  if(feature&&!feature.contains(ev.relatedTarget))feature.classList.remove('gp-feature-drop-target');
+ };
+ root.ondrop=ev=>{
+  const target=ev.target.closest?.('.feature-section[data-feat]');
+  const task=data.tasks.find(t=>String(t.task_id)===gpDraggingTaskId);
+  const feature=target&&data.features.find(f=>String(f.feature_id)===String(target.dataset.feat));
+  if(!task||!feature||!isPM()||task.project_id!==activeProject||feature.project_id!==activeProject||String(task.feature_id)===String(feature.feature_id)){clear();return}
+  ev.preventDefault();ev.stopPropagation();
+  const oldFeatureId=task.feature_id;
+  task.feature_id=feature.feature_id;
+  task.updated_at=new Date().toISOString();
+  try{persist();render()}catch(err){task.feature_id=oldFeatureId;gpAlert('Could not move task: '+err.message);render()}
+  clear();
+ };
+ root.ondragend=clear;
+}
 const gpOriginalForm=taskForm;
 taskForm=function(t,featureId=''){
  gpOriginalForm(t,featureId);
