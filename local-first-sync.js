@@ -52,7 +52,10 @@ function projectRows(pid,source=data){
   const arr=(source[kind]||[]).filter(x=>kind==='logs'?taskIds.has(String(x.task_id)):String(x.project_id)===String(pid));
   for(const [sort_order,obj] of arr.entries()){
    const id=unique(kind,obj);if(!id)continue;
-   const payload=clone(obj);
+   // Time logs are linked to a project through their task in local data.
+   // Give their snapshot the same project_id as the remote JSONB payload
+   // without modifying the actual browser log or its time entry.
+   const payload={...clone(obj),project_id:pid};
    if(kind==='team'){
     const person=(source.members||[]).find(m=>String(m.member_id)===String(obj.member_id));
     if(person)payload.display_name=person.display_name;
