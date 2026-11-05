@@ -520,6 +520,10 @@ function schedule(){
 }
 const oldPersist=persist;
 persist=function(){
+ if(user&&activatedUserId&&current()&&roleFor(activeProject)==='viewer'){
+  data=loadLocal();render();
+  throw Error('Viewer access is read-only. Ask the owner for Editor permission.');
+ }
  // Capture user-initiated removals BEFORE overwriting the previous browser
  // snapshot. A deletion of a teammate-created item is retained even if its
  // first realtime update hasn't yet reached our saved cloud baseline.
@@ -539,7 +543,17 @@ persist=function(){
 const originalHistory=gpHistoryNavigate;
 gpHistoryNavigate=function(...args){const result=originalHistory(...args);schedule();return result};
 const oldSwitch=gpSwitchProject;
-gpSwitchProject=function(pid){oldSwitch(pid);void watch();schedule()};
+gpSwitchProject=function(pid){oldSwitch(pid);void watch();void reloadTeam(pid);schedule()};
+const originalLocalRpc=rpc;
+rpc=async function(op,p={}){
+ if(!user||activatedUserId!==user.id)throw Error('Please sign in to use GamePlan.');
+ if(op==='createProject'){
+  await createAuthenticatedProject(p.name);return {ok:true};
+ }
+ if(current()&&roleFor(activeProject)==='viewer')
+  throw Error('This project is view-only. Ask the owner for Editor access.');
+ return originalLocalRpc(op,p);
+};
 const previousCloseModal=closeModal;
 closeModal=function(...args){const value=previousCloseModal(...args);schedule();return value};
 async function watch(){
@@ -730,15 +744,18 @@ async function joinShared(cloudId){
  if(!found){gpAlert('This project is not shared with your Discord email yet. Ask the owner to invite you.');return}
  const existing=Object.entries(links).find(([,remote])=>remote===cloudId);
  if(existing){
-  activeProject=existing[0];saveProject();render();schedule();return;
+  activeProject=existing[0];saveProject();render();await reloadTeam(existing[0]);schedule();return;
  }
  // Fresh browser: download to a new local project without touching any data
  // already saved locally. Do not sync-upload before establishing a baseline.
  const items=await api.loadProjectItems(cloudId);
  const pid='cloud-'+cloudId;
- if(data.projects.some(p=>String(p.project_id)===pid))throw Error('A local project already uses that identifier.');
+ if(data.projects.some(p=>String(p.project_id)===pid)){
+  saveLink(pid,cloudId);
+  activeProject=pid;saveProject();render();await reloadTeam(pid);return;
+ }
  const draft=clone(data);
- draft.projects.push({project_id:pid,project_name:found.name,description:'',status:'Active',project_manager_member_id:'penni'});
+ draft.projects.push({project_id:pid,project_name:found.name,description:'',status:'Active',project_manager_member_id:accountMemberId(found.owner_id)});
  const imported=remoteRows(items,pid);
  for(const row of Object.values(imported)){
   // New teammates should never see intentionally deleted features or tasks.
@@ -752,7 +769,7 @@ async function joinShared(cloudId){
   }
  }
  data=draft;oldPersist();saveLink(pid,cloudId);persistBaseline(pid,imported);
- activeProject=pid;saveProject();render();watch();refreshStatus();
+ activeProject=pid;saveProject();render();await watch();await reloadTeam(pid);refreshStatus();
 }
 function controls(){
  const area=$s('.gp-header-actions');if(!area)return;
