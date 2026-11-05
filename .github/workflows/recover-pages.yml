@@ -1,0 +1,21 @@
+name: Clear stuck GitHub Pages deployment
+on:
+  push:
+    paths:
+      - '.github/workflows/recover-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+
+jobs:
+  clear-stale-pages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel the stale Pages deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST \
+            "repos/${GITHUB_REPOSITORY}/pages/deployments/1ae2a120eb7b1111a639b366a527822ca0be84f3/cancel"
