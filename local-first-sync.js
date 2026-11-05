@@ -17,6 +17,15 @@ const clone=x=>JSON.parse(JSON.stringify(x));
 function read(k,fallback){try{return JSON.parse(localStorage.getItem(k)||'null')??fallback}catch{return fallback}}
 function store(k,val){localStorage.setItem(k,JSON.stringify(val))}
 function config(){return read(CFG,null)}
+// The project URL and sb_publishable_ key are public client configuration.
+// Include them in invitation links so teammates do not need setup screens.
+const incoming=new URLSearchParams(location.search);
+if(!config()&&incoming.has('backend')&&incoming.has('publishable')){
+ const url=incoming.get('backend'),keyValue=incoming.get('publishable');
+ if(/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(url)&&/^sb_publishable_[\w-]+$/.test(keyValue)){
+  store(CFG,{url:url.replace(/\/$/,''),key:keyValue});
+ }
+}
 function current(){return links[String(activeProject)]||''}
 function projectRows(pid,source=data){
  const taskIds=new Set((source.tasks||[]).filter(x=>String(x.project_id)===String(pid)).map(x=>String(x.task_id)));
@@ -320,7 +329,9 @@ async function shareCurrent(){
 async function shareInvite(){
  if(!user)return connect();
  const cloudId=current();if(!cloudId)return shareCurrent();
- const link=location.origin+location.pathname+'?shared='+encodeURIComponent(cloudId);
+ const cfg=config();
+ const link=location.origin+location.pathname+'?shared='+encodeURIComponent(cloudId)+
+  (cfg?.url&&cfg?.key?'&backend='+encodeURIComponent(cfg.url)+'&publishable='+encodeURIComponent(cfg.key):'');
  modal('Share project','<p class="sub">Invite teammates by the email attached to their Discord account. They can open the same GamePlan site and sync with you.</p>'+
   '<label>Project link<input id="gpInviteLink" readonly value="'+e(link)+'"></label>'+
   '<form id="gpInviteForm"><div class="fields"><label class="wide">Teammate Discord email<input name="email" type="email" required></label></div>'+
