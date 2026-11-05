@@ -226,12 +226,16 @@ function ensureCloudUI(){
  if(!header)return;
  const status=document.createElement('div');
  status.className='gp-cloud-toolbar';
- status.innerHTML='<span class="gp-cloud-status">☁ <strong>Shared GamePlan</strong> · <span id="gpCloudState">Connecting…</span> · <span id="gpCloudRole"></span> · <span id="gpCloudAccount"></span></span><button type="button" class="button" id="gpCloudShare" hidden>Share project</button><a class="button" href="index.html">Local board</a><button type="button" class="button" id="gpCloudReload">↻ Sync</button><button type="button" class="button" id="gpCloudSignOut">Sign out</button>';
- header.append(status);
+ status.innerHTML='<div class="gp-cloud-status"><span class="gp-cloud-status-dot" aria-hidden="true"></span><strong>Cloud</strong><span id="gpCloudState">Connecting…</span><span class="gp-cloud-role" id="gpCloudRole"></span><span class="gp-cloud-account" id="gpCloudAccount"></span></div><div class="gp-cloud-controls"><button type="button" class="button gp-cloud-primary" id="gpCloudShare" hidden>Share project</button><button type="button" class="button" id="gpCloudReload">↻ Sync</button><a class="button" href="index.html">Local board</a><button type="button" class="button" id="gpCloudSignOut">Sign out</button></div>';
+ const actions=header.querySelector('.gp-header-actions');
+ const rail=document.createElement('div');
+ rail.className='gp-cloud-header-rail';
+ if(actions){actions.before(rail);rail.append(actions)}else header.append(rail);
+ rail.append(status);
  $cloud('#gpCloudShare').onclick=inviteTeammate;
  $cloud('#gpCloudReload').onclick=()=>void loadProject(currentProjectId);
  $cloud('#gpCloudSignOut').onclick=async()=>{try{await api?.signOut();location.href='supabase/discord.html'}catch(err){gpAlert('Could not sign out: '+err.message)}};
- const version=$cloud('#appVersion');if(version)version.textContent='Cloud beta · v2026.11.05.51';
+ const version=$cloud('#appVersion');if(version)version.textContent='Cloud beta · v2026.11.05.53';
  const oldLink=$cloud('.top-actions a[href*="cloud=1"]');if(oldLink)oldLink.remove();
  // Full-board file replacement could overwrite teammates' changes; keep export,
  // but disable the destructive whole-board import in cloud mode.
