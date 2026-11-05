@@ -6,16 +6,26 @@
 (function(){
 'use strict';
 const $s=q=>document.querySelector(q);
-const CFG='gameplan-cloud-config-v1',LINKS='gp-sync-links-v1',BASE='gp-sync-baselines-v1',LAST='gp-sync-backup-import-v1';
+const CFG='gameplan-cloud-config-v1',LINKS='gp-sync-links-v1',BASE='gp-sync-baselines-v1',LAST='gp-sync-backup-import-v1',PENDING_INVITE='gp-pending-link-invite';
 const KINDS=['milestones','features','tasks','logs','tags','templates','team','custom_tag_colors'];
 const IDS={milestones:'milestone_id',features:'feature_id',tasks:'task_id',logs:'log_id',tags:'tag_id',templates:'template_id',team:'member_id'};
-let api=null,user=null,links=read(LINKS,{}),bases=read(BASE,{}),busy=false,loop=null,subscription=null,watched='',ready=false,blocked=false;
+let api=null,user=null,links=read(LINKS,{}),bases=read(BASE,{}),busy=false,loop=null,subscription=null,watched='',ready=false,blocked=false,inviteAttempted=false;
 const unique=(kind,obj)=>kind==='team'?'member:'+obj.member_id:kind==='custom_tag_colors'?'color:'+obj.color:String(obj[IDS[kind]]||'');
 const key=(kind,id)=>kind+'\u0000'+id;
 const equal=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 const clone=x=>JSON.parse(JSON.stringify(x));
 function read(k,fallback){try{return JSON.parse(localStorage.getItem(k)||'null')??fallback}catch{return fallback}}
 function store(k,val){localStorage.setItem(k,JSON.stringify(val))}
+
+// The secret token belongs in the URL fragment, never the HTTP query string.
+// Keep it only for this browser tab across the Discord OAuth redirect.
+const incomingFragment=new URLSearchParams(location.hash.replace(/^#/,''));
+if(incomingFragment.has('invite')){
+ const token=incomingFragment.get('invite')||'';
+ if(/^[a-f0-9]{64}$/.test(token))sessionStorage.setItem(PENDING_INVITE,token);
+ else sessionStorage.removeItem(PENDING_INVITE);
+ history.replaceState(null,'',location.pathname+location.search);
+}
 function config(){return read(CFG,null)}
 // The project URL and sb_publishable_ key are public client configuration.
 // Include them in invitation links so teammates do not need setup screens.
@@ -74,13 +84,14 @@ function refreshStatus(){
  const pid=String(activeProject||''),linked=!!links[pid];
  const pending=linked?counts(pid):0;
  if(!navigator.onLine)status(linked?'Offline · '+pending+' pending':'Offline · local only');
+ else if(sessionStorage.getItem(PENDING_INVITE)&&!user)status('Invite ready · sign in with Discord');
  else if(blocked)status('Sync paused · review backup',true);
  else if(!api||!user)status('Saved on this device');
  else if(!linked)status('Local · not shared');
  else if(busy)status('Syncing…');
  else status(pending?pending+' changes pending':'Cloud synced');
  const share=$s('#gpSyncShare');if(share){share.hidden=!user;share.textContent=linked?'Invite teammates':'Share project';}
- if($s('#gpSyncConnect'))$s('#gpSyncConnect').textContent=user?'Account':'Connect Discord';
+ if($s('#gpSyncConnect'))$s('#gpSyncConnect').textContent=user?'Account':sessionStorage.getItem(PENDING_INVITE)?'Join with Discord':'Connect Discord';
 }
 function persistBaseline(pid,snap){
  bases[pid]=snap;store(BASE,bases);
@@ -322,7 +333,7 @@ async function shareCurrent(){
    // them as locally deleted during the first sync.
    mergeRemote(pid,combined,{},projectRows(pid));
    persistBaseline(pid,combined);saveLink(pid,cloud.id);
-   closeModal();await watch();refreshStatus();gpAlert('Project connected. Your local tasks and time logs were uploaded. You can now invite teammates.');
+   closeModal();await watch();refreshStatus();await shareInvite();
   }catch(err){gpAlert('Could not connect project: '+err.message);btn.disabled=false}
  };
 }
@@ -330,18 +341,77 @@ async function shareInvite(){
  if(!user)return connect();
  const cloudId=current();if(!cloudId)return shareCurrent();
  const cfg=config();
- const link=location.origin+location.pathname+'?shared='+encodeURIComponent(cloudId)+
-  (cfg?.url&&cfg?.key?'&backend='+encodeURIComponent(cfg.url)+'&publishable='+encodeURIComponent(cfg.key):'');
- modal('Share project','<p class="sub">Invite teammates by the email attached to their Discord account. They can open the same GamePlan site and sync with you.</p>'+
-  '<label>Project link<input id="gpInviteLink" readonly value="'+e(link)+'"></label>'+
+ const buildLink=token=>location.origin+location.pathname+
+  (cfg?.url&&cfg?.key?'?backend='+encodeURIComponent(cfg.url)+'&publishable='+encodeURIComponent(cfg.key):'')+
+  '#invite='+encodeURIComponent(token);
+ const sqlHint='Invite links are not enabled on this Supabase project yet. Run supabase/link-invites.sql in Supabase SQL Editor once.';
+ const describeError=err=>/gp_(?:create|list|revoke|accept)_link_invite|PGRST202|42883|Could not find the function|schema cache/i.test(err?.message||'')?sqlHint:(err?.message||String(err));
+ modal('Share project',
+  '<p class="sub">Create a private invite link. Teammates can open it and join with Discord—no email needed. Anyone with a valid link can join, so only share it with people you trust.</p>'+
+  '<form id="gpCreateLinkForm"><div class="fields">'+
+  '<label>Access<select name="role"><option value="editor">Editor · can change tasks</option><option value="viewer">Viewer · read only</option></select></label>'+
+  '<label>Link expires<select name="days"><option value="7">In 7 days</option><option value="1">In 1 day</option><option value="30">In 30 days</option></select></label>'+
+  '</div><div class="controls"><button type="submit" class="button main">+ Generate invite link</button></div></form>'+
+  '<div id="gpGeneratedInvite" class="gp-invite-result" hidden><label>Send this link<input id="gpInviteLink" readonly autocomplete="off"></label>'+
+  '<div class="controls"><button type="button" class="button main" id="gpCopyInvite">Copy invite link</button></div>'+
+  '<p class="sub">This link is shown only now. A link can be used by up to 25 people before it expires or is revoked.</p></div>'+
+  '<div id="gpLinkList" class="gp-invite-list"><p class="sub">Loading invite links…</p></div>'+
+  '<details class="gp-invite-email"><summary>Invite by email instead (optional)</summary>'+
   '<form id="gpInviteForm"><div class="fields"><label class="wide">Teammate Discord email<input name="email" type="email" required></label></div>'+
-  '<div class="controls"><button class="button" type="button" id="gpCopyInvite">Copy link</button><button class="button main" type="submit">Invite editor</button></div></form>');
- $s('#gpCopyInvite').onclick=()=>{navigator.clipboard?.writeText(link);gpAlert('Project link copied')};
+  '<div class="controls"><button class="button" type="submit">Invite editor by email</button></div></form></details>');
+ const form=$s('#gpCreateLinkForm'),result=$s('#gpGeneratedInvite'),input=$s('#gpInviteLink');
+ const historyRoot=$s('#gpLinkList');
+ let generated='';
+ const refreshLinks=async()=>{
+  try{
+   const existing=await api.listLinkInvites(cloudId);
+   if(!historyRoot.isConnected)return;
+   const now=Date.now();
+   historyRoot.innerHTML='<h3>Existing invite links</h3>'+
+    (existing.length?existing.map(inv=>{
+     const active=!inv.revoked_at&&new Date(inv.expires_at).getTime()>now&&Number(inv.use_count)<Number(inv.max_uses);
+     const state=inv.revoked_at?'Revoked':new Date(inv.expires_at).getTime()<=now?'Expired':Number(inv.use_count)>=Number(inv.max_uses)?'Used up':'Active';
+     return '<div class="gp-invite-row"><div><strong>'+e(inv.invite_role==='viewer'?'Viewer':'Editor')+
+      '</strong> <span class="sub">'+e(state)+' · '+e(inv.use_count)+'/'+e(inv.max_uses)+' joined · expires '+
+      e(new Date(inv.expires_at).toLocaleDateString())+'</span></div>'+
+      (active?'<button type="button" class="button" data-revoke-invite="'+e(inv.invite_id)+'">Revoke</button>':'')+'</div>';
+    }).join(''):'<p class="sub">No links created yet.</p>');
+  }catch(err){
+   if(historyRoot.isConnected)historyRoot.innerHTML='<p class="sub gp-invite-error">'+e(describeError(err))+'</p>';
+  }
+ };
+ form.onsubmit=async ev=>{
+  ev.preventDefault();
+  const btn=form.querySelector('[type=submit]');btn.disabled=true;
+  try{
+   const fields=Object.fromEntries(new FormData(form).entries());
+   const invite=await api.createLinkInvite(cloudId,fields.role,Number(fields.days));
+   generated=buildLink(invite.invite_token);
+   input.value=generated;result.hidden=false;
+   await refreshLinks();
+  }catch(err){gpAlert('Could not generate link: '+describeError(err))}
+  finally{btn.disabled=false}
+ };
+ $s('#gpCopyInvite').onclick=async()=>{
+  if(!generated)return;
+  try{await navigator.clipboard.writeText(generated);gpAlert('Invite link copied. Send it in Discord!')}
+  catch{input.focus();input.select();gpAlert('Copy the selected link to share it.')}
+ };
+ historyRoot.onclick=async ev=>{
+  const button=ev.target.closest('[data-revoke-invite]');if(!button)return;
+  if(!await gpConfirm('Revoke this invite link? Anyone who has already joined will keep their membership.',{confirmLabel:'Revoke link',danger:true}))return;
+  button.disabled=true;
+  try{await api.revokeLinkInvite(button.dataset.revokeInvite);await refreshLinks()}
+  catch(err){gpAlert('Could not revoke link: '+describeError(err));button.disabled=false}
+ };
  $s('#gpInviteForm').onsubmit=async ev=>{
   ev.preventDefault();
-  try{await api.inviteByEmail(cloudId,new FormData(ev.currentTarget).get('email'),'editor');closeModal();gpAlert('Invitation saved. Send the project link to your teammate.')}
-  catch(err){gpAlert('Invitation failed: '+err.message)}
+  try{
+   await api.inviteByEmail(cloudId,new FormData(ev.currentTarget).get('email'),'editor');
+   gpAlert('Email invitation saved. They can use Discord with that email to join.');
+  }catch(err){gpAlert('Invitation failed: '+err.message)}
  };
+ void refreshLinks();
 }
 async function joinShared(cloudId){
  if(!user)return;
@@ -444,6 +514,25 @@ async function initialize(){
   if(!online){refreshStatus();return}
   ready=true;
   await watch();
+  // Redeem secret links server-side before reading any project data.
+  const token=sessionStorage.getItem(PENDING_INVITE);
+  if(token&&!inviteAttempted){
+   inviteAttempted=true;
+   try{
+    const inviteCloudId=await api.acceptLinkInvite(token);
+    sessionStorage.removeItem(PENDING_INVITE);
+    await joinShared(inviteCloudId);
+    gpAlert('You joined the shared project! Your changes will sync with your teammates.');
+    refreshStatus();return;
+   }catch(err){
+    const msg=/gp_accept_link_invite|PGRST202|42883|Could not find the function/i.test(err.message||'')
+     ?'Invite links require the one-time Supabase link-invites.sql setup.'
+     :err.message;
+    status('Could not join invitation · '+msg,true);
+    gpAlert('Could not join the project: '+msg);
+    return;
+   }
+  }
   const shared=new URLSearchParams(location.search).get('shared')||localStorage.getItem('gp-share-request');
   if(shared)localStorage.removeItem('gp-share-request');
   if(shared&&!Object.values(links).includes(shared)){
