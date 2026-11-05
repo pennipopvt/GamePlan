@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GamePlan · Cloud Preview</title><link rel="icon" href="../gameplan-mark.svg" type="image/svg+xml">
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,sans-serif;color:#33253a;background:#f9f7fa}
+*{box-sizing:border-box}body{margin:0}main{max-width:900px;margin:auto;padding:35px 20px 80px}
+header{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:24px}
+h1{font-size:30px;letter-spacing:-.8px;margin:0}h2{font-size:20px;margin:0 0 14px}
+p{line-height:1.55}.muted{color:#84798a;font-size:13px}
+.card{background:#fff;border:1px solid #e8dfeb;padding:24px;border-radius:14px;margin:16px 0;box-shadow:0 6px 25px #34193b09}
+button{cursor:pointer;border:1px solid #e0cbdc;border-radius:9px;padding:10px 14px;background:#fff;color:#8a175f;font:600 13px inherit}
+button.primary{background:#ff3cc7;border-color:#ff3cc7;color:#35112f}
+button:hover{background:#fce5f5}button.primary:hover{background:#eb2bb5}button:disabled{opacity:.5;cursor:not-allowed}
+input,select{font:inherit;padding:10px;border:1px solid #d9cedd;border-radius:8px;min-width:0;width:100%}
+label{font-size:13px;font-weight:600;display:grid;gap:6px}form{display:grid;gap:12px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.row>*{min-width:0}
+.project{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid #efeaf0}
+.project:last-child{border:0}.project button{flex:none}
+.task{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f0ebf2}
+.task:last-child{border:0}.task select{width:auto}
+.notice{white-space:pre-wrap;background:#fff1fa;padding:12px 14px;border:1px solid #f0c9e0;border-radius:9px}
+.notice.error{background:#fff0f0;border-color:#f2b9b9;color:#a52d36}
+[hidden]{display:none!important}a{color:#8e196b}
+@media(max-width:540px){main{padding:22px 13px}.card{padding:18px}.task{align-items:flex-start;flex-direction:column}.task select{width:100%}}
+</style></head>
+<body><main>
+<header><div><h1>GamePlan <span style="color:#a81578">Cloud Preview</span></h1><p class="muted">A separate collaboration test. Your local board is unchanged.</p></div><a href="../index.html">Back to local GamePlan</a></header>
+<p id="notice" class="notice" hidden role="status"></p>
+<section class="card" id="setup">
+<h2>Connect Supabase</h2><p class="muted">Create a Supabase project, run <code>supabase/schema.sql</code>, then enter its Project URL and publishable/anon key. Never use a secret or service-role key here.</p>
+<form id="configForm"><label>Supabase project URL<input id="url" type="url" required placeholder="https://your-project.supabase.co"></label>
+<label>Publishable key<input id="key" required autocomplete="off" placeholder="sb_publishable_..."></label>
+<div class="row"><button class="primary">Save browser configuration</button><button type="button" id="clearConfig">Clear configuration</button></div></form>
+</section>
+<section class="card" id="auth" hidden>
+<h2>Sign in</h2><p class="muted">Use the Google account you want to share projects with. Add this page URL to Supabase's allowed redirect URLs.</p>
+<div class="row"><button id="login" class="primary">Continue with Google</button><button id="logout" hidden>Sign out</button><span id="identity" class="muted"></span></div>
+</section>
+<section id="app" hidden>
+<section class="card"><h2>Your cloud projects</h2>
+<div id="projects"></div>
+<form id="createProject" class="row" style="margin-top:16px"><input id="newProjectName" placeholder="New project name" required style="flex:1;min-width:190px"><button class="primary">Create project</button></form>
+</section>
+<section id="selected" hidden>
+<section class="card"><h2 id="projectName"></h2><p class="muted">Edits save to Supabase and updates appear in other connected browsers.</p>
+<form id="inviteForm" class="row"><input id="inviteEmail" type="email" placeholder="Teammate's Google email" required style="flex:1;min-width:190px"><select id="inviteRole" style="width:120px"><option value="editor">Editor</option><option value="viewer">Viewer</option></select><button class="primary">Invite</button></form>
+<p class="muted">Invited teammates sign in with the same email address to join automatically.</p>
+</section>
+<section class="card"><h2>Tasks</h2><div id="tasks"></div>
+<form id="newTaskForm" class="row" style="margin-top:18px"><input id="taskTitle" placeholder="New task" required style="flex:2;min-width:150px"><select id="featurePicker" required style="flex:1;min-width:150px"></select><button class="primary">Add task</button></form>
+<p id="emptyFeatures" class="muted" hidden>This project needs a feature before tasks can be created. Import a local project to test the complete workflow.</p>
+</section>
+</section>
+<section class="card"><h2>Copy a local project into the cloud</h2>
+<p class="muted">Copies data from the existing GamePlan browser storage. The original project stays local and is never deleted. This creates a new cloud project.</p>
+<div class="row"><select id="localProjects" style="flex:1;min-width:190px"></select><button id="importLocal">Import copy</button></div>
+</section>
+</section>
+</main>
+<script type="module">
+import {createGamePlanCloud} from './gameplan-cloud.js';
+const $=id=>document.getElementById(id);
+const STORAGE='gameplan-cloud-config-v1',LOCAL_KEY='little-dock-local-v2';
+let cloud=null,active=null,unsubscribe=null,refreshTimer=null;
+const message=(text,error=false)=>{const n=$('notice');n.hidden=!text;n.textContent=text;n.className='notice'+(error?' error':'')};
+const run=async(fn)=>{try{message('');await fn()}catch(err){console.error(err);message(err.message||String(err),true)}};
+function addText(parent,tag,text,cls){const el=document.createElement(tag);el.textContent=text;if(cls)el.className=cls;parent.append(el);return el}
+function localData(){try{return JSON.parse(localStorage.getItem(LOCAL_KEY)||'null')}catch{return null}}
+function refreshLocalOptions(){
+ const data=localData(),sel=$('localProjects');sel.replaceChildren();
+ for(const p of data?.projects||[]){const o=document.createElement('option');o.value=p.project_id;o.textContent=p.project_name;sel.append(o)}
+ $('importLocal').disabled=!sel.options.length;
+}
+function saveConfig(ev){
+ ev.preventDefault();
+ const url=$('url').value.trim().replace(/\/$/,''),key=$('key').value.trim();
+ if(/service_role|sb_secret_/i.test(key))throw Error('Never use a secret/service-role key in browser code.');
+ const instance=createGamePlanCloud({url,publishableKey:key});
+ localStorage.setItem(STORAGE,JSON.stringify({url,key}));
+ cloud=instance;$('auth').hidden=false;void checkAuth();
+}
+async function checkAuth(){
+ if(!cloud)return;
+ const session=await cloud.getSession();
+ $('login').hidden=!!session;$('logout').hidden=!session;
+ $('identity').textContent=session?.user?.email||'';
+ $('app').hidden=!session;
+ if(session){refreshLocalOptions();await showProjects()}else{active=null;$('selected').hidden=true}
+}
+async function showProjects(){
+ const projects=await cloud.listProjects(),box=$('projects');box.replaceChildren();
+ if(!projects.length)addText(box,'p','No cloud projects yet.','muted');
+ for(const p of projects){
+  const row=document.createElement('div');row.className='project';
+  const name=addText(row,'strong',p.name);
+  const open=document.createElement('button');open.textContent='Open';open.onclick=()=>run(()=>openProject(p));row.append(open);box.append(row);
+ }
+}
+async function openProject(p){
+ active=p;unsubscribe?.();unsubscribe=null;$('selected').hidden=false;
+ $('projectName').textContent=p.name;
+ await showItems();
+ unsubscribe=cloud.subscribeProject(p.id,()=>{
+  clearTimeout(refreshTimer);
+  refreshTimer=setTimeout(()=>{if(active?.id===p.id)void run(showItems)},150);
+ });
+}
+async function showItems(){
+ if(!active)return;
+ const items=await cloud.loadProjectItems(active.id),box=$('tasks');box.replaceChildren();
+ const features=new Map(items.features.map(f=>[String(f.feature_id),f.name]));
+ const picker=$('featurePicker');picker.replaceChildren();
+ for(const f of items.features){const option=document.createElement('option');option.value=f.feature_id;option.textContent=f.name;picker.append(option)}
+ $('newTaskForm').hidden=!items.features.length;$('emptyFeatures').hidden=!!items.features.length;
+ if(!items.tasks.length)addText(box,'p','No tasks yet.','muted');
+ for(const t of items.tasks){
+  const row=document.createElement('div');row.className='task';
+  const detail=document.createElement('div');addText(detail,'strong',t.title);addText(detail,'div',features.get(String(t.feature_id))||'Unknown feature','muted');row.append(detail);
+  const select=document.createElement('select');
+  for(const status of ['To do','In progress','Blocked','Done']){
+   const o=document.createElement('option');o.value=status;o.textContent=status;select.append(o);
+  }
+  select.value=t.status||'To do';
+  select.onchange=()=>run(async()=>{
+   select.disabled=true;
+   try{await cloud.saveItem(active.id,'tasks',String(t.task_id),{...t,status:select.value})}
+   finally{select.disabled=false}
+  });
+  row.append(select);box.append(row);
+ }
+}
+$('configForm').addEventListener('submit',ev=>run(()=>saveConfig(ev)));
+$('clearConfig').onclick=()=>{localStorage.removeItem(STORAGE);cloud=null;active=null;unsubscribe?.();$('auth').hidden=true;$('app').hidden=true;message('Configuration cleared from this browser.')};
+$('login').onclick=()=>run(()=>cloud.signInWithGoogle());
+$('logout').onclick=()=>run(async()=>{await cloud.signOut();await checkAuth()});
+$('createProject').addEventListener('submit',ev=>{ev.preventDefault();void run(async()=>{await cloud.createProject($('newProjectName').value);$('newProjectName').value='';await showProjects()})});
+$('inviteForm').addEventListener('submit',ev=>{ev.preventDefault();void run(async()=>{await cloud.inviteByEmail(active.id,$('inviteEmail').value,$('inviteRole').value);$('inviteEmail').value='';message('Invitation saved. Your teammate can join by signing in with that email.')})});
+$('newTaskForm').addEventListener('submit',ev=>{ev.preventDefault();void run(async()=>{const id=crypto.randomUUID();await cloud.saveItem(active.id,'tasks',id,{task_id:id,feature_id:$('featurePicker').value,title:$('taskTitle').value.trim(),status:'To do',priority:'Normal',estimated_hours:0,remaining_hours:0,tag_ids:[],assignee_member_id:''});$('taskTitle').value='';await showItems()})});
+$('importLocal').onclick=()=>run(async()=>{
+ const data=localData();if(!data)throw Error('No local board data found in this browser.');
+ if(!confirm('Create a new cloud copy of this project? The local copy will not be changed.'))return;
+ const result=await cloud.importLocalProject(data,$('localProjects').value);
+ message('Imported '+result.importedItems+' items into a new cloud project.');await showProjects();
+ await openProject(result);
+});
+try{const saved=JSON.parse(localStorage.getItem(STORAGE)||'null');if(saved){$('url').value=saved.url||'';$('key').value=saved.key||'';cloud=createGamePlanCloud({url:saved.url,publishableKey:saved.key});$('auth').hidden=false;await checkAuth()}}catch(err){message(err.message,true)}
+</script></body></html>
