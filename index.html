@@ -1020,8 +1020,28 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
 #milestoneList .feature-section.status-progress>.feature-summary{background:#fbfbe8}
 #milestoneList .task-entry.status-progress .status-select{background:var(--gp-yellow);color:#303200;border-color:#d9df00}
 #milestoneList .task-entry.status-progress:hover{background:#f8f9d8}
+
+/* Sidebar option B — soft charcoal. Color-only overrides; geometry is unchanged. */
+.sidebar,.gp-collapsed .sidebar{background:#252934;border-right-color:#1d222c;color:#f4f5f7}
+#gpSidebarTop .sidebar-brand>span{color:#f7f8fa}
+#gpSidebarTop .sidebar-brand .gp-brand-mark{filter:brightness(0) invert(1)}
+#gpSidebarToggle,.gp-collapsed #gpSidebarToggle{color:#e4e8ee;background:transparent}
+#gpSidebarToggle:hover,.gp-collapsed #gpSidebarToggle:hover{color:#fff;background:#ffffff18}
+#gpPrimary>.gp-nav,.gp-collapsed #gpPrimary>.gp-nav{color:#cbd0db}
+#gpPrimary>.gp-nav:hover,.gp-collapsed #gpPrimary>.gp-nav:hover{background:#ffffff13;color:#fff}
+#gpPrimary>.gp-nav.active,.gp-collapsed #gpPrimary>.gp-nav.active{
+ background:#ffffff1d;color:#fff;box-shadow:inset 3px 0 0 #b5d9da
+}
+#gpBoardNav{border-left-color:#ffffff30}
+#gpBoardNav .side-label,.sidebar .side-label{color:#aab1c0}
+#gpBoardNav .side-link,.sidebar .side-link{color:#c7cfda}
+#gpBoardNav .side-link:hover,.sidebar .side-link:hover{background:#ffffff12;color:#fff}
+#gpBoardNav .side-link.active,.sidebar .side-link.active{background:#ffffff1b;color:#fff;box-shadow:none}
+#gpBoardNav .side-count,.sidebar .side-count{color:#bfcbd3}
+.sidebar .sidebar-foot{color:#a4adba}
+.sidebar .gp-nav .gp-icon{color:inherit}
 </style></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.18</span></div></div><div class="top-actions"><a class="link" href="shared.html?v=2026.11.04.17">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.19</span></div></div><div class="top-actions"><a class="link" href="shared.html?v=2026.11.04.17">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter"><option value="">All assignees</option></select><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div class="grid"><div class="card stat"><span class="muted">Total tasks</span><b id="total">0</b></div><div class="card stat"><span class="muted">Completed</span><b id="completed">0</b></div><div class="card stat"><span class="muted">Time logged</span><b id="hours">0h</b></div></div>
@@ -1030,7 +1050,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.04.18';
+const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.04.19';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=['Ethan','Jerry','Jenny'];
@@ -1549,4 +1569,4 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="gameplan.js?v=2026.11.04.18"></script></body></html>
+</script><script src="gameplan.js?v=2026.11.04.19"></script></body></html>
