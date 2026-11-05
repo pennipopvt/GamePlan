@@ -54,6 +54,38 @@ export function createGamePlanCloud({url,publishableKey}){
    }).select('id,email,role').single();
    check(error);return data;
   },
+  // Link-only invites: the token is generated inside Postgres, hashed at rest,
+  // and can be redeemed only after Discord authentication.
+  async createLinkInvite(projectId,role='editor',expiresDays=7){
+   await currentUser();
+   if(!['editor','viewer'].includes(role))throw Error('Invalid invite role.');
+   if(!Number.isInteger(expiresDays)||expiresDays<1||expiresDays>30)throw Error('Choose an expiry from 1 to 30 days.');
+   const {data,error}=await client.rpc('gp_create_link_invite',{
+    p_project:projectId,p_role:role,p_expires_days:expiresDays
+   });
+   check(error);
+   const invite=Array.isArray(data)?data[0]:data;
+   if(!invite?.invite_token)throw Error('Could not create invite link.');
+   return invite;
+  },
+  async listLinkInvites(projectId){
+   await currentUser();
+   const {data,error}=await client.rpc('gp_list_link_invites',{p_project:projectId});
+   check(error);return data||[];
+  },
+  async revokeLinkInvite(inviteId){
+   await currentUser();
+   const {data,error}=await client.rpc('gp_revoke_link_invite',{p_invite:inviteId});
+   check(error);return data===true;
+  },
+  async acceptLinkInvite(token){
+   await currentUser();
+   if(!/^[a-f0-9]{64}$/.test(String(token||'')))throw Error('Invalid invitation URL.');
+   const {data,error}=await client.rpc('gp_accept_link_invite',{p_token:token});
+   check(error);
+   if(!data)throw Error('Could not join this project.');
+   return data;
+  },
   async listMembers(projectId){
    await currentUser();
    const {data,error}=await client.from('gp_members').select('project_id,user_id,role,joined_at').eq('project_id',projectId);
