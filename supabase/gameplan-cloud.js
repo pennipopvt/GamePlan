@@ -11,7 +11,11 @@ function requireId(value,name){const id=String(value??'').trim();if(!id)throw Er
 export function createGamePlanCloud({url,publishableKey}){
  if(!/^https:\/\/[^/]+\.supabase\.co\/?$/.test(url||''))throw Error('Enter a valid Supabase project URL.');
  if(!publishableKey||!String(publishableKey).trim())throw Error('Supabase publishable key is missing.');
- const client=createClient(url,publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+ const remember=localStorage.getItem('gp-remember-login-v1')!=='false';
+ const client=createClient(url,publishableKey,{auth:{
+  persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,
+  storage:remember?localStorage:sessionStorage
+ }});
  const currentUser=async()=>{
   const {data,error}=await client.auth.getUser();check(error);
   if(!data.user)throw Error('Sign in to access shared projects.');
@@ -19,11 +23,36 @@ export function createGamePlanCloud({url,publishableKey}){
  };
  return {
   client,
-  async signInWithDiscord(){
+  async signInWithDiscord(){return this.signInWithProvider('discord')},
+  async signInWithProvider(provider){
+   if(!['discord','google'].includes(provider))throw Error('Unsupported login provider.');
    const {data,error}=await client.auth.signInWithOAuth({
-    provider:'discord',
-    options:{redirectTo:location.origin+'/ProjectPlanner/supabase/discord.html'}
-   });
+    provider,options:{redirectTo:location.origin+'/ProjectPlanner/supabase/discord.html'}
+   });check(error);return data;
+  },
+  async signInWithEmail(email){
+   const address=String(email||'').trim();
+   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address))throw Error('Enter a valid email address.');
+   const {data,error}=await client.auth.signInWithOtp({
+    email:address,options:{emailRedirectTo:location.origin+'/ProjectPlanner/supabase/discord.html'}
+   });check(error);return data;
+  },
+  async linkedIdentities(){
+   await currentUser();
+   const {data,error}=await client.auth.getUserIdentities();check(error);return data?.identities||[];
+  },
+  async linkIdentity(provider){
+   await currentUser();
+   if(!['discord','google'].includes(provider))throw Error('Unsupported provider.');
+   const {data,error}=await client.auth.linkIdentity({
+    provider,options:{redirectTo:location.origin+'/ProjectPlanner/supabase/discord.html'}
+   });check(error);return data;
+  },
+  async addEmailIdentity(email){
+   await currentUser();
+   const address=String(email||'').trim();
+   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address))throw Error('Enter a valid email.');
+   const {data,error}=await client.auth.updateUser({email:address});
    check(error);return data;
   },
   async signOut(){const {error}=await client.auth.signOut();check(error)},
@@ -85,6 +114,31 @@ export function createGamePlanCloud({url,publishableKey}){
    check(error);
    if(!data)throw Error('Could not join this project.');
    return data;
+  },
+  async projectTeam(projectId){
+   await currentUser();
+   const {data,error}=await client.rpc('gp_project_team',{p_project:projectId});
+   check(error);return data||[];
+  },
+  async setTeamMember(projectId,userId,displayName,legacyMemberId){
+   await currentUser();
+   const {data,error}=await client.rpc('gp_set_team_member',{
+    p_project:projectId,p_user:userId,p_display_name:displayName||null,
+    p_legacy_member_id:legacyMemberId||null
+   });check(error);return data;
+  },
+  async setTeamRole(projectId,userId,role){
+   await currentUser();
+   if(!['editor','viewer'].includes(role))throw Error('Invalid role.');
+   const {data,error}=await client.rpc('gp_set_team_role',{
+    p_project:projectId,p_user:userId,p_role:role
+   });check(error);return data;
+  },
+  async removeTeamMember(projectId,userId){
+   await currentUser();
+   const {data,error}=await client.rpc('gp_remove_team_member',{
+    p_project:projectId,p_user:userId
+   });check(error);return data;
   },
   async listMembers(projectId){
    await currentUser();
