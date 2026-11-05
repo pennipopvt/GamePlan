@@ -1388,6 +1388,8 @@ a:hover,.link:hover{color:#80115c}
  #milestoneList .task-entry .gp-task-tags{grid-area:tags}
 }
 
+/* Allow expanded task tags to extend beyond their milestone card. */
+#milestoneList .milestone-section[open]:not(.gp-details-animating){overflow:visible}
 /* Readable task typography and side-mounted tag swatches that reveal on hover. */
 #milestoneList .task-entry{
  grid-template-areas:"main tags person status actions";
