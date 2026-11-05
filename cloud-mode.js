@@ -20,8 +20,13 @@ function idOf(kind,item){
 }
 function flatSnapshot(items,projectId){
  const out=new Map();
+ const taskIds=new Set((items.tasks||[])
+  .filter(t=>String(t.project_id)===String(projectId))
+  .map(t=>String(t.task_id)));
  for(const kind of KINDS){
-  const arr=(items[kind]||[]).filter(it=>String(it.project_id)===String(projectId));
+  const arr=(items[kind]||[]).filter(it=>kind==='logs'
+   ?taskIds.has(String(it.task_id))
+   :String(it.project_id)===String(projectId));
   for(const [index,item] of arr.entries()){
    const id=idOf(kind,item);if(!id)continue;
    const value={kind,item_id:id,payload:{...item,project_id:projectId},sort_order:index};
