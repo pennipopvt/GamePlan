@@ -402,6 +402,35 @@ details[open]>summary .chevron{transform:rotate(90deg)}
  #gpProjectTitle{font-size:19px}
  .gp-board-footer{padding:15px}
 }
+
+/* Subtle sidebar movement without shifting the fixed icon rail. */
+@media(min-width:681px){
+ .app{transition:grid-template-columns .22s cubic-bezier(.2,.75,.25,1)}
+ .sidebar{transition:border-color .22s ease}
+ #gpSidebarTop .sidebar-brand{transition:opacity .16s ease}
+ #gpPrimary>.gp-nav .gp-text,#gpProjectTrigger .gp-project-trigger-name{transition:opacity .14s ease}
+}
+@media(prefers-reduced-motion:reduce){
+ .app,.sidebar,#gpSidebarTop .sidebar-brand,#gpPrimary>.gp-nav .gp-text,#gpProjectTrigger .gp-project-trigger-name{transition:none!important}
+}
+/* Drag tasks by their handle and drop them onto another feature (including its header). */
+.task-entry{position:relative}
+.task-entry:has(.gp-task-drag-handle){padding-left:40px}
+.gp-task-drag-handle{
+ position:absolute;top:50%;left:9px;transform:translateY(-50%);
+ display:flex;align-items:center;justify-content:center;
+ width:24px;height:32px;border-radius:6px;
+ color:#91a59d;cursor:grab;user-select:none;touch-action:pan-y;
+ opacity:.45;transition:opacity .12s,color .12s,background .12s;
+}
+.task-entry:hover .gp-task-drag-handle,.gp-task-drag-handle:hover{opacity:1}
+.gp-task-drag-handle:hover{color:#2c7669;background:#e2efe7}
+.gp-task-drag-handle:active{cursor:grabbing}
+.gp-task-dragging{opacity:.45}
+.feature-section.gp-feature-drop-target{outline:2px dashed #398d7b;outline-offset:-3px;background:#e8f4ec}
+.feature-section.gp-feature-drop-target>.feature-summary{background:#dcf1e5}
+@media(max-width:680px){.task-entry:has(.gp-task-drag-handle){padding-left:40px}}
+@media(hover:none){.gp-task-drag-handle{opacity:.85}}
 </style></head>
 <body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.4</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
