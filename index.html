@@ -874,8 +874,147 @@ body{background:#fbfcfa}
  .gp-detail-meta>div{padding:12px 14px}
  .gp-detail-description{padding:15px}
 }
+
+/* GamePlan palette / Coolors Nov 2026:
+   amethyst #4c1a57, fuchsia #ff3cc7, yellow #f0f600,
+   cyan #00e5e8, ocean #007c77. Bright inks are used as accents,
+   with low-chroma tints for text-heavy nested rows. */
+:root{
+ --gp-amethyst:#4c1a57;--gp-fuchsia:#ff3cc7;--gp-yellow:#f0f600;
+ --gp-cyan:#00e5e8;--gp-ocean:#007c77;--gp-ink:#252833;
+ --gp-paper:#fafafb;--gp-border:#e8e5ec;
+ --gp-todo-bg:#f3f4f6;--gp-todo-edge:#adb2ba;
+ --gp-progress-bg:#f8f8dc;--gp-progress-edge:#c5c900;
+ --gp-blocked-bg:#fce7f5;--gp-blocked-edge:#db4aa7;
+ --gp-done-bg:#ddf2ef;--gp-done-edge:#007c77;
+ --gp-selection-bg:#d8f8f8;--gp-selection-edge:#00a7ac;
+ color:var(--gp-ink);background:var(--gp-paper)
+}
+body{background:var(--gp-paper);color:var(--gp-ink)}
+a,.link{color:var(--gp-ocean)}
+a:hover,.link:hover{color:#005a56}
+.sub,.muted{color:#777884}
+.card,.gp-card{background:#fff;border-color:var(--gp-border);box-shadow:0 3px 14px #4c1a5706}
+input,textarea,select{border-color:#dcd9e1;color:#322c38;background:#fff}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible{outline-color:#00afb2}
+.button{border-color:#ddd8e1;color:var(--gp-amethyst);background:#fff}
+.button:hover{filter:none;background:#f7f1f9}
+.button.main,.button.main:hover{background:var(--gp-ocean);border-color:var(--gp-ocean);color:#fff}
+.button.main:hover{background:#005e5b}
+.button.danger{color:#a62c75;border-color:#f0bcd9;background:#fff5fb}
+.button.danger:hover{background:#fce6f3}
+.gp-header-actions .button,.gp-overview-heading #pmActions .button,.gp-overview-heading #gpSelectTasks{color:var(--gp-ocean)}
+.gp-header-actions .button:hover,.gp-overview-heading #pmActions .button:hover,.gp-overview-heading #gpSelectTasks:hover{color:#005b58}
+#pageHeading,#gpProjectTitle{color:#342638!important}
+.gp-header-project .gp-project-label{color:#887b90}
+.gp-header-project #gpProjectTrigger{color:var(--gp-ocean)}
+.gp-header-project #gpProjectTrigger:hover{background:#e5f7f6;color:#005f5c}
+/* Dark-amethyst left rail: preserve the 44px grid so icon alignment never changes. */
+.sidebar,.gp-collapsed .sidebar{background:var(--gp-amethyst);border-right-color:#38103f;color:#f8effa}
+#gpSidebarTop .sidebar-brand>span{color:#fff}
+#gpSidebarTop .sidebar-brand .gp-brand-mark{filter:brightness(0) invert(1)}
+#gpSidebarToggle,.gp-collapsed #gpSidebarToggle{color:#f8eaf8;background:transparent}
+#gpSidebarToggle:hover,.gp-collapsed #gpSidebarToggle:hover{color:#fff;background:#ffffff1f}
+#gpPrimary>.gp-nav,.gp-collapsed #gpPrimary>.gp-nav{color:#f1dfef}
+#gpPrimary>.gp-nav:hover,.gp-collapsed #gpPrimary>.gp-nav:hover{background:#ffffff18;color:#fff}
+#gpPrimary>.gp-nav.active,.gp-collapsed #gpPrimary>.gp-nav.active{
+ color:#fff;background:#ffffff2b;border-radius:8px;font-weight:600;
+ box-shadow:inset 3px 0 0 var(--gp-cyan)
+}
+#gpBoardNav{border-left-color:#ffffff45}
+#gpBoardNav .side-label,.sidebar .side-label{color:#d9b6dd}
+#gpBoardNav .side-link,.sidebar .side-link{color:#ead8e9}
+#gpBoardNav .side-link:hover,.sidebar .side-link:hover{background:#ffffff17;color:#fff}
+#gpBoardNav .side-link.active,.sidebar .side-link.active{background:#ffffff25;color:#fff;box-shadow:none;font-weight:600}
+#gpBoardNav .side-count,.sidebar .side-count{color:#f4d9f4}
+.sidebar .sidebar-foot{color:#cfb1d4}
+.sidebar .gp-nav .gp-icon{color:inherit}
+/* Statistics echo the vivid dashboard reference without coloring task surfaces neon. */
+.grid .stat{border:0;border-radius:12px;box-shadow:none;padding:17px 20px;min-height:96px}
+.grid .stat:nth-child(1){background:var(--gp-fuchsia);color:#3c143e}
+.grid .stat:nth-child(2){background:var(--gp-ocean);color:#fff}
+.grid .stat:nth-child(3){background:var(--gp-cyan);color:#17353a}
+.grid .stat .muted,.grid .stat b{color:inherit}
+.grid .stat .muted{opacity:.82;font-weight:600}
+.grid .stat b{font-weight:600}
+.grid{border-bottom-color:var(--gp-border)}
+/* The nesting remains light and legible, with palette-tinted section headers. */
+#milestoneList .milestone-section{background:#fff;border-color:#ded5e5;box-shadow:0 4px 14px #4c1a570a}
+#milestoneList .milestone-summary{background:#f0eaf4;border-bottom-color:#e1d4e7}
+#milestoneList .milestone-summary .title-stack strong{color:var(--gp-amethyst)}
+#milestoneList .milestone-summary .title-stack .sub{color:#786c80}
+#milestoneList .milestone-tools .tag{background:#e7dceb;color:#684875}
+#milestoneList .gp-milestone-time{color:#766680}
+#milestoneList .milestone-summary .progress-line{background:#d8e5e5}
+#milestoneList .milestone-summary .progress-line span{background:var(--gp-ocean)}
+#milestoneList .feature-section{background:#fff;border-color:#e5e2e8;box-shadow:none}
+#milestoneList .feature-summary,#milestoneList .feature-section.status-todo>.feature-summary{background:#f3f5f6;border-bottom-color:#e5e7eb}
+#milestoneList .feature-section.status-progress>.feature-summary{background:#f7f7d8}
+#milestoneList .feature-section.status-blocked>.feature-summary{background:#fae4f2}
+#milestoneList .feature-section.status-done>.feature-summary{background:#e0f1ee}
+#milestoneList .feature-section.status-todo{border-left-color:var(--gp-todo-edge)}
+#milestoneList .feature-section.status-progress{border-left-color:var(--gp-progress-edge)}
+#milestoneList .feature-section.status-blocked{border-left-color:var(--gp-blocked-edge)}
+#milestoneList .feature-section.status-done{border-left-color:var(--gp-done-edge)}
+#milestoneList .feature-summary .title-stack strong{color:#443b4b}
+#milestoneList .feature-summary .title-stack .sub{color:#817984}
+#milestoneList .feature-section.status-todo .feature-status-label{color:#687078}
+#milestoneList .feature-section.status-progress .feature-status-label{color:#757900}
+#milestoneList .feature-section.status-blocked .feature-status-label{color:#a72b78}
+#milestoneList .feature-section.status-done .feature-status-label{color:#006865}
+#milestoneList .task-entry.status-todo{background:var(--gp-todo-bg);border-left-color:var(--gp-todo-edge)}
+#milestoneList .task-entry.status-progress{background:var(--gp-progress-bg);border-left-color:var(--gp-progress-edge)}
+#milestoneList .task-entry.status-blocked{background:var(--gp-blocked-bg);border-left-color:var(--gp-blocked-edge)}
+#milestoneList .task-entry.status-done{background:var(--gp-done-bg);border-left-color:var(--gp-done-edge)}
+#milestoneList .task-entry.status-todo:hover{background:#ebedf0}
+#milestoneList .task-entry.status-progress:hover{background:#efefc8}
+#milestoneList .task-entry.status-blocked:hover{background:#f6d4e9}
+#milestoneList .task-entry.status-done:hover{background:#cbe8e4}
+#milestoneList .task-entry .task-title{color:#3d3441}
+#milestoneList .task-entry .sub{color:#726c78}
+#milestoneList .task-entry .status-select.status-todo{background:#e9ebed;color:#5d6470;border-color:#cfd2d6}
+#milestoneList .task-entry .status-select.status-progress{background:#f0f0b7;color:#656a00;border-color:#d9dc69}
+#milestoneList .task-entry .status-select.status-blocked{background:#f6d2e9;color:#902b6d;border-color:#edadd3}
+#milestoneList .task-entry .status-select.status-done{background:#cde9e5;color:#005e5a;border-color:#95ceca}
+#milestoneList .gp-template-selectable.gp-template-selected,
+#milestoneList .gp-template-selectable.gp-template-selected.status-todo,
+#milestoneList .gp-template-selectable.gp-template-selected.status-progress,
+#milestoneList .gp-template-selectable.gp-template-selected.status-blocked,
+#milestoneList .gp-template-selectable.gp-template-selected.status-done{background:var(--gp-selection-bg);border-left-color:var(--gp-selection-edge);box-shadow:inset 0 0 0 2px var(--gp-selection-edge)}
+#milestoneList .gp-template-selectable.gp-template-selected:hover{background:#c6f1f2}
+#milestoneList .gp-template-selectable.gp-template-selected .task-title{color:#006d71}
+#milestoneList .gp-template-selectable:focus-within{outline-color:var(--gp-selection-edge)}
+#gpSelectionBar{background:#e4f7f7;border-color:#a7d8d8;color:#006763}
+#milestoneList .chevron{color:#79677e}
+#milestoneList .gp-task-drag-handle{color:#8b8794}
+#milestoneList .gp-task-drag-handle:hover{color:var(--gp-amethyst);background:#e9e0eb}
+/* Dialogs, analytics, team and template surfaces should belong to the same palette. */
+.gp-board-footer{background:#f6f2f8;border-color:#e7ddea}
+.gp-board-footer h2{color:var(--gp-amethyst)}
+.gp-site-footer{border-top-color:var(--gp-border);color:#817887}
+.gp-card,.gp-template-task,.gp-project-choice{border-color:var(--gp-border);background:#fff}
+.gp-project-choice:hover{background:#e7f7f5;border-color:#8cccca}
+.gp-project-choice[aria-current="true"]{background:#dff2ef;border-color:var(--gp-ocean)}
+.gp-project-choice .gp-choice-current,.gp-project-chooser-create{color:var(--gp-ocean)}
+#back .modal{border-color:#e5dfe8;box-shadow:0 22px 70px #4c1a5726}
+#back .modal #modalTitle{color:var(--gp-amethyst)}
+#back .modal #close{color:#86718b}
+#back .modal #close:hover{color:var(--gp-amethyst);background:#f2e9f4}
+.gp-detail-path{border-bottom-color:#e9e2eb}
+.gp-detail-section h3{color:var(--gp-amethyst)}
+.gp-detail-description{background:#faf7fb;border-color:#ede5f0;color:#403746}
+.gp-detail-meta>div{background:#f8f6f9;border-color:#eae5ed}
+.gp-detail-meta strong{color:#51425a}
+.gp-detail-status.gp-detail-todo{background:#eceef0;color:#5a606a}
+.gp-detail-status.gp-detail-progress{background:#f2f2c2;color:#626800}
+.gp-detail-status.gp-detail-blocked{background:#f9dfef;color:#972469}
+.gp-detail-status.gp-detail-done{background:#d6efec;color:#006965}
+.gp-detail-logs,.gp-detail-controls{border-top-color:var(--gp-border)}
+.gp-tag{color:#47374c}
+.gp-color-tile:focus-visible,.gp-color-add:focus-visible{outline-color:var(--gp-cyan)}
+@media(max-width:680px){.grid .stat{padding:12px 14px;min-height:77px}}
 </style></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.16</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.17</span></div></div><div class="top-actions"><a class="link" href="shared.html?v=2026.11.04.17">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter"><option value="">All assignees</option></select><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div class="grid"><div class="card stat"><span class="muted">Total tasks</span><b id="total">0</b></div><div class="card stat"><span class="muted">Completed</span><b id="completed">0</b></div><div class="card stat"><span class="muted">Time logged</span><b id="hours">0h</b></div></div>
@@ -884,7 +1023,7 @@ body{background:#fbfcfa}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.04.16';
+const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.04.17';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=['Ethan','Jerry','Jenny'];
@@ -1403,4 +1542,4 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="gameplan.js?v=2026.11.04.16"></script></body></html>
+</script><script src="gameplan.js?v=2026.11.04.17"></script></body></html>
