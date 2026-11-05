@@ -117,7 +117,7 @@ async function checkAccount(){
  if(!navigator.onLine)return false;
  const cfg=config();if(!cfg?.url||!cfg?.key)return false;
  if(!api){
-  const module=await import('./supabase/gameplan-cloud.js?v=2026.11.05.56');
+  const module=await import('./supabase/gameplan-cloud.js?v=2026.11.05.58');
   api=module.createGamePlanCloud({url:cfg.url,publishableKey:cfg.key});
  }
  const {data:result,error}=await api.client.auth.getUser();
@@ -480,7 +480,7 @@ function controls(){
  }
  area.append(more);
  const box=document.createElement('div');box.className='gp-sync-tools';
- box.innerHTML='<span id="gpSyncStatus" role="status">Saved on this device</span>'+
+ box.innerHTML='<button type="button" id="gpSyncStatus" role="status" title="Open sync details">Saved on this device</button>'+
   '<button class="button gp-sync-connect" id="gpSyncConnect">Connect Discord</button>'+
   '<button class="button gp-sync-share" id="gpSyncShare" hidden>Share project</button>'+
   '<button class="button gp-sync-now" id="gpSyncNow">↻ Sync</button>';
@@ -490,6 +490,28 @@ function controls(){
   $s('#gpAccountDone').onclick=closeModal;
  else void connect()};
  $s('#gpSyncShare').onclick=()=>void shareCurrent();
+ $s('#gpSyncStatus').onclick=()=>{
+  const pid=String(activeProject||''),diff=links[pid]?changesSince(bases[pid]||{},projectRows(pid)):{};
+  const countsByKind={};
+  for(const change of Object.values(diff)){
+   const kind=change?.kind||'deleted items';
+   countsByKind[kind]=(countsByKind[kind]||0)+1;
+  }
+  const count=Object.keys(diff).length;
+  const summary=Object.entries(countsByKind).map(([kind,n])=>n+' '+kind).join(', ')||'none';
+  const message=lastSyncError?'<p class="gp-sync-error-detail">'+e(lastSyncError)+'</p>':'';
+  modal('Cloud synchronization',
+   '<p class="sub">'+e(navigator.onLine?'Online':'Offline')+' · '+
+    e(user?'Discord connected':'Not connected')+' · '+e(links[pid]?'Shared project':'Browser-only project')+'</p>'+
+   '<p><strong>Pending changes:</strong> '+count+'</p><p class="sub">'+e(summary)+'</p>'+
+   (lastSyncAt?'<p class="sub">Last successful sync: '+e(new Date(lastSyncAt).toLocaleString())+'</p>':'')+
+   (remoteMissingCount?'<p class="sub">Some items appear missing on the server. Your browser copies were kept.</p>':'')+
+   message+
+   '<div class="controls"><button type="button" class="button" id="gpSyncDownload">Export backup</button>'+
+    '<button type="button" class="button main" id="gpSyncRetry">Retry sync</button></div>');
+  $s('#gpSyncDownload').onclick=()=>downloadBackup();
+  $s('#gpSyncRetry').onclick=()=>{closeModal();void initialize().then(schedule)};
+ };
  $s('#gpSyncNow').onclick=async()=>{
   if(blocked){
    const agree=await gpConfirm('A backup was restored. Resume syncing this browser copy? Its differences may update or delete records in the linked cloud project.',{confirmLabel:'Resume syncing'});
