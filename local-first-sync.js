@@ -25,7 +25,12 @@ function projectRows(pid,source=data){
   const arr=(source[kind]||[]).filter(x=>kind==='logs'?taskIds.has(String(x.task_id)):String(x.project_id)===String(pid));
   for(const [sort_order,obj] of arr.entries()){
    const id=unique(kind,obj);if(!id)continue;
-   out[key(kind,id)]={kind,item_id:id,payload:clone(obj),sort_order};
+   const payload=clone(obj);
+   if(kind==='team'){
+    const person=(source.members||[]).find(m=>String(m.member_id)===String(obj.member_id));
+    if(person)payload.display_name=person.display_name;
+   }
+   out[key(kind,id)]={kind,item_id:id,payload,sort_order};
   }
  }
  return out;
