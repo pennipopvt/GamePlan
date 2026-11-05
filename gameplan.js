@@ -973,7 +973,7 @@ gpAnalytics=function(){
  const view=gpGroupedChartData();
  const root=$('#gpExtra');
  root.innerHTML='<div class="gp-chart-controls">'+settings.map(([key,label,choices])=>'<label>'+e(label)+'<select data-gp-chart="'+key+'">'+options(choices,key)+'</select></label>').join('')+'</div>'+
- '<div class="gp-chart-card"><div class="gp-chart-heading"><div><h2>'+e(gpMetricLabels[gpChartSettings.metric])+' by '+e(gpGroupLabels[gpChartSettings.group])+'</h2><p class="sub">'+view.count+' matching tasks · '+view.entries.length+' groups</p></div><div class="gp-chart-total"><strong>'+gpNum(view.total)+'</strong><span>'+(['tasks','done'].includes(gpChartSettings.metric)?'tasks':'hours')+'</span></div></div>'+gpGraphView(view.entries)+'</div>'+
+ '<div class="gp-chart-card"><div class="gp-chart-heading"><div><h2>'+e(gpMetricLabels[gpChartSettings.metric])+' by '+e(gpGroupLabels[gpChartSettings.group])+'</h2><p class="sub">'+view.count+' matching tasks · '+view.entries.length+' groups</p></div><div class="gp-chart-total"><strong>'+gpChartTimeValue(view.total)+'</strong><span>'+(['tasks','done'].includes(gpChartSettings.metric)?'tasks':'total time')+'</span></div></div>'+gpGraphView(view.entries)+'</div>'+
  '<details class="gp-original-analytics"><summary>Detailed time log breakdown</summary><div id="gpOriginalAnalyticsTable"></div></details>';
  const graphHTML=root.innerHTML;
  gpPreviousAnalytics();
