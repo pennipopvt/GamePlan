@@ -144,7 +144,7 @@ function isEditing(){return !!($s('#back.show')||$s('#gpDialogOverlay'))}
 async function checkAccount(){
  const cfg=config();if(!cfg?.url||!cfg?.key)return false;
  if(!api){
-  const module=await import('./supabase/gameplan-cloud.js?v=2026.11.05.60');
+  const module=await import('./supabase/gameplan-cloud.js?v=2026.11.05.61');
   api=module.createGamePlanCloud({url:cfg.url,publishableKey:cfg.key});
  }
  if(!navigator.onLine){
@@ -262,7 +262,12 @@ async function refreshProjectList(){
  // Import projects that this authenticated account can read and does not
  // already have locally. No existing project or local cache is replaced.
  for(const project of cloudProjectList){
-  if(!Object.values(links).includes(project.id))await joinShared(project.id);
+  if(Object.values(links).includes(project.id))continue;
+  // A locally migrated board with the same title may contain newer offline
+  // work. Don't create a duplicate or link it automatically.
+  const sameName=data.projects.some(p=>p.project_name===project.name);
+  if(sameName)continue;
+  await joinShared(project.id);
  }
  if(data.projects.length){
   window.GamePlanAccounts?.hideEmpty?.();
