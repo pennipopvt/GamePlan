@@ -251,6 +251,9 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 .gp-hue-track input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:25px;margin-top:-3px;background:#fff;border:2px solid #38534c;border-radius:5px;box-shadow:0 1px 5px #0005}
 .gp-hue-track input[type=range]::-moz-range-thumb{width:12px;height:23px;background:#fff;border:2px solid #38534c;border-radius:5px;box-shadow:0 1px 5px #0005}
 
+/* Preserve visibility for the active workspace and responsive sidebar. */
+#gpBoardView[hidden],#gpExtra[hidden],#gpTemplateChoice[hidden]{display:none!important}
+.gp-collapsed .sidebar-foot{display:none!important}
 /* Sidebar navigation: desktop toggle stays visible; hidden subtabs really hide. */
 #menuToggle{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;margin-right:8px;min-width:39px;min-height:39px;font-size:20px;line-height:1}
 .gp-collapsed .gp-nav{white-space:nowrap}
