@@ -143,7 +143,7 @@ function gpNavigate(page){
 }
 function gpAddShell(){
  const sidebar=$('#sidebar');
- sidebar.querySelector('.sidebar-brand').innerHTML='<img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span>';
+ sidebar.querySelector('.sidebar-brand').innerHTML='<img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span>';
  const nav=document.createElement('nav');nav.id='gpPrimary';nav.className='side-nav';
  const gpBoardIcon='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>';
  const gpGraphIcon='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m6 16 5-6 4 3 5-7"/></svg>';
