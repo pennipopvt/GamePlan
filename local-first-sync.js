@@ -104,7 +104,7 @@ async function checkAccount(){
  if(!navigator.onLine)return false;
  const cfg=config();if(!cfg?.url||!cfg?.key)return false;
  if(!api){
-  const module=await import('./supabase/gameplan-cloud.js?v=2026.11.05.54');
+  const module=await import('./supabase/gameplan-cloud.js?v=2026.11.05.56');
   api=module.createGamePlanCloud({url:cfg.url,publishableKey:cfg.key});
  }
  const {data:result,error}=await api.client.auth.getUser();
@@ -520,8 +520,8 @@ async function initialize(){
    inviteAttempted=true;
    try{
     const inviteCloudId=await api.acceptLinkInvite(token);
-    sessionStorage.removeItem(PENDING_INVITE);
     await joinShared(inviteCloudId);
+    sessionStorage.removeItem(PENDING_INVITE);
     gpAlert('You joined the shared project! Your changes will sync with your teammates.');
     refreshStatus();return;
    }catch(err){
