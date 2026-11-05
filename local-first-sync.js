@@ -93,9 +93,10 @@ function deletedMarker(record,pid){
 }
 function changesSince(base,local){
  const diff={};
- for(const k of new Set([...Object.keys(base),...Object.keys(local)]))
+ for(const k of new Set([...Object.keys(base),...Object.keys(local)])){
   if(base[k]?.payload?.__gp_deleted&&!local[k])continue;
   if(!equal(canonical(base[k]),canonical(local[k])))diff[k]=local[k]||null;
+ }
  return diff;
 }
 function status(message,error=false){
