@@ -35,8 +35,8 @@ label{font-size:13px;font-weight:600;display:grid;gap:6px}form{display:grid;gap:
 <div class="row"><button class="primary">Save browser configuration</button><button type="button" id="clearConfig">Clear configuration</button></div></form>
 </section>
 <section class="card" id="auth" hidden>
-<h2>Sign in</h2><p class="muted">Use the Google account you want to share projects with. Add this page URL to Supabase's allowed redirect URLs.</p>
-<div class="row"><button id="login" class="primary">Continue with Google</button><button id="logout" hidden>Sign out</button><span id="identity" class="muted"></span></div>
+<h2>Sign in</h2><p class="muted">Sign in with Discord to share projects with your team. Add this page URL to Supabase's allowed redirect URLs.</p>
+<div class="row"><button id="login" class="primary">Continue with Discord</button><button id="logout" hidden>Sign out</button><span id="identity" class="muted"></span></div>
 </section>
 <section id="app" hidden>
 <section class="card"><h2>Your cloud projects</h2>
@@ -45,7 +45,7 @@ label{font-size:13px;font-weight:600;display:grid;gap:6px}form{display:grid;gap:
 </section>
 <section id="selected" hidden>
 <section class="card"><h2 id="projectName"></h2><p class="muted">Edits save to Supabase and updates appear in other connected browsers.</p>
-<form id="inviteForm" class="row"><input id="inviteEmail" type="email" placeholder="Teammate's Google email" required style="flex:1;min-width:190px"><select id="inviteRole" style="width:120px"><option value="editor">Editor</option><option value="viewer">Viewer</option></select><button class="primary">Invite</button></form>
+<form id="inviteForm" class="row"><input id="inviteEmail" type="email" placeholder="Teammate's Discord account email" required style="flex:1;min-width:190px"><select id="inviteRole" style="width:120px"><option value="editor">Editor</option><option value="viewer">Viewer</option></select><button class="primary">Invite</button></form>
 <p class="muted">Invited teammates sign in with the same email address to join automatically.</p>
 </section>
 <section class="card"><h2>Milestones and features</h2>
@@ -140,7 +140,7 @@ async function showItems(){
 }
 $('configForm').addEventListener('submit',ev=>run(()=>saveConfig(ev)));
 $('clearConfig').onclick=()=>{localStorage.removeItem(STORAGE);cloud=null;active=null;unsubscribe?.();$('auth').hidden=true;$('app').hidden=true;message('Configuration cleared from this browser.')};
-$('login').onclick=()=>run(()=>cloud.signInWithGoogle());
+$('login').onclick=()=>run(()=>cloud.signInWithDiscord());
 $('logout').onclick=()=>run(async()=>{await cloud.signOut();await checkAuth()});
 $('createProject').addEventListener('submit',ev=>{ev.preventDefault();void run(async()=>{await cloud.createProject($('newProjectName').value);$('newProjectName').value='';await showProjects()})});
 $('inviteForm').addEventListener('submit',ev=>{ev.preventDefault();void run(async()=>{await cloud.inviteByEmail(active.id,$('inviteEmail').value,$('inviteRole').value);$('inviteEmail').value='';message('Invitation saved. Your teammate can join by signing in with that email.')})});
