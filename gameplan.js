@@ -184,6 +184,9 @@ function gpAddShell(){
  boardNav.hidden=true;
  boardNav.style.display='none';
  const main=$('#mainApp');const board=document.createElement('div');board.id='gpBoardView';while(main.firstChild)board.append(main.firstChild);main.append(board);
+ const pageHeader=document.createElement('header');pageHeader.id='gpSecondaryPageHeader';pageHeader.className='gp-secondary-page-header';
+ pageHeader.innerHTML='<h1 id="gpSecondaryPageTitle"></h1>';
+ pageHeader.hidden=true;main.append(pageHeader);
  const extra=document.createElement('section');extra.id='gpExtra';extra.className='card';main.append(extra);
  const headerActions=document.createElement('div');headerActions.className='gp-header-actions';
  headerActions.setAttribute('aria-label','Import and export');
@@ -240,6 +243,9 @@ function gpSelectionBar(){
 function gpRenderPage(){
  $('#gpBoardView').hidden=gpPage!=='board';
  $('#gpExtra').hidden=gpPage==='board';
+ const secondaryHeader=$('#gpSecondaryPageHeader');
+ secondaryHeader.hidden=gpPage==='board';
+ if(gpPage!=='board')$('#gpSecondaryPageTitle').textContent=({analytics:'Analytics',templates:'Feature Templates',team:'Project Team',settings:'Project Settings'})[gpPage]||'';
  const boardSubtabs=$('#gpBoardNav');
  boardSubtabs.hidden=true;
  boardSubtabs.style.display='none';
@@ -254,7 +260,7 @@ function gpRenderPage(){
 }
 function gpSettings(){
  const project=find(data.projects,activeProject,'project_id');
- $('#gpExtra').innerHTML='<div class="gp-flex"><div><h1>Project Settings</h1><p class="sub">'+e(project.project_name)+'</p></div><button class="button" id="gpRename">Edit project name</button></div><h2>Project Tags</h2><p class="sub">Tags can be assigned to multiple tasks. For analytics, the first tag receives the logged time so hours are not counted twice.</p><div class="gp-list" id="gpTags">'+gpTags().map(t=>'<div class="gp-card gp-flex"><span class="gp-tag" style="--tc:'+e(t.color)+'">'+e(t.name)+'</span><div class="actions"><button class="button" data-tag-edit="'+e(t.tag_id)+'">Edit</button><button class="button danger" data-tag-delete="'+e(t.tag_id)+'">Delete</button></div></div>').join('')+'</div><p><button class="button main" id="gpAddTag">+ Add tag</button></p><section class="gp-danger-zone"><h2>Danger Zone</h2><p class="sub">Permanently delete this project, including its milestones, features, tasks, time logs, tags, templates and team memberships. Other projects will stay intact.</p><button type="button" class="button danger" id="gpDeleteProject">Delete project</button></section>';
+ $('#gpExtra').innerHTML='<div class="gp-flex"><div class="gp-page-card-spacer"></div><button class="button" id="gpRename">Edit project name</button></div><h2>Project Tags</h2><p class="sub">Tags can be assigned to multiple tasks. For analytics, the first tag receives the logged time so hours are not counted twice.</p><div class="gp-list" id="gpTags">'+gpTags().map(t=>'<div class="gp-card gp-flex"><span class="gp-tag" style="--tc:'+e(t.color)+'">'+e(t.name)+'</span><div class="actions"><button class="button" data-tag-edit="'+e(t.tag_id)+'">Edit</button><button class="button danger" data-tag-delete="'+e(t.tag_id)+'">Delete</button></div></div>').join('')+'</div><p><button class="button main" id="gpAddTag">+ Add tag</button></p><section class="gp-danger-zone"><h2>Danger Zone</h2><p class="sub">Permanently delete this project, including its milestones, features, tasks, time logs, tags, templates and team memberships. Other projects will stay intact.</p><button type="button" class="button danger" id="gpDeleteProject">Delete project</button></section>';
  $('#gpRename').onclick=async()=>{const name=await gpPrompt('Project name',project.project_name);if(name?.trim()){project.project_name=name.trim();persist();render()}};
  $('#gpAddTag').onclick=()=>gpEditTag();
  $('#gpDeleteProject').onclick=gpDeleteProject;
@@ -351,7 +357,7 @@ function gpAnalytics(){
  const tasks=projectTasks(),lookup=new Map(tasks.map(t=>[String(t.task_id),t])),groups=new Map();let total=0;
  for(const log of data.logs){const t=lookup.get(String(log.task_id));if(!t)continue;const tag=gpTags().find(g=>g.tag_id===(t.tag_ids||[])[0]);const key=String(log.member_id)+'|'+(tag?.name||'Untagged');groups.set(key,(groups.get(key)||0)+Number(log.hours||0));total+=Number(log.hours||0)}
  const rows=[...groups].map(([key,h])=>({name:member(key.split('|')[0]),tag:key.split('|').slice(1).join('|'),hours:h})).sort((a,b)=>b.hours-a.hours);
- $('#gpExtra').innerHTML='<h1>Analytics</h1><p class="sub">Actual logged time by person and primary task tag.</p><h2>'+formatHours(total)+' total</h2><div class="table-wrap"><table><thead><tr><th>Team member</th><th>Tag</th><th>Logged time</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+e(r.name)+'</td><td>'+e(r.tag)+'</td><td>'+formatHours(r.hours)+'</td></tr>').join('')+'</tbody></table></div>';
+ $('#gpExtra').innerHTML='<h2>'+formatHours(total)+' total</h2><div class="table-wrap"><table><thead><tr><th>Team member</th><th>Tag</th><th>Logged time</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+e(r.name)+'</td><td>'+e(r.tag)+'</td><td>'+formatHours(r.hours)+'</td></tr>').join('')+'</tbody></table></div>';
 }
 async function gpSaveTemplate(){
  const selected=projectTasks().filter(t=>gpSelected.has(String(t.task_id)));if(!selected.length)return;
@@ -362,7 +368,7 @@ async function gpSaveTemplate(){
  data.templates.push({template_id:uid(),project_id:activeProject,name:name.trim(),tasks});persist();gpNavigate('templates');
 }
 function gpTemplatesPage(){
- $('#gpExtra').innerHTML='<div class="gp-flex"><div><h1>Feature Templates</h1><p class="sub">Select tasks across features to save a reusable collection.</p></div><button class="button main" id="gpChoose">+ Select tasks</button></div><div class="gp-list" id="gpTemplateList">'+gpTemplates().map(t=>'<div class="gp-card gp-flex"><div><h3>'+e(t.name)+'</h3><p class="sub">'+t.tasks.length+' tasks · '+formatHours(t.tasks.reduce((s,x)=>s+Number(x.estimated_hours||0),0))+' estimated</p></div><div class="actions"><button class="button" data-t-edit="'+e(t.template_id)+'">Edit</button><button class="button danger" data-t-delete="'+e(t.template_id)+'">Delete</button><button class="button main" data-t-use="'+e(t.template_id)+'">Use template</button></div></div>').join('')+'</div>';
+ $('#gpExtra').innerHTML='<div class="gp-flex"><div class="gp-page-card-spacer"></div><button class="button main" id="gpChoose">+ Select tasks</button></div><div class="gp-list" id="gpTemplateList">'+gpTemplates().map(t=>'<div class="gp-card gp-flex"><div><h3>'+e(t.name)+'</h3><p class="sub">'+t.tasks.length+' tasks · '+formatHours(t.tasks.reduce((s,x)=>s+Number(x.estimated_hours||0),0))+' estimated</p></div><div class="actions"><button class="button" data-t-edit="'+e(t.template_id)+'">Edit</button><button class="button danger" data-t-delete="'+e(t.template_id)+'">Delete</button><button class="button main" data-t-use="'+e(t.template_id)+'">Use template</button></div></div>').join('')+'</div>';
  $('#gpChoose').onclick=()=>{gpNavigate('board');gpSelecting=true;renderMilestones();gpSelectionBar()};
  $('#gpTemplateList').onclick=async ev=>{const a=ev.target.closest('[data-t-edit]'),b=ev.target.closest('[data-t-delete]'),c=ev.target.closest('[data-t-use]');if(a)gpEditTemplate(a.dataset.tEdit);if(b){const t=gpTemplates().find(x=>x.template_id===b.dataset.tDelete);if(t&&await gpConfirm('Delete '+t.name+'?',{danger:true,confirmLabel:'Delete template'})){data.templates=data.templates.filter(x=>x!==t);persist();render()}}if(c)gpUseTemplate(c.dataset.tUse)};
 }
@@ -488,7 +494,7 @@ function gpOpenProjectDialog(){
 function gpTeamPage(){
  const memberships=(data.team||[]).filter(m=>m.project_id===activeProject);
  const roster=data.roster||data.members;
- $('#gpExtra').innerHTML='<div class="gp-flex"><div><h1>Project Team</h1><p class="sub">Members of '+e(find(data.projects,activeProject,'project_id')?.project_name||'this project')+'</p></div><button id="gpAddMember" class="button main">+ Add member</button></div><div id="gpTeamRows" class="gp-list">'+memberships.map(m=>{
+ $('#gpExtra').innerHTML='<div class="gp-flex"><div class="gp-page-card-spacer"></div><button id="gpAddMember" class="button main">+ Add member</button></div><div id="gpTeamRows" class="gp-list">'+memberships.map(m=>{
   const person=roster.find(p=>String(p.member_id)===String(m.member_id))||data.members.find(p=>String(p.member_id)===String(m.member_id));
   return '<div class="gp-card gp-flex"><div><strong>'+e(person?.display_name||'Unknown')+'</strong><div class="sub">'+e(m.project_role||'Member')+(m.discipline?' · '+e(m.discipline):'')+'</div></div><button type="button" class="button" data-gp-member="'+e(m.member_id)+'">Edit</button></div>';
  }).join('')+'</div>';
@@ -928,7 +934,7 @@ gpAnalytics=function(){
  ];
  const view=gpGroupedChartData();
  const root=$('#gpExtra');
- root.innerHTML='<h1>Analytics</h1><p class="sub">Explore task activity. Customize the graph using any combination of settings.</p><div class="gp-chart-controls">'+settings.map(([key,label,choices])=>'<label>'+e(label)+'<select data-gp-chart="'+key+'">'+options(choices,key)+'</select></label>').join('')+'</div>'+
+ root.innerHTML='<div class="gp-chart-controls">'+settings.map(([key,label,choices])=>'<label>'+e(label)+'<select data-gp-chart="'+key+'">'+options(choices,key)+'</select></label>').join('')+'</div>'+
  '<div class="gp-chart-card"><div class="gp-chart-heading"><div><h2>'+e(gpMetricLabels[gpChartSettings.metric])+' by '+e(gpGroupLabels[gpChartSettings.group])+'</h2><p class="sub">'+view.count+' matching tasks · '+view.entries.length+' groups</p></div><div class="gp-chart-total"><strong>'+gpNum(view.total)+'</strong><span>'+(['tasks','done'].includes(gpChartSettings.metric)?'tasks':'hours')+'</span></div></div>'+gpGraphView(view.entries)+'</div>'+
  '<details class="gp-original-analytics"><summary>Detailed time log breakdown</summary><div id="gpOriginalAnalyticsTable"></div></details>';
  root.querySelectorAll('[data-gp-chart]').forEach(el=>el.onchange=()=>{
