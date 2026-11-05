@@ -123,7 +123,7 @@ alter table public.gp_invites enable row level security;
 alter table public.gp_items enable row level security;
 
 create policy "members see projects" on public.gp_projects for select to authenticated
- using (public.gp_is_member(id));
+ using (owner_id=(select auth.uid()) or public.gp_is_member(id));
 create policy "users create owned projects" on public.gp_projects for insert to authenticated
  with check (owner_id=(select auth.uid()));
 create policy "owners edit projects" on public.gp_projects for update to authenticated
