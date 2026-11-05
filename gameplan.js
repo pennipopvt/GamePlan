@@ -160,7 +160,7 @@ function gpAddShell(){
  const logo=sidebar.querySelector('.sidebar-brand');
  const topRow=document.createElement('div');topRow.id='gpSidebarTop';
  logo.before(topRow);topRow.append(sidebarToggle,logo);
- topRow.after(projectSwitcher,nav);
+ topRow.after(nav);
  const trigger=$('#gpProjectTrigger'),menu=$('#gpProjectMenu');
  const closeMenu=()=>{menu.hidden=true;trigger.setAttribute('aria-expanded','false')};
  trigger.onclick=()=>{const open=menu.hidden;menu.hidden=!open;trigger.setAttribute('aria-expanded',String(open));if(open)menu.querySelector('[aria-current="true"]')?.focus()};
@@ -174,11 +174,12 @@ function gpAddShell(){
 
  const header=$('.workspace .top');
  const titleWrap=document.createElement('div');titleWrap.className='gp-header-project';
- titleWrap.innerHTML='<label for="gpProjectTitle" class="gp-project-label">CURRENT PROJECT</label><input id="gpProjectTitle" aria-label="Edit current project name" autocomplete="off" spellcheck="false" title="Click to rename project">';
+ titleWrap.innerHTML='<div class="gp-project-overline"><label for="gpProjectTitle" class="gp-project-label">CURRENT PROJECT</label></div><input id="gpProjectTitle" aria-label="Edit current project name" autocomplete="off" spellcheck="false" title="Click to rename project">';
  const oldHeader=header.firstElementChild;
  const versionLabel=$('#appVersion');
  const mobileToggle=$('#menuToggle');
  header.prepend(mobileToggle,titleWrap);
+ titleWrap.querySelector('.gp-project-overline').appendChild(projectSwitcher);
  oldHeader.remove();
  $('#gpProjectTitle').addEventListener('change',gpRenameProjectInline);
  $('#gpProjectTitle').addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();ev.currentTarget.blur()}if(ev.key==='Escape'){ev.currentTarget.value=find(data.projects,activeProject,'project_id')?.project_name||'';ev.currentTarget.blur()}});
