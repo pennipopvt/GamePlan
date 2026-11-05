@@ -68,9 +68,15 @@ function projectRows(pid,source=data){
 function remoteRows(items,pid){
  const out={};
  for(const kind of KINDS){
-  for(const [i,obj] of (items[kind]||[]).entries()){
+  let livePosition=0;
+  for(const obj of (items[kind]||[])){
    const id=unique(kind,obj);if(!id)continue;
-   out[key(kind,id)]={kind,item_id:id,payload:{...clone(obj),project_id:pid},sort_order:i};
+   // Tombstones are stored in gp_items but do NOT occupy a visible sort slot.
+   // Otherwise deleting a feature would make all subsequent features look
+   // reordered and could leave phantom pending changes forever.
+   const removed=obj.__gp_deleted===true;
+   out[key(kind,id)]={kind,item_id:id,payload:{...clone(obj),project_id:pid},
+    sort_order:removed?-1:livePosition++};
   }
  }
  return out;
@@ -218,6 +224,15 @@ async function reconcile(pid,{allowWrites=true}={}){
   // Re-read the local board after network I/O so edits saved during the
   // remote fetch cannot be overwritten by an older pre-request snapshot.
   const liveLocal=projectRows(pid);
+  // Clear out locally queued deletes that are already confirmed by a
+  // remote tombstone (another editor may have deleted the same item).
+  let confirmedDeletes=false;
+  for(const k of Object.keys(deletedIntents[pid]||{})){
+   if(remote[k]?.payload?.__gp_deleted){
+    delete deletedIntents[pid][k];confirmedDeletes=true;
+   }
+  }
+  if(confirmedDeletes)store(DELETED,deletedIntents);
   const missing=Object.keys(base).filter(k=>base[k]&&!remote[k]&&liveLocal[k]);
   remoteMissingCount=missing.length;
   // Retain local rows missing remotely without re-uploading them automatically.
@@ -513,6 +528,8 @@ async function joinShared(cloudId){
  draft.projects.push({project_id:pid,project_name:found.name,description:'',status:'Active',project_manager_member_id:'penni'});
  const imported=remoteRows(items,pid);
  for(const row of Object.values(imported)){
+  // New teammates should never see intentionally deleted features or tasks.
+  if(row.payload?.__gp_deleted)continue;
   draft[row.kind].push({...row.payload,project_id:pid});
  }
  for(const member of items.team||[]){
