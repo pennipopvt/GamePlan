@@ -1607,14 +1607,40 @@ a:hover,.link:hover{color:#80115c}
  }
 }
 
-/* Completed tasks remain legible without strike-through or faded titles. */
+/* Completed titles stay faded, but without a strikethrough. */
 #milestoneList .task-entry .task-title.task-done,
 #milestoneList .task-entry.status-done .task-title{
  text-decoration:none;
- opacity:1;
+ opacity:.63;
 }
+
+/* Legible supporting text: no tiny, pixelated-looking labels. */
+#milestoneList .task-entry>div:first-of-type>.sub{font-size:13px;line-height:1.45}
+#milestoneList .task-entry .meta-person{font-size:13px}
+#milestoneList .task-entry .task-title{font-size:14px}
+#milestoneList .task-entry>.status-select{font-size:13px}
+#milestoneList .task-entry .gp-tag-rail-name{font-size:13px}
+#milestoneList .milestone-summary .gp-milestone-time,
+#milestoneList .milestone-summary .gp-milestone-target,
+#milestoneList .milestone-summary .gp-milestone-description,
+#milestoneList .milestone-summary .gp-milestone-ratio,
+#milestoneList .feature-summary .sub,
+#milestoneList .feature-summary .feature-hours{font-size:13px}
+#milestoneList .feature-summary .title-stack strong{font-size:14px}
+#mainApp .grid .stat .muted{font-size:13px}
+.sidebar .side-link,.sidebar .side-count,#gpBoardNav .side-link,
+#gpPrimary>.gp-nav{font-size:13px}
+.sidebar .side-label,#gpBoardNav .side-label{font-size:12px;letter-spacing:.035em}
+.gp-filter-choice,.gp-filter-chip,.gp-filter-clear,.gp-filter-help,
+.gp-filter-group-heading{font-size:13px}
+.gp-tag-editor .gp-tag-chip,.gp-tag-editor .gp-tag-add-inline,
+.gp-detail-tag,.gp-detail-path,.gp-detail-meta-label,
+.gp-detail-log-meta,.gp-detail-logs .note .sub{font-size:13px}
+.gp-detail-description{font-size:14px;line-height:1.6}
+#milestoneList .task-entry .task-title.task-done,
+#milestoneList .task-entry.status-done .task-title{text-decoration:none;opacity:.63}
 </style></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.36</span></div></div><div class="top-actions"><a class="link" href="shared.html?v=2026.11.04.17">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.37</span></div></div><div class="top-actions"><a class="link" href="shared.html?v=2026.11.04.17">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter" hidden aria-hidden="true"><option value="">All assignees</option></select><div class="gp-filter-wrap"><button type="button" class="button gp-filter-trigger" id="gpFilterTrigger" aria-expanded="false" aria-controls="gpFilterPanel"><span aria-hidden="true">⚲</span> Filters <span id="gpFilterCount" class="gp-filter-count" hidden>0</span></button><div class="gp-filter-panel" id="gpFilterPanel" hidden></div></div><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div id="gpFilterChips" class="gp-filter-chips" hidden></div>
@@ -1624,7 +1650,7 @@ a:hover,.link:hover{color:#80115c}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.04.36';
+const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.04.37';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=['Ethan','Jerry','Jenny'];
@@ -2145,4 +2171,4 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="gameplan.js?v=2026.11.04.36"></script></body></html>
+</script><script src="gameplan.js?v=2026.11.04.37"></script></body></html>
