@@ -678,7 +678,7 @@ function gpRenderFacetControls(){
    return '<section class="gp-filter-group"><div class="gp-filter-group-heading">'+e(group.title)+'</div><div class="gp-filter-choices">'+
     (opts.length?opts.map(o=>'<button type="button" class="gp-filter-choice" data-gp-facet="'+e(group.key)+'" data-gp-id="'+e(o.id)+'" aria-pressed="'+String(gpFacets[group.key].has(o.id))+'">'+(o.color?'<span class="gp-filter-dot" style="--gp-dot:'+e(o.color)+'"></span>':'')+e(o.name)+'</button>').join(''):'<span class="sub">None yet</span>')+
     '</div></section>';
-  }).join('')+'<p class="gp-filter-help">Multiple choices within a category match any; combining categories narrows your results.</p>';
+  }).join('')+'<p class="gp-filter-help">Multiple choices within a category match any; combining categories narrows your results.</p><button type="button" class="gp-filter-clear" id="gpManageTags">Manage tags in Project Settings</button>';
 }
 function gpSetupFacetEvents(){
  const root=$('#gpFilterPanel'),trigger=$('#gpFilterTrigger'),chips=$('#gpFilterChips');
@@ -696,7 +696,8 @@ function gpSetupFacetEvents(){
    if(set.has(id))set.delete(id);else set.add(id);
    render();return;
   }
-  if(ev.target.closest('#gpClearFilters')){gpResetFacets();render()}
+  if(ev.target.closest('#gpClearFilters')){gpResetFacets();render();return}
+  if(ev.target.closest('#gpManageTags')){close();gpNavigate('settings')}
  });
  chips.addEventListener('click',ev=>{
   const remove=ev.target.closest('[data-gp-remove-key]');
@@ -750,6 +751,7 @@ taskForm=function(t,featureId=''){
    const tag={tag_id:uid(),project_id:activeProject,name,color};
    data.tags.push(tag);
    try{persist()}catch(err){data.tags.pop();gpAlert(err.message);return}
+   area.querySelectorAll('[name="gp_tag"]:checked').forEach(el=>existing.add(String(el.value)));
    existing.add(String(tag.tag_id));
    area.querySelector('#gpTaskTagOptions').innerHTML=options();
   }
