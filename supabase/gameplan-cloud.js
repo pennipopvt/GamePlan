@@ -49,9 +49,9 @@ export function createGamePlanCloud({url,publishableKey}){
    const user=await currentUser(),address=String(email||'').trim().toLowerCase();
    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address))throw Error('Enter a valid email address.');
    if(!['editor','viewer'].includes(role))throw Error('Invalid role.');
-   const {data,error}=await client.from('gp_invites').upsert({
+   const {data,error}=await client.from('gp_invites').insert({
     project_id:projectId,email:address,role,invited_by:user.id
-   },{onConflict:'project_id,email'}).select('id,email,role').single();
+   }).select('id,email,role').single();
    check(error);return data;
   },
   async listMembers(projectId){
