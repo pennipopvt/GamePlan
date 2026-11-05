@@ -305,6 +305,27 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 .gp-dialog-card input{width:100%}
 .gp-toast[hidden]{display:none}
 .gp-toast{position:fixed;z-index:60;bottom:18px;right:18px;max-width:min(440px,calc(100% - 36px));display:flex;align-items:center;gap:15px;justify-content:space-between;background:white;border:1px solid #c9ddd2;border-left:4px solid #559987;border-radius:11px;box-shadow:0 10px 35px #21433135;padding:12px 16px;color:#305b50;line-height:1.5}
+
+/* Project workspace controls: persistent title, project switcher, and dedicated Team page. */
+#teamSection{display:none!important}
+#project{display:none!important}
+#menuToggle{display:none}
+.gp-header-project{margin-top:13px;display:grid;gap:5px;width:min(520px,100%)}
+.gp-project-label{font-size:10px;letter-spacing:1.2px;font-weight:800;color:#789389;line-height:1.4}
+#gpProjectTitle{display:block;width:100%;border:1px solid transparent;border-radius:8px;background:transparent;color:#29564f;font:700 clamp(19px,2vw,27px) Georgia,serif;line-height:1.2;padding:6px 9px;margin-left:-9px;text-overflow:ellipsis}
+#gpProjectTitle:hover{background:#f0f7f2;border-color:#dce9e2}
+#gpProjectTitle:focus{background:#fff;border-color:#86b5a3;outline:2px solid #9fd0bf55}
+#gpProjectSwitcher{position:relative;padding:2px 10px 3px;display:grid;grid-template-columns:minmax(0,1fr) 32px;column-gap:6px;row-gap:5px;align-items:center}
+#gpProjectSwitcher .gp-project-label{grid-column:1/-1}
+#gpProjectSelect{width:100%;min-width:0;padding:9px 7px;font-size:12px;color:#315d53;border-color:#c6d9ce;background:#fff}
+.gp-project-add{width:32px;height:35px;border-radius:8px;background:#fff;border:1px solid #c6d9ce;color:#317d73;font-size:20px;cursor:pointer}
+.gp-project-add:hover{background:#e1f0e8}
+.gp-delete-icon{color:#849992}
+.gp-delete-icon:hover,.gp-delete-icon:focus-visible{background:#ffebeb!important;color:#c03636!important;opacity:1}
+.gp-collapsed #gpProjectSwitcher{padding:0;display:flex;justify-content:center}
+.gp-collapsed #gpProjectSwitcher .gp-project-label,.gp-collapsed #gpProjectSelect{display:none}
+.gp-collapsed .gp-project-add{width:36px}
+@media(max-width:680px){#menuToggle{display:inline-flex}#gpProjectSwitcher{padding:2px 8px}#gpProjectTitle{font-size:19px}.gp-header-project{margin-top:8px}}
 </style></head>
 <body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand">✳ Game<span>Plan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav><div class="sidebar-foot">Local only · your board is saved in this browser.</div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.4</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice">Your changes are saved instantly in this browser. Export a backup occasionally.</div>
