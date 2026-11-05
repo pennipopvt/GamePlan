@@ -138,12 +138,7 @@ render=function(){
  gpDecorateDeletes();
 };
 function gpNavigate(page){
- if(page==='board'&&gpPage==='board'&&!document.querySelector('.app').classList.contains('gp-collapsed')){
-  gpBoardSubtabsOpen=!gpBoardSubtabsOpen;
-  gpRenderPage();
-  return;
- }
- if(page==='board'&&gpPage!=='board')gpBoardSubtabsOpen=true;
+ // Board is a single destination; clicking it does not toggle subtabs.
  gpPage=page;gpSelected.clear();gpSelecting=false;$('#sidebar').classList.remove('visible');render();
 }
 function gpAddShell(){
@@ -185,6 +180,9 @@ function gpAddShell(){
  const label=sidebar.querySelector('.side-label');const milestone=sidebar.querySelector('#milestoneNav');
  label.before(boardNav);boardNav.append(label,sidebar.querySelector('#viewNav'),milestone.previousElementSibling,milestone);
  nav.insertBefore(boardNav,nav.children[1]);
+ // Preserve legacy view containers used by the board renderer, but remove sidebar subtabs.
+ boardNav.hidden=true;
+ boardNav.style.display='none';
  const main=$('#mainApp');const board=document.createElement('div');board.id='gpBoardView';while(main.firstChild)board.append(main.firstChild);main.append(board);
  const extra=document.createElement('section');extra.id='gpExtra';extra.className='card';main.append(extra);
  const headerActions=document.createElement('div');headerActions.className='gp-header-actions';
@@ -243,13 +241,10 @@ function gpRenderPage(){
  $('#gpBoardView').hidden=gpPage!=='board';
  $('#gpExtra').hidden=gpPage==='board';
  const boardSubtabs=$('#gpBoardNav');
- boardSubtabs.hidden=gpPage!=='board';
- if(gpPage==='board'){
-  if(boardSubtabs.scrollHeight>0)boardSubtabs.style.setProperty('--gp-board-nav-height',boardSubtabs.scrollHeight+'px');
-  boardSubtabs.classList.toggle('gp-subtabs-closed',!gpBoardSubtabsOpen);
- }
+ boardSubtabs.hidden=true;
+ boardSubtabs.style.display='none';
  const boardTab=$('#gpPrimary [data-page="board"]');
- if(boardTab)boardTab.setAttribute('aria-expanded',String(gpPage==='board'&&gpBoardSubtabsOpen));
+ if(boardTab)boardTab.removeAttribute('aria-expanded');
  document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===gpPage));
  gpSelectionBar();
  if(gpPage==='settings')gpSettings();
@@ -692,6 +687,8 @@ function gpSetupFacetEvents(){
   root.hidden=!opening;trigger.setAttribute('aria-expanded',String(opening));
  });
  root.addEventListener('click',ev=>{
+  // Render replaces clicked buttons. Avoid the outside-click listener closing the menu.
+  ev.stopPropagation();
   const choice=ev.target.closest('[data-gp-facet]');
   if(choice){
    const key=choice.dataset.gpFacet,id=choice.dataset.gpId;
