@@ -394,7 +394,16 @@ function controls(){
   $s('#gpAccountDone').onclick=closeModal;
  else void connect()};
  $s('#gpSyncShare').onclick=()=>void shareCurrent();
- $s('#gpSyncNow').onclick=()=>{if(!user){void connect();return}void reconcile(String(activeProject))};
+ $s('#gpSyncNow').onclick=async()=>{
+  if(blocked){
+   const agree=await gpConfirm('A backup was restored. Resume syncing this browser copy? Its differences may update or delete records in the linked cloud project.',{confirmLabel:'Resume syncing'});
+   if(!agree)return;
+   blocked=false;localStorage.removeItem(LAST);
+   refreshStatus();schedule();return;
+  }
+  if(!user){void connect();return}
+  void reconcile(String(activeProject));
+ };
  // An existing local export is always available. Import remains a recovery
  // action, not a cloud sync mechanism.
  const cloudLink=$s('.top-actions a[href*="cloud=1"]');cloudLink?.remove();
