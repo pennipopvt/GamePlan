@@ -200,18 +200,11 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 }
 
 /* GamePlan navigation, analytics, and reusable task templates */
-.gp-short{display:none}.gp-pages{display:grid;gap:5px}
+.gp-short{display:none}
 .gp-nav{border:0;background:transparent;width:100%;padding:12px 10px;text-align:left;border-radius:9px;color:#476560;font-size:13px;font-weight:700;cursor:pointer}
 .gp-nav .gp-icon{font-size:18px;display:inline-block;width:28px;text-align:center}
 .gp-nav:hover{background:#dfeae3}.gp-nav.active{background:#fff;color:#226f69}
-#gpBoardNav{display:grid;gap:12px}
 .app.gp-collapsed{grid-template-columns:68px minmax(0,1fr)}
-.gp-collapsed .sidebar{padding:24px 7px;overflow:hidden}
-.gp-collapsed .gp-long,.gp-collapsed .gp-nav .gp-text,.gp-collapsed #gpBoardNav,.gp-collapsed .sidebar-foot{display:none}
-.gp-collapsed .gp-short{display:block;text-align:center}
-.gp-collapsed .sidebar-brand{padding:0;font-size:26px}
-.gp-collapsed .gp-nav{padding:12px 4px;text-align:center}
-.gp-collapsed .gp-nav .gp-icon{width:auto}
 .gp-flex{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .gp-list{display:grid;gap:11px;margin:17px 0}.gp-card{background:#fff;border:1px solid #dfebe4;border-radius:10px;padding:15px}
 .gp-card h3{margin:0 0 6px}.gp-card p{margin:0}
@@ -227,7 +220,7 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 .gp-template-task input,.gp-template-task textarea,.gp-template-task select{width:100%}
 #gpExtra{margin-top:12px}
 @media(max-width:900px){.gp-selectable{padding-left:60px}.gp-task-select{left:25px}}
-@media(max-width:680px){.app.gp-collapsed{display:block}.gp-collapsed .sidebar{display:none}.gp-selectable{padding-left:42px}.gp-task-select{left:9px}}
+@media(max-width:680px){.gp-selectable{padding-left:42px}.gp-task-select{left:9px}}
 
 .gp-color-grid{display:grid;grid-template-columns:repeat(auto-fill,40px);grid-auto-rows:40px;gap:9px;margin:12px 0;justify-content:start}
 .gp-color-tile,.gp-color-add{position:relative;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:8px;cursor:pointer;overflow:hidden;box-sizing:border-box}
@@ -276,69 +269,39 @@ details[open]>summary .chevron{transform:rotate(90deg)}
  #gpBoardNav[hidden]{display:none!important}
 }
 
-/* Nested Board navigation and sidebar's own hamburger control */
-#gpPrimary{display:flex;flex-direction:column;gap:5px}
+/* Board subnavigation stays nested under its parent tab. */
 #gpBoardNav{display:flex;flex-direction:column;gap:5px;margin:0 0 7px 17px;padding:3px 0 4px 11px;border-left:1px solid #c6d9cf}
 #gpBoardNav[hidden]{display:none!important}
 #gpBoardNav .side-label{font-size:9px;letter-spacing:1px;padding:8px 7px 2px}
 #gpBoardNav .side-link{font-size:12px;padding:9px 10px;gap:5px;border-radius:7px}
 #gpBoardNav .side-count{font-size:10px}
-.gp-sidebar-toggle{display:flex;align-items:center;gap:12px;width:100%;min-height:39px;margin:0 0 2px;padding:8px 12px;border:0;background:transparent;color:#517368;border-radius:9px;text-align:left;cursor:pointer;font-size:17px}
+.gp-sidebar-toggle{border:0;background:transparent;color:#517368;border-radius:9px;cursor:pointer}
 .gp-sidebar-toggle:hover{background:#dce9e0;color:#246c60}
-.gp-toggle-text{font-size:12px;font-weight:650}
 #menuToggle{display:none}
-.gp-collapsed .gp-sidebar-toggle{justify-content:center;padding:8px 4px}
-.gp-collapsed .gp-toggle-text,.gp-collapsed #gpBoardNav{display:none!important}
-.gp-collapsed #gpPrimary{width:100%}
-@media(max-width:680px){
- #menuToggle{display:inline-flex}
- .gp-sidebar-toggle{display:none}
- #gpBoardNav{margin-left:15px}
-}
+@media(max-width:680px){#menuToggle{display:inline-flex}#gpSidebarToggle{display:none}#gpBoardNav{margin-left:15px}}
 
-/* Integrated confirmations, input panels and nonblocking notifications */
-.gp-dialog-backdrop{position:fixed;inset:0;background:#152c2c93;z-index:30;display:flex;align-items:center;justify-content:center;padding:20px}
-.gp-dialog-card{width:min(480px,100%);max-height:min(85vh,650px);overflow:auto;padding:25px;background:#fff;border:1px solid #dce8df;border-radius:16px;box-shadow:0 18px 55px #16382d30}
-.gp-dialog-card h2{font:700 24px Georgia,serif;margin:0 0 14px;color:#29564f}
-.gp-dialog-message{white-space:pre-wrap;line-height:1.65;color:#47605c;margin:0 0 19px}
-.gp-dialog-card .gp-dialog-actions{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap;margin-top:20px}
-.gp-dialog-card input{width:100%}
-.gp-toast[hidden]{display:none}
-.gp-toast{position:fixed;z-index:60;bottom:18px;right:18px;max-width:min(440px,calc(100% - 36px));display:flex;align-items:center;gap:15px;justify-content:space-between;background:white;border:1px solid #c9ddd2;border-left:4px solid #559987;border-radius:11px;box-shadow:0 10px 35px #21433135;padding:12px 16px;color:#305b50;line-height:1.5}
-
-/* Project workspace controls: persistent title, project switcher, and dedicated Team page. */
-#teamSection{display:none!important}
-#project{display:none!important}
-#menuToggle{display:none}
+/* Workspace header and destructive controls */
+#teamSection,#project{display:none!important}
 .gp-header-project{margin-top:13px;display:grid;gap:5px;width:min(520px,100%)}
 .gp-project-label{font-size:10px;letter-spacing:1.2px;font-weight:800;color:#789389;line-height:1.4}
 #gpProjectTitle{display:block;width:100%;border:1px solid transparent;border-radius:8px;background:transparent;color:#29564f;font:700 clamp(19px,2vw,27px) Georgia,serif;line-height:1.2;padding:6px 9px;margin-left:-9px;text-overflow:ellipsis}
 #gpProjectTitle:hover{background:#f0f7f2;border-color:#dce9e2}
 #gpProjectTitle:focus{background:#fff;border-color:#86b5a3;outline:2px solid #9fd0bf55}
-#gpProjectSwitcher{position:relative;padding:2px 10px 3px;display:grid;grid-template-columns:minmax(0,1fr) 32px;column-gap:6px;row-gap:5px;align-items:center}
-#gpProjectSwitcher .gp-project-label{grid-column:1/-1}
-#gpProjectSelect{width:100%;min-width:0;padding:9px 7px;font-size:12px;color:#315d53;border-color:#c6d9ce;background:#fff}
-.gp-project-add{width:32px;height:35px;border-radius:8px;background:#fff;border:1px solid #c6d9ce;color:#317d73;font-size:20px;cursor:pointer}
-.gp-project-add:hover{background:#e1f0e8}
 .gp-delete-icon{color:#849992}
 .gp-delete-icon:hover,.gp-delete-icon:focus-visible{background:#ffebeb!important;color:#c03636!important;opacity:1}
-.gp-collapsed #gpProjectSwitcher{padding:0;display:flex;justify-content:center}
-.gp-collapsed #gpProjectSwitcher .gp-project-label,.gp-collapsed #gpProjectSelect{display:none}
-.gp-collapsed .gp-project-add{width:36px}
-@media(max-width:680px){#menuToggle{display:inline-flex}#gpProjectSwitcher{padding:2px 8px}#gpProjectTitle{font-size:19px}.gp-header-project{margin-top:8px}}
+@media(max-width:680px){#gpProjectTitle{font-size:19px}.gp-header-project{margin-top:8px}}
 
-/* Project switcher: a quiet transparent trigger with an in-app project menu. */
-#gpProjectSwitcher{position:relative;display:block;padding:2px 8px 5px}
-#gpProjectSwitcher .gp-project-label{display:block;margin:0 4px 4px}
-.gp-project-trigger{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:39px;padding:8px 9px;border:1px solid transparent;border-radius:9px;background:transparent;color:#315d53;font-size:13px;font-weight:700;text-align:left;cursor:pointer}
+/* Project menu and project settings danger zone */
+.gp-project-trigger{border:1px solid transparent;border-radius:9px;background:transparent;color:#315d53;font-size:13px;font-weight:700;text-align:left;cursor:pointer}
 .gp-project-trigger:hover,.gp-project-trigger[aria-expanded="true"]{background:#dceae1;border-color:#c6dbce}
 .gp-project-trigger:focus-visible{outline:2px solid #5d9d87;outline-offset:1px}
 .gp-project-trigger-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.gp-project-chevron{font-size:20px;flex-shrink:0;color:#709588;line-height:1}
+.gp-project-switch-icon{width:18px;height:18px;display:block;color:#507d70}
+.gp-project-trigger:hover .gp-project-switch-icon{color:#216d5e}
 .gp-project-menu[hidden]{display:none!important}
-.gp-project-menu{position:absolute;z-index:20;left:8px;top:100%;width:max(210px,100%);max-width:min(330px,calc(100vw - 26px));max-height:340px;overflow-y:auto;padding:6px;background:#fff;border:1px solid #d4e4d9;border-radius:12px;box-shadow:0 12px 35px #1e483529}
+.gp-project-menu{position:absolute;z-index:20;left:0;right:0;top:calc(100% - 3px);max-height:340px;overflow-y:auto;overflow-x:hidden;padding:6px;background:#fff;border:1px solid #d4e4d9;border-radius:12px;box-shadow:0 12px 35px #1e483529}
 .gp-project-option,.gp-project-create{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:0;border-radius:7px;background:transparent;color:#365e55;cursor:pointer;text-align:left;padding:10px 11px;font-size:13px}
-.gp-project-option span:first-child{overflow-wrap:anywhere}
+.gp-project-option>span:first-child{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .gp-project-option:hover,.gp-project-option:focus-visible,.gp-project-create:hover,.gp-project-create:focus-visible{background:#eaf4ed;outline:none}
 .gp-project-option[aria-current="true"]{font-weight:750;background:#f1f7f3}
 .gp-project-menu-divider{height:1px;background:#e0ebe3;margin:5px}
@@ -346,242 +309,73 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 .gp-project-create span{font-size:21px;line-height:1}
 .gp-danger-zone{margin-top:30px;padding:18px;border:1px solid #e8cccc;border-radius:11px}
 .gp-danger-zone h2{margin-top:0;color:#a44848}
-.gp-collapsed #gpProjectSwitcher{padding:0}
-.gp-collapsed #gpProjectSwitcher .gp-project-label,.gp-collapsed .gp-project-trigger-name{display:none}
-.gp-collapsed .gp-project-trigger{justify-content:center;min-height:40px;padding:8px 3px}
-.gp-collapsed .gp-project-menu{left:48px;top:0}
-@media(max-width:680px){#gpProjectSwitcher{padding:2px 8px 5px}.gp-project-menu{width:calc(100% - 16px)}}
 
-/* Let the project menu pop outside a collapsed sidebar without being clipped. */
+/* Sidebar geometry — one icon rail in both states; no per-state recentering. */
+.app.gp-collapsed{grid-template-columns:68px minmax(0,1fr)}
+.sidebar,.gp-collapsed .sidebar{box-sizing:border-box;padding:24px 12px;gap:12px}
 .gp-collapsed .sidebar{overflow:visible}
-.gp-collapsed #gpProjectSwitcher{position:relative}
-.gp-collapsed .gp-project-menu{left:calc(100% + 8px);top:0}
-
-/* Make the project picker and its menu share the exact same inset and width. */
-#gpProjectSwitcher{box-sizing:border-box;min-width:0}
-.gp-project-trigger{box-sizing:border-box;width:100%;min-width:0;gap:8px}
-.gp-project-chevron{display:block;flex:none;transition:transform .18s ease;transform-origin:center}
-.gp-project-trigger[aria-expanded="true"] .gp-project-chevron{transform:rotate(180deg)}
-.gp-project-menu{box-sizing:border-box;left:8px;right:8px;top:calc(100% - 3px);width:auto;min-width:0;max-width:none;overflow-x:hidden}
-.gp-project-option,.gp-project-create{box-sizing:border-box;min-width:0}
-.gp-project-option>span:first-child{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.gp-collapsed .gp-project-menu{left:calc(100% + 8px);right:auto;top:0;width:220px;max-width:calc(100vw - 85px)}
-@media(max-width:680px){.gp-project-menu{width:auto;left:8px;right:8px;top:calc(100% - 3px)}}
-
-/* Consistent spacing and shared icon grid for sidebar controls. */
-.sidebar{gap:12px}
-#gpSidebarToggle,#gpProjectSwitcher .gp-project-trigger,#gpPrimary>.gp-nav{box-sizing:border-box;min-height:44px;height:44px;border-radius:9px}
-#gpSidebarToggle{display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;gap:8px;padding:0 10px;margin:0;text-align:left}
-#gpSidebarToggle>span:first-child{display:flex;align-items:center;justify-content:center;width:28px;font-size:18px}
-#gpProjectSwitcher{padding:0}
-#gpProjectSwitcher .gp-project-label{margin:0 10px 4px}
-#gpProjectSwitcher .gp-project-trigger{padding:0 10px;gap:8px}
-#gpPrimary{gap:8px}
-#gpPrimary>.gp-nav{display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;gap:8px;padding:0 10px;text-align:left}
-#gpPrimary>.gp-nav .gp-icon{width:28px;display:flex;align-items:center;justify-content:center;line-height:1;font-size:18px}
-.gp-project-switch-icon{display:block;flex-shrink:0;color:#507d70;transition:color .15s ease}
-.gp-project-trigger:hover .gp-project-switch-icon,.gp-project-trigger[aria-expanded="true"] .gp-project-switch-icon{color:#216d5e}
-.gp-collapsed #gpSidebarToggle,.gp-collapsed #gpProjectSwitcher .gp-project-trigger,.gp-collapsed #gpPrimary>.gp-nav{width:44px;height:44px;min-height:44px;padding:0;display:flex;align-items:center;justify-content:center;margin-left:auto;margin-right:auto}
-.gp-collapsed #gpSidebarToggle>span:first-child,.gp-collapsed #gpPrimary>.gp-nav .gp-icon{width:28px;display:flex;align-items:center;justify-content:center}
-.gp-collapsed #gpProjectSwitcher{width:100%;padding:0}
-.gp-collapsed #gpProjectSwitcher .gp-project-label,.gp-collapsed .gp-project-trigger-name{display:none}
-.gp-collapsed #gpProjectSwitcher .gp-project-trigger{gap:0}
-.gp-collapsed .sidebar{gap:12px}
-@media(max-width:680px){#gpSidebarToggle{display:none}#gpPrimary>.gp-nav{width:100%}#gpProjectSwitcher .gp-project-trigger{width:100%}}
-
-/* Anchor primary icons to one fixed rail in both sidebar states. */
-@media(min-width:681px){
- .sidebar{padding-left:12px}
- #gpSidebarToggle,#gpPrimary>.gp-nav{display:grid;grid-template-columns:44px minmax(0,1fr);gap:0;padding:0;justify-items:stretch}
- #gpSidebarToggle>span:first-child,#gpPrimary>.gp-nav .gp-icon{width:44px;min-width:44px;height:44px;display:flex;align-items:center;justify-content:center}
- #gpSidebarToggle .gp-toggle-text,#gpPrimary>.gp-nav .gp-text{align-self:center;min-width:0}
- #gpProjectSwitcher .gp-project-trigger{display:grid;grid-template-columns:44px minmax(0,1fr);gap:0;padding:0;text-align:left}
- #gpProjectSwitcher .gp-project-switch-icon{grid-column:1;grid-row:1;justify-self:center;align-self:center}
- #gpProjectSwitcher .gp-project-trigger-name{grid-column:2;grid-row:1;align-self:center}
- .gp-collapsed #gpSidebarToggle,.gp-collapsed #gpProjectSwitcher .gp-project-trigger,.gp-collapsed #gpPrimary>.gp-nav{width:44px;padding:0;margin-left:auto;margin-right:auto;display:flex;align-items:center;justify-content:center}
- .gp-collapsed #gpProjectSwitcher .gp-project-switch-icon{flex-shrink:0}
+#gpSidebarTop,.gp-collapsed #gpSidebarTop{
+ display:grid;grid-template-columns:44px minmax(0,1fr);gap:0;
+ box-sizing:border-box;align-items:center;width:100%;height:44px;
+ min-height:44px;max-height:44px;flex:0 0 44px;overflow:hidden
 }
-
-/* Replace the project heading with a quiet section divider. */
-#gpProjectSwitcher::before{display:none}
-#gpProjectSwitcher::after{content:"";display:block;height:1px;background:#c6d9cf;margin:12px 8px 0}
-.gp-collapsed #gpProjectSwitcher::before,.gp-collapsed #gpProjectSwitcher::after{content:"";display:block;width:36px;max-width:calc(100% - 4px);height:1px;background:#c6d9cf;margin:9px auto}
-.gp-collapsed #gpProjectSwitcher::before{margin-top:0;margin-bottom:12px}
-.gp-collapsed #gpProjectSwitcher::after{margin-top:12px;margin-bottom:0}
-@media(max-width:680px){#gpProjectSwitcher::before{display:none}#gpProjectSwitcher::after{margin-top:12px}}
-
-/* Project-switch section: force vertical stacking so dividers cannot cross the icon. */
-#gpSidebarTop{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:44px;min-width:0}
-#gpSidebarTop .sidebar-brand{flex:1;min-width:0;padding:0 0 0 10px;white-space:nowrap;line-height:44px}
-#gpSidebarTop #gpSidebarToggle{width:44px;min-width:44px;height:44px;min-height:44px;padding:0;display:flex;align-items:center;justify-content:center;flex:0 0 44px;margin:0}
-#gpSidebarTop #gpSidebarToggle>span:first-child{width:28px;height:44px;display:flex;align-items:center;justify-content:center}
-#gpSidebarTop #gpSidebarToggle .gp-toggle-text{display:none}
-#gpProjectSwitcher{display:block;position:relative;flex:none;min-width:0;box-sizing:border-box}
-#gpProjectSwitcher::before{display:none}
-#gpProjectSwitcher::after{content:"";display:block;position:static;width:calc(100% - 16px);height:1px;min-height:1px;margin:11px 8px 0;background:#c6d9cf}
-.gp-collapsed #gpSidebarTop{justify-content:center;min-height:44px}
+#gpSidebarToggle,.gp-collapsed #gpSidebarToggle{
+ grid-column:1;grid-row:1;display:flex;align-items:center;justify-content:center;
+ width:44px;height:44px;min-height:44px;margin:0;padding:0
+}
+#gpSidebarToggle>span:first-child{display:flex;align-items:center;justify-content:center;width:44px;height:44px;font-size:18px}
+#gpSidebarToggle .gp-toggle-text{display:none}
+#gpSidebarTop .sidebar-brand{
+ grid-column:2;grid-row:1;display:block;box-sizing:border-box;
+ width:100%;height:44px;min-height:44px;max-height:44px;margin:0;padding:0 0 0 5px;
+ font:700 18px/44px Georgia,serif;white-space:nowrap;overflow:hidden
+}
 .gp-collapsed #gpSidebarTop .sidebar-brand{display:none}
-.gp-collapsed #gpSidebarTop #gpSidebarToggle{margin:0 auto}
-.gp-collapsed #gpProjectSwitcher{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:0!important;position:relative;width:100%;padding:0}
-.gp-collapsed #gpProjectSwitcher::before,.gp-collapsed #gpProjectSwitcher::after{content:"";display:block!important;position:static!important;flex:0 0 1px!important;align-self:center;width:36px;height:1px;min-height:1px;max-width:36px;background:#c6d9cf;margin-left:auto;margin-right:auto}
-.gp-collapsed #gpProjectSwitcher::before{margin-top:0;margin-bottom:12px}
-.gp-collapsed #gpProjectSwitcher::after{margin-top:12px;margin-bottom:0}
-.gp-collapsed #gpProjectSwitcher .gp-project-trigger{flex:0 0 44px;min-height:44px;margin:0 auto}
-.gp-collapsed #gpProjectSwitcher .gp-project-menu{position:absolute;top:0;left:calc(100% + 8px)}
+#gpProjectSwitcher,.gp-collapsed #gpProjectSwitcher{
+ position:relative;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;
+ box-sizing:border-box;width:100%;min-width:0;flex:0 0 auto;margin:0;padding:0;gap:0
+}
+#gpProjectSwitcher::before,#gpProjectSwitcher::after,
+.gp-collapsed #gpProjectSwitcher::before,.gp-collapsed #gpProjectSwitcher::after{
+ content:"";position:static;display:block;flex:0 0 1px;align-self:center;
+ box-sizing:border-box;width:calc(100% - 16px);height:1px;min-height:1px;
+ background:#c6d9cf
+}
+#gpProjectSwitcher::before,.gp-collapsed #gpProjectSwitcher::before{margin:0 auto 12px}
+#gpProjectSwitcher::after,.gp-collapsed #gpProjectSwitcher::after{margin:12px auto 0}
+#gpProjectTrigger,.gp-collapsed #gpProjectTrigger{
+ display:grid;grid-template-columns:44px minmax(0,1fr);align-items:center;
+ box-sizing:border-box;width:100%;height:44px;min-height:44px;
+ padding:0;margin:0;gap:0;justify-items:stretch
+}
+#gpProjectTrigger .gp-project-switch-icon,.gp-collapsed #gpProjectTrigger .gp-project-switch-icon{
+ grid-column:1;grid-row:1;align-self:center;justify-self:center
+}
+#gpProjectTrigger .gp-project-trigger-name{grid-column:2;grid-row:1;align-self:center}
+.gp-collapsed #gpProjectTrigger .gp-project-trigger-name{display:none}
+#gpPrimary{display:flex;flex-direction:column;gap:8px;width:100%;min-width:0}
+#gpPrimary>.gp-nav,.gp-collapsed #gpPrimary>.gp-nav{
+ display:grid;grid-template-columns:44px minmax(0,1fr);align-items:center;
+ box-sizing:border-box;width:100%;height:44px;min-height:44px;
+ padding:0;margin:0;gap:0;text-align:left
+}
+#gpPrimary>.gp-nav .gp-icon,.gp-collapsed #gpPrimary>.gp-nav .gp-icon{
+ grid-column:1;grid-row:1;display:flex;align-items:center;justify-content:center;
+ width:44px;height:44px;min-width:44px;line-height:1
+}
+#gpPrimary>.gp-nav .gp-icon svg{display:block;width:20px;height:20px;flex:0 0 20px}
+#gpPrimary>.gp-nav .gp-text{grid-column:2;grid-row:1;align-self:center}
+.gp-collapsed #gpPrimary>.gp-nav .gp-text{display:none}
+.gp-collapsed #gpBoardNav,.gp-collapsed .sidebar-foot{display:none!important}
+.gp-collapsed .gp-project-menu{left:calc(100% + 8px);right:auto;top:0;width:220px;max-width:calc(100vw - 85px)}
 @media(max-width:680px){
- #gpSidebarTop .sidebar-brand{line-height:44px}
- #gpSidebarTop #gpSidebarToggle{display:none}
- #gpProjectSwitcher{display:block}
- #gpProjectSwitcher::before{display:none}
+ .app.gp-collapsed{display:block}
+ .gp-collapsed .sidebar{display:none}
+ #gpSidebarToggle{display:none}
+ #menuToggle{display:inline-flex}
+ .sidebar{padding:22px 10px}
 }
 
-/* Match expanded heading footprint to collapsed divider footprint (1px + 12px). */
-#gpProjectSwitcher .gp-project-section-heading{display:block;box-sizing:border-box;height:13px;line-height:13px;margin:0;padding:0 10px;font-size:9px;letter-spacing:1px;font-weight:800;color:#789389;white-space:nowrap}
-.gp-collapsed #gpProjectSwitcher .gp-project-section-heading{display:none}
-@media(max-width:680px){#gpProjectSwitcher .gp-project-section-heading{display:block}}
-
-/* Matching separators in expanded and collapsed sidebar: same 13px top footprint. */
-#gpProjectSwitcher{display:flex;flex-direction:column;align-items:stretch;gap:0}
-#gpProjectSwitcher::before{content:"";display:block;position:static;flex:0 0 1px;width:calc(100% - 16px);height:1px;min-height:1px;margin:0 8px 12px;background:#c6d9cf}
-#gpProjectSwitcher::after{content:"";display:block;position:static;flex:0 0 1px;width:calc(100% - 16px);height:1px;min-height:1px;margin:12px 8px 0;background:#c6d9cf}
-.gp-collapsed #gpProjectSwitcher::before,.gp-collapsed #gpProjectSwitcher::after{width:36px;max-width:36px}
-.gp-collapsed #gpProjectSwitcher::before{margin:0 auto 12px}
-.gp-collapsed #gpProjectSwitcher::after{margin:12px auto 0}
-#gpProjectSwitcher .gp-project-section-heading{display:none}
-@media(max-width:680px){#gpProjectSwitcher{display:flex;flex-direction:column}#gpProjectSwitcher::before{display:block}}
-
-/* Keep the logo/header row exactly one icon tall in both sidebar states. */
-#gpSidebarTop{box-sizing:border-box;height:44px;min-height:44px;max-height:44px;flex:0 0 44px;align-items:center;overflow:hidden}
-#gpSidebarTop .sidebar-brand{box-sizing:border-box;height:44px;min-height:44px;max-height:44px;line-height:44px;font-size:18px;font-weight:700;margin:0;padding:0 0 0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#gpSidebarTop .sidebar-brand .gp-long{font-size:inherit;line-height:inherit}
-#gpSidebarTop #gpSidebarToggle{box-sizing:border-box;height:44px;min-height:44px;max-height:44px;flex:0 0 44px}
-.gp-collapsed #gpSidebarTop{height:44px;min-height:44px;max-height:44px}
-#gpPrimary>.gp-nav .gp-icon svg{display:block;width:20px;height:20px}
-
-/* Sidebar alignment: ONE shared coordinate system for both expanded and collapsed. */
-@media (min-width:681px){
- .sidebar,.gp-collapsed .sidebar{
-  box-sizing:border-box;
-  padding:24px 12px;
-  gap:12px;
- }
- #gpSidebarTop,.gp-collapsed #gpSidebarTop{
-  display:grid;
-  grid-template-columns:44px minmax(0,1fr);
-  align-items:center;
-  justify-content:initial;
-  width:100%;
-  height:44px;
-  min-height:44px;
-  max-height:44px;
-  flex:0 0 44px;
-  gap:0;
-  overflow:hidden;
- }
- #gpSidebarTop #gpSidebarToggle,.gp-collapsed #gpSidebarTop #gpSidebarToggle{
-  display:flex;
-  grid-column:1;
-  grid-row:1;
-  box-sizing:border-box;
-  width:44px;
-  height:44px;
-  min-height:44px;
-  margin:0;
-  padding:0;
-  justify-content:center;
-  align-items:center;
-  flex:0 0 44px;
- }
- #gpSidebarTop .sidebar-brand{
-  grid-column:2;
-  grid-row:1;
-  display:block;
-  box-sizing:border-box;
-  width:100%;
-  min-width:0;
-  height:44px;
-  min-height:44px;
-  max-height:44px;
-  padding:0 0 0 5px;
-  margin:0;
-  font:700 18px/44px Georgia,serif;
-  white-space:nowrap;
-  overflow:hidden;
- }
- .gp-collapsed #gpSidebarTop .sidebar-brand{display:none}
- #gpProjectSwitcher,.gp-collapsed #gpProjectSwitcher{
-  box-sizing:border-box;
-  position:relative;
-  width:100%;
-  display:flex!important;
-  flex:0 0 auto;
-  flex-direction:column!important;
-  justify-content:flex-start!important;
-  align-items:stretch!important;
-  padding:0;
-  gap:0!important;
- }
- #gpProjectSwitcher::before,#gpProjectSwitcher::after,
- .gp-collapsed #gpProjectSwitcher::before,.gp-collapsed #gpProjectSwitcher::after{
-  content:"";
-  display:block!important;
-  position:static!important;
-  box-sizing:border-box;
-  flex:0 0 1px!important;
-  align-self:center;
-  width:calc(100% - 16px);
-  max-width:none;
-  height:1px;
-  min-height:1px;
-  background:#c6d9cf;
- }
- #gpProjectSwitcher::before,.gp-collapsed #gpProjectSwitcher::before{margin:0 auto 12px}
- #gpProjectSwitcher::after,.gp-collapsed #gpProjectSwitcher::after{margin:12px auto 0}
- #gpProjectSwitcher .gp-project-trigger,.gp-collapsed #gpProjectSwitcher .gp-project-trigger{
-  display:grid;
-  grid-template-columns:44px minmax(0,1fr);
-  align-items:center;
-  justify-items:start;
-  box-sizing:border-box;
-  width:100%;
-  height:44px;
-  min-height:44px;
-  flex:0 0 44px;
-  margin:0;
-  padding:0;
-  gap:0;
-  text-align:left;
- }
- #gpProjectSwitcher .gp-project-switch-icon,.gp-collapsed #gpProjectSwitcher .gp-project-switch-icon{
-  grid-column:1;grid-row:1;justify-self:center;align-self:center;
- }
- #gpProjectSwitcher .gp-project-trigger-name{
-  grid-column:2;grid-row:1;align-self:center;min-width:0;
- }
- .gp-collapsed #gpProjectSwitcher .gp-project-trigger-name{display:none}
- #gpPrimary{gap:8px}
- #gpPrimary>.gp-nav,.gp-collapsed #gpPrimary>.gp-nav{
-  display:grid;
-  grid-template-columns:44px minmax(0,1fr);
-  align-items:center;
-  justify-items:stretch;
-  width:100%;
-  height:44px;
-  min-height:44px;
-  margin:0;
-  padding:0;
-  gap:0;
-  text-align:left;
- }
- #gpPrimary>.gp-nav .gp-icon,.gp-collapsed #gpPrimary>.gp-nav .gp-icon{
-  grid-column:1;grid-row:1;
-  width:44px;height:44px;
-  display:flex;align-items:center;justify-content:center;
- }
- #gpPrimary>.gp-nav .gp-text{grid-column:2;grid-row:1;align-self:center}
- .gp-collapsed #gpPrimary>.gp-nav .gp-text{display:none}
- .gp-collapsed .gp-project-menu{position:absolute;left:calc(100% + 8px);top:0;width:220px}
-}
 </style></head>
 <body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand">✳ Game<span>Plan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav><div class="sidebar-foot">Local only · your board is saved in this browser.</div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.4</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice">Your changes are saved instantly in this browser. Export a backup occasionally.</div>
