@@ -913,8 +913,9 @@ function controls(){
    const kind=change?.kind||'deleted items';
    countsByKind[kind]=(countsByKind[kind]||0)+1;
   }
-  const count=Object.keys(diff).length;
-  const summary=Object.entries(countsByKind).map(([kind,n])=>n+' '+kind).join(', ')||'none';
+  const titlePending=!!nameDirty[pid];
+  const count=Object.keys(diff).length+(titlePending?1:0);
+  const summary=[...Object.entries(countsByKind).map(([kind,n])=>n+' '+kind),...(titlePending?['1 project title']:[])].join(', ')||'none';
   const message=lastSyncError?'<p class="gp-sync-error-detail">'+e(lastSyncError)+'</p>':'';
   modal('Cloud synchronization',
    '<p class="sub">'+e(navigator.onLine?'Online':'Offline')+' · '+
