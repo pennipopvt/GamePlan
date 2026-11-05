@@ -214,9 +214,13 @@ async function reconcile(pid,{allowWrites=true}={}){
    updated_at:new Date().toISOString(),updated_by:auth.user.id
   }));
   for(let i=0;i<upserts.length;i+=50){
-   const {error}=await api.client.from('gp_items').upsert(upserts.slice(i,i+50),{onConflict:'project_id,kind,item_id'});
+   const batch=upserts.slice(i,i+50);
+   const {data:saved,error}=await api.client.from('gp_items')
+    .upsert(batch,{onConflict:'project_id,kind,item_id'}).select('kind,item_id');
    if(error)throw error;
-   for(const item of upserts.slice(i,i+50)){
+   if(!Array.isArray(saved)||saved.length!==batch.length)
+    throw Error('Supabase did not confirm saving all '+batch.length+' changed items. The browser copy is safe.');
+   for(const item of batch){
     safeRemote[key(item.kind,item.item_id)]={kind:item.kind,item_id:item.item_id,
      payload:{...item.payload,project_id:pid},sort_order:item.sort_order};
    }
