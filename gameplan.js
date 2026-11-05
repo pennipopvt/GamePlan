@@ -48,7 +48,7 @@ const gpDragTaskRow=taskRow;
 taskRow=function(task){
  let html=gpDragTaskRow(task);
  if(!isPM())return html;
- const handle='<span class="gp-task-drag-handle" draggable="true" data-gp-drag-task="'+e(task.task_id)+'" title="Drag to another feature" aria-label="Drag '+e(task.title)+' to another feature" role="img"><svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><g fill="currentColor" stroke="none"><circle cx="9" cy="9" r="1.5"/><circle cx="15" cy="9" r="1.5"/><circle cx="9" cy="15" r="1.5"/><circle cx="15" cy="15" r="1.5"/></g></svg></span>';
+ const handle='<span class="gp-task-drag-handle" draggable="true" data-gp-drag-task="'+e(task.task_id)+'" title="Drag to another feature" aria-label="Drag '+e(task.title)+' to another feature" role="img"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="currentColor"><circle cx="8" cy="5" r="1.7"/><circle cx="16" cy="5" r="1.7"/><circle cx="8" cy="12" r="1.7"/><circle cx="16" cy="12" r="1.7"/><circle cx="8" cy="19" r="1.7"/><circle cx="16" cy="19" r="1.7"/></svg></span>';
  return html.replace(/(<div class="task-entry [^"]*">)/, '$1'+handle);
 };
 const gpOriginalRenderMilestones=renderMilestones;
