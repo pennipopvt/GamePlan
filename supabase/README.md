@@ -10,6 +10,33 @@ GamePlan has **one main board**: [open GamePlan](https://pennipopvt.github.io/Pr
 - A new team member can join with the project link and their invited Discord email. A new local project is created for that team member without overwriting their other local projects.
 - **Import full board** is a recovery action under the More menu, not a cloud-copy workflow. It requires confirmation, saves a prior local backup and pauses cloud syncing for review.
 
+## Signed-in accounts, team roles and migration (2026-11-05)
+
+GamePlan now requires an authenticated account to open its main workspace. A new account starts with an **empty workspace** and creates projects with the logged-in Supabase user as **Owner** (not the old Penni/PM sample). The main UI uses the same browser-first cache, now namespaced per Supabase user ID.
+
+**One-time team permissions migration:** Run [team-accounts.sql](team-accounts.sql) in your EXISTING Supabase project's SQL Editor. Do not rerun `schema.sql` or delete old tables. This adds:
+- A project-scoped authenticated member profile table for user-selected display names and optional links to historical task assignees.
+- A secure member-list RPC that reads existing `gp_members` and real OAuth account display names.
+- Owner-only name, Editor/Viewer permission and membership-management RPCs.
+
+The migration does **not** overwrite existing projects, tasks, tags, assignments or time logs. Old member names remain accessible as historical assignees until the project owner matches them to the relevant signed-in account in **Team → Manage → Match older task assignments**. The owner's historical ID is automatically linked to the actual owner when that mapping can be verified.
+
+**Migrating an existing browser:** When the first authenticated account opens the upgraded site, GamePlan asks whether to copy the prior `little-dock-local-v2` board into that user's private account cache or start with a blank workspace. The original key is retained as a recovery copy either way, and no server data is overwritten automatically. Each login gets a separate browser cache. Avoid choosing "Start blank" if you have offline work that has not reached the cloud.
+
+### Login methods and identity linking
+
+Discord is the established sign-in method. The login screen also offers Google OAuth and passwordless email magic links. Their availability depends on **Authentication → Sign In / Providers** in Supabase:
+- Enable **Google** and configure its OAuth client credentials in Google Cloud before expecting Google login to succeed.
+- Enable **Email** and configure an appropriate SMTP sender for reliable magic-link delivery.
+- Keep the allowed redirect URL `https://pennipopvt.github.io/ProjectPlanner/supabase/discord.html` in Supabase Auth → URL Configuration. It handles all three providers.
+- Enable **Manual Linking** in Supabase Auth settings to use **Account → Link Discord/Google**. Linking requires proving control of the second OAuth identity and preserves the original account; GamePlan never merges two accounts solely because of a remembered browser or email address.
+- **Keep me signed in** is checked by default. Supabase refreshes the remembered session in localStorage. Unchecking uses browser sessionStorage for that new login, which lasts only for the current browser session.
+- To add or change an email associated with an existing OAuth account, use **Account → Add / update email** and complete its verification message.
+
+If a browser has no public Supabase configuration and is not entering through a project invitation, its login screen asks for the project URL and **public publishable key** once. A valid team invitation link already includes those public settings. Never put a Supabase service-role or secret key in the browser.
+
+Project membership and permission checks are enforced by Supabase RLS, plus owner-only RPCs for managing roles. **Viewer** accounts can read team data but cannot upload edits. Cached browser data is private only to that browser profile; export backups and don't share browser profiles with untrusted people.
+
 ## Email-free Discord invite links
 
 **One-time database upgrade for existing GamePlan Supabase projects:**
