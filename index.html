@@ -438,7 +438,7 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 .gp-task-drag-handle:hover{opacity:1}
 .gp-board-footer #gpUndoAction,.gp-board-footer #gpRedoAction{font-weight:600}
 </style></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.7</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.8</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head"><div><h1 id="pageHeading" style="margin:0 0 8px;font:700 27px Georgia,serif">Project Overview</h1><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter"><option value="">All assignees</option></select><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div class="grid"><div class="card stat"><span class="muted">Total tasks</span><b id="total">0</b></div><div class="card stat"><span class="muted">Completed</span><b id="completed">0</b></div><div class="card stat"><span class="muted">Time logged</span><b id="hours">0h</b></div></div>
@@ -447,7 +447,7 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.04.7';
+const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.04.8';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=['Ethan','Jerry','Jenny'];
@@ -664,7 +664,7 @@ function render(){
  $('#pageHeading').textContent=m?.name||({all:'Project Overview',open:'Open Tasks',done:'Completed Tasks'}[activeView]||'Project Overview');
  $('#roleDescription').textContent=m?.description||'Organize milestones, features, and everyone’s assigned work';
  const actions=$('#pmActions');
- actions.innerHTML='<button class="button" data-action="milestone">+ Milestone</button><button class="button" data-action="project">+ Project</button>';
+ actions.innerHTML='<button class="button" data-action="milestone">+ Milestone</button>';
  actions.onclick=ev=>{const a=ev.target.closest('[data-action]');if(a)quickCreate(a.dataset.action)};
  renderNavigation();renderMilestones();renderTeam();
 }
@@ -686,7 +686,7 @@ function renderMilestones(){
   if(isFiltered&&!shown.length)return '';
   const percent=allForMilestone.length?100*allForMilestone.filter(t=>t.status==='Done').length/allForMilestone.length:0;
   const open=!collapsedMilestones.has(String(m.milestone_id));
-  return `<details class="milestone-section" data-ms="${e(m.milestone_id)}" ${open?'open':''}><summary class="milestone-summary"><span class="chevron">▸</span><div class="title-stack"><strong>${e(m.name)}</strong><div class="sub">${e(m.description||'')}${m.target_date?' · Target '+e(m.target_date):''}</div><div class="progress-line"><span style="width:${percent}%"></span></div></div><div class="milestone-tools"><span class="tag">${allForMilestone.filter(t=>t.status==='Done').length}/${allForMilestone.length} done</span><button class="context-add" type="button" data-add-feature="${e(m.milestone_id)}" title="Add a feature to this milestone">+ Feature</button><button class="icon-edit" type="button" data-milestone="${e(m.milestone_id)}" aria-label="Edit milestone: ${e(m.name)}" title="Edit milestone"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></summary>${fs.map(f=>{
+  return `<details class="milestone-section" data-ms="${e(m.milestone_id)}" ${open?'open':''}><summary class="milestone-summary"><span class="chevron">▸</span><div class="title-stack"><strong>${e(m.name)}</strong><div class="sub">${e(m.description||'')}${m.target_date?' · Target '+e(m.target_date):''}</div><div class="progress-line"><span style="width:${percent}%"></span></div></div><div class="milestone-tools"><span class="tag">${allForMilestone.filter(t=>t.status==='Done').length}/${allForMilestone.length} done</span><button class="icon-edit" type="button" data-add-feature="${e(m.milestone_id)}" title="Add feature" aria-label="Add feature to ${e(m.name)}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M13 3v5h5"/><path d="M16 5h6M19 2v6"/></svg></button><button class="icon-edit" type="button" data-milestone="${e(m.milestone_id)}" aria-label="Edit milestone: ${e(m.name)}" title="Edit milestone"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></summary>${fs.map(f=>{
    const tasks=shown.filter(t=>t.feature_id===f.feature_id);
    if(isFiltered&&!tasks.length)return '';
    const all=project.filter(t=>t.feature_id===f.feature_id),expanded=!collapsedFeatures.has(String(f.feature_id)),derivedStatus=featureStatus(f.feature_id);
@@ -944,4 +944,4 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="gameplan.js?v=2026.11.04.7"></script></body></html>
+</script><script src="gameplan.js?v=2026.11.04.8"></script></body></html>
