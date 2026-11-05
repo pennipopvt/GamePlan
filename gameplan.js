@@ -88,10 +88,19 @@ function gpAddShell(){
  sidebarToggle.innerHTML='<span aria-hidden="true">☰</span><span class="gp-toggle-text">Collapse sidebar</span>';
  sidebarToggle.setAttribute('aria-label','Collapse sidebar');
  const projectSwitcher=document.createElement('div');projectSwitcher.id='gpProjectSwitcher';
- projectSwitcher.innerHTML='<label for="gpProjectSelect" class="gp-project-label">CURRENT PROJECT</label><select id="gpProjectSelect" aria-label="Switch project"></select><button id="gpNewProject" class="gp-project-add" type="button" title="New project">+</button>';
+ projectSwitcher.innerHTML='<span class="gp-project-label">CURRENT PROJECT</span><button id="gpProjectTrigger" class="gp-project-trigger" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="gpProjectMenu"><span class="gp-project-trigger-name"></span><span class="gp-project-chevron" aria-hidden="true">⌄</span></button><div id="gpProjectMenu" class="gp-project-menu" hidden></div>';
  sidebar.querySelector('.sidebar-brand').after(projectSwitcher,sidebarToggle,nav);
- $('#gpProjectSelect').onchange=ev=>gpSwitchProject(ev.target.value);
- $('#gpNewProject').onclick=()=>quickCreate('project');
+ const trigger=$('#gpProjectTrigger'),menu=$('#gpProjectMenu');
+ const closeMenu=()=>{menu.hidden=true;trigger.setAttribute('aria-expanded','false')};
+ trigger.onclick=()=>{const open=menu.hidden;menu.hidden=!open;trigger.setAttribute('aria-expanded',String(open));if(open)menu.querySelector('[aria-current="true"]')?.focus()};
+ menu.onclick=ev=>{
+  const item=ev.target.closest('[data-gp-project]');
+  if(item){closeMenu();gpSwitchProject(item.dataset.gpProject)}
+  if(ev.target.closest('[data-gp-new-project]')){closeMenu();quickCreate('project')}
+ };
+ document.addEventListener('click',ev=>{if(!projectSwitcher.contains(ev.target))closeMenu()});
+ document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&!menu.hidden){closeMenu();trigger.focus()}});
+
  const header=$('.workspace .top .brand');
  const titleWrap=document.createElement('div');titleWrap.className='gp-header-project';
  titleWrap.innerHTML='<label for="gpProjectTitle" class="gp-project-label">CURRENT PROJECT</label><input id="gpProjectTitle" aria-label="Edit current project name" autocomplete="off" spellcheck="false" title="Click to rename project">';
@@ -145,9 +154,10 @@ function gpRenderPage(){
 }
 function gpSettings(){
  const project=find(data.projects,activeProject,'project_id');
- $('#gpExtra').innerHTML='<div class="gp-flex"><div><h1>Project Settings</h1><p class="sub">'+e(project.project_name)+'</p></div><button class="button" id="gpRename">Edit project name</button></div><h2>Project tags</h2><p class="sub">Tags can be assigned to multiple tasks. For analytics, the first tag receives the logged time so hours are not counted twice.</p><div class="gp-list" id="gpTags">'+gpTags().map(t=>'<div class="gp-card gp-flex"><span class="gp-tag" style="--tc:'+e(t.color)+'">'+e(t.name)+'</span><div class="actions"><button class="button" data-tag-edit="'+e(t.tag_id)+'">Edit</button><button class="button danger" data-tag-delete="'+e(t.tag_id)+'">Delete</button></div></div>').join('')+'</div><p><button class="button main" id="gpAddTag">+ Add tag</button></p>';
+ $('#gpExtra').innerHTML='<div class="gp-flex"><div><h1>Project Settings</h1><p class="sub">'+e(project.project_name)+'</p></div><button class="button" id="gpRename">Edit project name</button></div><h2>Project tags</h2><p class="sub">Tags can be assigned to multiple tasks. For analytics, the first tag receives the logged time so hours are not counted twice.</p><div class="gp-list" id="gpTags">'+gpTags().map(t=>'<div class="gp-card gp-flex"><span class="gp-tag" style="--tc:'+e(t.color)+'">'+e(t.name)+'</span><div class="actions"><button class="button" data-tag-edit="'+e(t.tag_id)+'">Edit</button><button class="button danger" data-tag-delete="'+e(t.tag_id)+'">Delete</button></div></div>').join('')+'</div><p><button class="button main" id="gpAddTag">+ Add tag</button></p><section class="gp-danger-zone"><h2>Danger zone</h2><p class="sub">Permanently delete this project, including its milestones, features, tasks, time logs, tags, templates and team memberships. Other projects will stay intact.</p><button type="button" class="button danger" id="gpDeleteProject">Delete project</button></section>';
  $('#gpRename').onclick=async()=>{const name=await gpPrompt('Project name',project.project_name);if(name?.trim()){project.project_name=name.trim();persist();render()}};
  $('#gpAddTag').onclick=()=>gpEditTag();
+ $('#gpDeleteProject').onclick=gpDeleteProject;
  $('#gpTags').onclick=ev=>{const a=ev.target.closest('[data-tag-edit]'),b=ev.target.closest('[data-tag-delete]');if(a)gpEditTag(a.dataset.tagEdit);if(b)gpDeleteTag(b.dataset.tagDelete)};
 }
 function gpColorToHSV(hex){
@@ -307,6 +317,38 @@ function gpFeatureCreate(preferredMilestoneId='',initialTemplateId=''){
 }
 function gpUseTemplate(id){gpFeatureCreate('',id)}
 
+async function gpDeleteProject(){
+ const p=find(data.projects,activeProject,'project_id');if(!p)return;
+ if(data.projects.length<=1){gpAlert('Create another project before deleting your last project.');return}
+ const id=p.project_id;
+ const ms=data.milestones.filter(x=>x.project_id===id),fs=data.features.filter(x=>x.project_id===id),tasks=data.tasks.filter(x=>x.project_id===id);
+ const taskIds=new Set(tasks.map(x=>String(x.task_id)));
+ const logs=data.logs.filter(x=>taskIds.has(String(x.task_id)));
+ const summary='Delete project “'+p.project_name+'”?\\n\\nThis will permanently delete:\\n• '+ms.length+' milestones\\n• '+fs.length+' features\\n• '+tasks.length+' tasks\\n• '+logs.length+' time entries\\n• '+gpTags().length+' tags\\n• '+gpTemplates().length+' templates\\n\\nOther projects will not be changed. This cannot be undone.';
+ if(!await gpConfirm(summary,{title:'Delete entire project?',danger:true,confirmLabel:'Continue'}))return;
+ const typed=await gpPrompt('Type the project name to confirm deletion', '');
+ if(typed!==p.project_name){if(typed!==null)gpAlert('Project name did not match. Nothing was deleted.');return}
+ // Make one atomic local backup update; shared member identities remain available to other projects.
+ const old=data;
+ const next={...data,
+  projects:data.projects.filter(x=>x.project_id!==id),
+  milestones:data.milestones.filter(x=>x.project_id!==id),
+  features:data.features.filter(x=>x.project_id!==id),
+  tasks:data.tasks.filter(x=>x.project_id!==id),
+  logs:data.logs.filter(x=>!taskIds.has(String(x.task_id))),
+  team:data.team.filter(x=>x.project_id!==id),
+  memberships:data.memberships.filter(x=>x.project_id!==id),
+  tags:data.tags.filter(x=>x.project_id!==id),
+  templates:data.templates.filter(x=>x.project_id!==id),
+  custom_tag_colors:(data.custom_tag_colors||[]).filter(x=>x.project_id!==id)
+ };
+ data=next;
+ try{persist()}catch(err){data=old;gpAlert('Unable to save project deletion: '+err.message);return}
+ activeProject=next.projects[0].project_id;activeView='all';gpSelected.clear();gpSelecting=false;
+ $('#assigneeFilter').value='';$('#searchTasks').value='';
+ saveProject();gpNavigate('board');
+ gpAlert('Project deleted.');
+}
 function gpSwitchProject(id){
  if(!data.projects.some(p=>String(p.project_id)===String(id)))return;
  activeProject=id;activeView='all';gpSelected.clear();gpSelecting=false;saveProject();
@@ -321,8 +363,9 @@ function gpRenameProjectInline(){
 }
 function gpRenderProjectControls(){
  const project=find(data.projects,activeProject,'project_id');
- const options=data.projects.map(p=>'<option value="'+e(p.project_id)+'" '+(String(p.project_id)===String(activeProject)?'selected':'')+'>'+e(p.project_name)+'</option>').join('');
- const picker=$('#gpProjectSelect');if(picker)picker.innerHTML=options;
+ const picker=$('#gpProjectTrigger'),menu=$('#gpProjectMenu');
+ if(picker)picker.querySelector('.gp-project-trigger-name').textContent=project?.project_name||'Select project';
+ if(menu)menu.innerHTML=data.projects.map(p=>'<button type="button" class="gp-project-option" data-gp-project="'+e(p.project_id)+'" aria-current="'+(String(p.project_id)===String(activeProject))+'"><span>'+e(p.project_name)+'</span><span aria-hidden="true">'+(String(p.project_id)===String(activeProject)?'✓':'')+'</span></button>').join('')+'<div class="gp-project-menu-divider"></div><button type="button" class="gp-project-create" data-gp-new-project><span aria-hidden="true">＋</span> Create project</button>';
  const title=$('#gpProjectTitle');if(title&&document.activeElement!==title)title.value=project?.project_name||'';
 }
 function gpTeamPage(){
