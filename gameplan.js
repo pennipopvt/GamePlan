@@ -236,7 +236,12 @@ function gpSelectionBar(){
 function gpRenderPage(){
  $('#gpBoardView').hidden=gpPage!=='board';
  $('#gpExtra').hidden=gpPage==='board';
- $('#gpBoardNav').hidden=gpPage!=='board'||!gpBoardSubtabsOpen;
+ const boardSubtabs=$('#gpBoardNav');
+ boardSubtabs.hidden=gpPage!=='board';
+ if(gpPage==='board'){
+  boardSubtabs.style.setProperty('--gp-board-nav-height',boardSubtabs.scrollHeight+'px');
+  boardSubtabs.classList.toggle('gp-subtabs-closed',!gpBoardSubtabsOpen);
+ }
  const boardTab=$('#gpPrimary [data-page="board"]');
  if(boardTab)boardTab.setAttribute('aria-expanded',String(gpPage==='board'&&gpBoardSubtabsOpen));
  document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===gpPage));
@@ -554,6 +559,41 @@ function gpSetupHistoryControls(){
  });
  gpUpdateHistoryControls();
 }
+/* Animate native details height without replacing their controls or saved open states. */
+function gpSetupHierarchyAnimation(){
+ const root=$('#milestoneList');
+ root.addEventListener('click',ev=>{
+  const summary=ev.target.closest?.('summary');
+  const el=summary?.parentElement;
+  if(!summary||!el?.matches('details[data-ms],details[data-feat]')||!root.contains(el))return;
+  if(ev.target.closest('button,a,input,select,[role="button"]'))return;
+  ev.preventDefault();
+  if(el.dataset.gpAnimating==='1')return;
+  const opening=!el.open;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches||typeof el.animate!=='function'){
+   el.open=opening;
+   return;
+  }
+  const summaryHeight=summary.getBoundingClientRect().height;
+  const startHeight=opening?summaryHeight:el.getBoundingClientRect().height;
+  if(opening)el.open=true;
+  const endHeight=opening?el.scrollHeight:summaryHeight;
+  el.dataset.gpAnimating='1';
+  el.classList.add('gp-details-animating');
+  const animation=el.animate(
+   [{height:startHeight+'px'},{height:endHeight+'px'}],
+   {duration:210,easing:'cubic-bezier(.22,.68,.25,1)'}
+  );
+  const finish=()=>{
+   if(!opening)el.open=false;
+   el.classList.remove('gp-details-animating');
+   delete el.dataset.gpAnimating;
+  };
+  animation.onfinish=finish;
+  animation.oncancel=finish;
+ },true);
+}
 gpAddShell();
+gpSetupHierarchyAnimation();
 gpSetupHistoryControls();
 render();
