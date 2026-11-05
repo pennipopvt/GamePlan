@@ -40,7 +40,7 @@ const gpOriginalRow=taskRow;
 taskRow=function(t){
  let html=gpOriginalRow(t),extra=gpTagBadges(t);
  if(extra)html=html.replace('</button><div class="sub">','</button><div class="gp-badges">'+extra+'</div><div class="sub">');
- if(gpSelecting)html=html.replace('<div class="task-entry ', '<div class="task-entry gp-template-selectable '+(gpSelected.has(String(t.task_id))?'gp-template-selected ':'')+'" data-gp-template-task="'+e(t.task_id)+'" aria-selected="'+(gpSelected.has(String(t.task_id))?'true':'false')+'" ');
+ if(gpSelecting)html=html.replace(/(<div class="task-entry [^"]*)(")/,(_match,classes,quote)=>classes+' gp-template-selectable'+(gpSelected.has(String(t.task_id))?' gp-template-selected':'')+quote+' data-gp-template-task="'+e(t.task_id)+'" aria-selected="'+String(gpSelected.has(String(t.task_id)))+'"');
  return html;
 };
 /* Drag-and-drop task reassignment: only the feature ID changes, preserving logs and metadata. */
