@@ -82,7 +82,9 @@ function gpAddShell(){
  const sidebar=$('#sidebar');
  sidebar.querySelector('.sidebar-brand').innerHTML='<span class="gp-long">✳ Game<span>Plan</span></span><span class="gp-short">✳</span>';
  const nav=document.createElement('nav');nav.id='gpPrimary';nav.className='side-nav';
- nav.innerHTML=[['board','▦','Board'],['analytics','▥','Analytics'],['templates','▤','Templates'],['team','♙','Team'],['settings','⚙','Project Settings']].map(([v,icon,label])=>'<button class="gp-nav" data-page="'+v+'" title="'+label+'"><span class="gp-icon">'+icon+'</span><span class="gp-text">'+label+'</span></button>').join('');
+ const gpGraphIcon='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m6 16 5-6 4 3 5-7"/></svg>';
+ const gpBlueprintIcon='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="15" height="18" rx="1.5"/><path d="M6 7h9M6 10h6M6 13h4M6 16h3"/><path d="m13 17 6.5-6.5 2 2L15 19l-3 1z"/></svg>';
+ nav.innerHTML=[['board','▦','Board'],['analytics',gpGraphIcon,'Analytics'],['templates',gpBlueprintIcon,'Templates'],['team','♙','Team'],['settings','⚙','Project Settings']].map(([v,icon,label])=>'<button class="gp-nav" data-page="'+v+'" title="'+label+'"><span class="gp-icon">'+icon+'</span><span class="gp-text">'+label+'</span></button>').join('');
  const sidebarToggle=document.createElement('button');
  sidebarToggle.id='gpSidebarToggle';sidebarToggle.type='button';sidebarToggle.className='gp-sidebar-toggle';
  sidebarToggle.innerHTML='<span aria-hidden="true">☰</span><span class="gp-toggle-text">Collapse sidebar</span>';
