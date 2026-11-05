@@ -10,9 +10,17 @@ const CFG='gameplan-cloud-config-v1',LINKS='gp-sync-links-v1',BASE='gp-sync-base
 const KINDS=['milestones','features','tasks','logs','tags','templates','team','custom_tag_colors'];
 const IDS={milestones:'milestone_id',features:'feature_id',tasks:'task_id',logs:'log_id',tags:'tag_id',templates:'template_id',team:'member_id'};
 let api=null,user=null,links=read(LINKS,{}),bases=read(BASE,{}),busy=false,loop=null,subscription=null,watched='',ready=false,blocked=false,inviteAttempted=false;
+let lastSyncError=null,lastSyncAt=0,remoteMissingCount=0;
 const unique=(kind,obj)=>kind==='team'?'member:'+obj.member_id:kind==='custom_tag_colors'?'color:'+obj.color:String(obj[IDS[kind]]||'');
 const key=(kind,id)=>kind+'\u0000'+id;
-const equal=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+// PostgreSQL JSONB may reorder object keys without changing record values.
+function stable(value){
+ if(value===null||typeof value!=='object')return JSON.stringify(value);
+ if(Array.isArray(value))return '['+value.map(stable).join(',')+']';
+ return '{'+Object.keys(value).filter(k=>value[k]!==undefined).sort()
+  .map(k=>JSON.stringify(k)+':'+stable(value[k])).join(',')+'}';
+}
+const equal=(a,b)=>stable(a)===stable(b);
 const clone=x=>JSON.parse(JSON.stringify(x));
 function read(k,fallback){try{return JSON.parse(localStorage.getItem(k)||'null')??fallback}catch{return fallback}}
 function store(k,val){localStorage.setItem(k,JSON.stringify(val))}
@@ -74,7 +82,8 @@ function changesSince(base,local){
 function status(message,error=false){
  const box=$s('#gpSyncStatus');
  if(!box)return;
- box.textContent=message;box.classList.toggle('gp-sync-error',error);
+ box.textContent=message;box.title=message;
+ box.classList.toggle('gp-sync-error',error);
 }
 function counts(pid){
  const snap=projectRows(pid),base=bases[pid]||{};
@@ -89,6 +98,8 @@ function refreshStatus(){
  else if(!api||!user)status('Saved on this device');
  else if(!linked)status('Local · not shared');
  else if(busy)status('Syncing…');
+ else if(lastSyncError)status('Sync failed · '+lastSyncError,true);
+ else if(remoteMissingCount)status(remoteMissingCount+' items missing remotely · saved locally',true);
  else status(pending?pending+' changes pending':'Cloud synced');
  const share=$s('#gpSyncShare');if(share){share.hidden=!user;share.textContent=linked?'Invite teammates':'Share project';}
  if($s('#gpSyncConnect'))$s('#gpSyncConnect').textContent=user?'Account':sessionStorage.getItem(PENDING_INVITE)?'Join with Discord':'Connect Discord';
@@ -99,7 +110,9 @@ function persistBaseline(pid,snap){
 function saveLink(pid,cloudId){
  links[pid]=cloudId;store(LINKS,links);
 }
-function isEditing(){return !!($s('#back.show')||$s('#gpDialogOverlay')||document.activeElement?.matches('input,textarea,[contenteditable="true"]'))}
+// Focusing a search field is not an edit transaction. Only open dialogs
+ // should briefly defer reconciliation of incoming cloud changes.
+function isEditing(){return !!($s('#back.show')||$s('#gpDialogOverlay'))}
 async function checkAccount(){
  if(!navigator.onLine)return false;
  const cfg=config();if(!cfg?.url||!cfg?.key)return false;
@@ -176,16 +189,20 @@ async function reconcile(pid,{allowWrites=true}={}){
   const visible=await api.listProjects();
   if(!visible.some(p=>p.id===cloudId))throw Error('Cloud project is not accessible. Local data is safe.');
   const remote=await remoteSnapshot(cloudId,pid);
-  const missing=Object.keys(base).filter(k=>base[k]&&!remote[k]&&before[k]);
-  if(missing.length)throw Error(missing.length+' cloud items are missing. Local copy preserved; sync paused for review.');
   // First linked sync may not run until a baseline is saved by link/share flow.
   if(!Object.prototype.hasOwnProperty.call(bases,pid))throw Error('Project is not initialized for syncing. Reconnect from Account.');
-  mergeRemote(pid,remote,base,before);
-  // Save remote baseline BEFORE uploading local pending work so reconnection
-  // never interprets teammate edits as ours.
-  persistBaseline(pid,remote);
-  const local=projectRows(pid),pending=changesSince(remote,local);
-  if(!allowWrites||!Object.keys(pending).length){status('Cloud synced');return}
+  const missing=Object.keys(base).filter(k=>base[k]&&!remote[k]&&before[k]);
+  remoteMissingCount=missing.length;
+  // Retain local rows missing remotely without re-uploading them automatically.
+  // Other local edits should still be allowed to sync.
+  const safeRemote={...remote};
+  for(const k of missing)safeRemote[k]=base[k];
+  mergeRemote(pid,safeRemote,base,before);
+  persistBaseline(pid,safeRemote);
+  const local=projectRows(pid),pending=changesSince(safeRemote,local);
+  if(!allowWrites||!Object.keys(pending).length){
+   lastSyncError=null;lastSyncAt=Date.now();return;
+  }
   const {data:auth,error:authError}=await api.client.auth.getUser();
   if(authError||!auth.user)throw Error('Sign in again to save cloud changes');
   const upserts=Object.values(pending).filter(Boolean).map(row=>({
@@ -197,33 +214,35 @@ async function reconcile(pid,{allowWrites=true}={}){
    const {error}=await api.client.from('gp_items').upsert(upserts.slice(i,i+50),{onConflict:'project_id,kind,item_id'});
    if(error)throw error;
    for(const item of upserts.slice(i,i+50)){
-    remote[key(item.kind,item.item_id)]={kind:item.kind,item_id:item.item_id,
+    safeRemote[key(item.kind,item.item_id)]={kind:item.kind,item_id:item.item_id,
      payload:{...item.payload,project_id:pid},sort_order:item.sort_order};
    }
-   persistBaseline(pid,remote);
+   persistBaseline(pid,safeRemote);
   }
   for(const [k,v] of Object.entries(pending)){
    if(v)continue;
-   const item=remote[k];if(!item)continue;
+   const item=safeRemote[k];if(!item)continue;
    const {error}=await api.client.from('gp_items').delete().eq('project_id',cloudId).eq('kind',item.kind).eq('item_id',item.item_id);
    if(error)throw error;
-   delete remote[k];persistBaseline(pid,remote);
+   delete safeRemote[k];persistBaseline(pid,safeRemote);
   }
   // A project rename is explicit, not a bulk overwrite.
   const cloudProjects=await api.listProjects();
   const cloud=cloudProjects.find(p=>p.id===cloudId);
   const localProject=data.projects.find(p=>String(p.project_id)===String(pid));
-  if(cloud&&localProject&&cloud.name!==localProject.project_name){
+  if(cloud&&cloud.owner_id===user.id&&localProject&&cloud.name!==localProject.project_name){
    await api.renameProject(cloudId,localProject.project_name);
   }
-  status('Cloud synced');
- }catch(err){status('Pending changes · '+err.message,true);console.error('[GamePlan sync]',err)}
- finally{busy=false;refreshStatus()}
+  lastSyncError=null;lastSyncAt=Date.now();
+ }catch(err){
+  lastSyncError=err?.message||String(err);
+  console.error('[GamePlan sync]',err);
+ }finally{busy=false;refreshStatus()}
 }
 let debounce=null;
 function schedule(){
  refreshStatus();
- if(!ready||busy||blocked||!navigator.onLine||!user||!current())return;
+ if(!ready||blocked||!navigator.onLine||!user||!current())return;
  clearTimeout(debounce);
  debounce=setTimeout(()=>void reconcile(String(activeProject)),650);
 }
@@ -236,6 +255,7 @@ gpSwitchProject=function(pid){oldSwitch(pid);watch();schedule()};
 async function watch(){
  const id=current();
  if(id===watched)return;
+ remoteMissingCount=0;lastSyncError=null;
  subscription?.();subscription=null;watched=id;
  if(!api||!id)return;
  subscription=api.subscribeProject(id,()=>{
