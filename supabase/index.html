@@ -48,6 +48,10 @@ label{font-size:13px;font-weight:600;display:grid;gap:6px}form{display:grid;gap:
 <form id="inviteForm" class="row"><input id="inviteEmail" type="email" placeholder="Teammate's Google email" required style="flex:1;min-width:190px"><select id="inviteRole" style="width:120px"><option value="editor">Editor</option><option value="viewer">Viewer</option></select><button class="primary">Invite</button></form>
 <p class="muted">Invited teammates sign in with the same email address to join automatically.</p>
 </section>
+<section class="card"><h2>Milestones and features</h2>
+<form id="newMilestoneForm" class="row" style="margin-bottom:12px"><input id="milestoneName" placeholder="New milestone" required style="flex:1;min-width:170px"><button>Create milestone</button></form>
+<form id="newFeatureForm" class="row"><input id="featureName" placeholder="New feature" required style="flex:1;min-width:170px"><select id="milestonePicker" required style="width:180px"></select><button>Create feature</button></form>
+</section>
 <section class="card"><h2>Tasks</h2><div id="tasks"></div>
 <form id="newTaskForm" class="row" style="margin-top:18px"><input id="taskTitle" placeholder="New task" required style="flex:2;min-width:150px"><select id="featurePicker" required style="flex:1;min-width:150px"></select><button class="primary">Add task</button></form>
 <p id="emptyFeatures" class="muted" hidden>This project needs a feature before tasks can be created. Import a local project to test the complete workflow.</p>
@@ -110,6 +114,9 @@ async function openProject(p){
 async function showItems(){
  if(!active)return;
  const items=await cloud.loadProjectItems(active.id),box=$('tasks');box.replaceChildren();
+ const milestones=$('milestonePicker');milestones.replaceChildren();
+ for(const m of items.milestones){const option=document.createElement('option');option.value=m.milestone_id;option.textContent=m.name;milestones.append(option)}
+ $('newFeatureForm').hidden=!items.milestones.length;
  const features=new Map(items.features.map(f=>[String(f.feature_id),f.name]));
  const picker=$('featurePicker');picker.replaceChildren();
  for(const f of items.features){const option=document.createElement('option');option.value=f.feature_id;option.textContent=f.name;picker.append(option)}
@@ -137,6 +144,8 @@ $('login').onclick=()=>run(()=>cloud.signInWithGoogle());
 $('logout').onclick=()=>run(async()=>{await cloud.signOut();await checkAuth()});
 $('createProject').addEventListener('submit',ev=>{ev.preventDefault();void run(async()=>{await cloud.createProject($('newProjectName').value);$('newProjectName').value='';await showProjects()})});
 $('inviteForm').addEventListener('submit',ev=>{ev.preventDefault();void run(async()=>{await cloud.inviteByEmail(active.id,$('inviteEmail').value,$('inviteRole').value);$('inviteEmail').value='';message('Invitation saved. Your teammate can join by signing in with that email.')})});
+$('newMilestoneForm').addEventListener('submit',ev=>{ev.preventDefault();void run(async()=>{const id=crypto.randomUUID();await cloud.saveItem(active.id,'milestones',id,{milestone_id:id,name:$('milestoneName').value.trim(),status:'To do',description:''});$('milestoneName').value='';await showItems()})});
+$('newFeatureForm').addEventListener('submit',ev=>{ev.preventDefault();void run(async()=>{const id=crypto.randomUUID();await cloud.saveItem(active.id,'features',id,{feature_id:id,milestone_id:$('milestonePicker').value,name:$('featureName').value.trim(),status:'To do',description:''});$('featureName').value='';await showItems()})});
 $('newTaskForm').addEventListener('submit',ev=>{ev.preventDefault();void run(async()=>{const id=crypto.randomUUID();await cloud.saveItem(active.id,'tasks',id,{task_id:id,feature_id:$('featurePicker').value,title:$('taskTitle').value.trim(),status:'To do',priority:'Normal',estimated_hours:0,remaining_hours:0,tag_ids:[],assignee_member_id:''});$('taskTitle').value='';await showItems()})});
 $('importLocal').onclick=()=>run(async()=>{
  const data=localData();if(!data)throw Error('No local board data found in this browser.');
