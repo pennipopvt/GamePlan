@@ -132,19 +132,24 @@ function onAuthenticated(user){
    localStorage.setItem('gp-account-link-offer-v1:'+user.id,'1');
    accountNudge('Using more than one login? You can connect Google, Discord, or email to this same account.',true);
   }else if(previousAccount!==user.id){
-   accountNudge('This is a different account than the one previously used in this browser. Projects stay separate. To link logins, sign into the original account first.',false);
+   accountNudge('This browser was previously used with another GamePlan account. Your projects have NOT been merged. To link another login safely, return to the original account and choose Account → Link Discord or Google.',false,true);
   }
  }
 }
-function accountNudge(message,canLink){
+function accountNudge(message,canLink,canSwitch=false){
  const main=$a('#mainApp'),work=$a('.workspace');if(!work)return;
  const banner=document.createElement('div');banner.id='gpAccountLinkPrompt';banner.className='gp-account-nudge';
  banner.innerHTML='<span>'+html(message)+'</span>'+
   (canLink?'<button type="button" class="button" id="gpNudgeLink">Link logins</button>':'')+
+  (canSwitch?'<button type="button" class="button" id="gpNudgeSwitch">Switch accounts</button>':'')+
   '<button type="button" class="gp-nudge-dismiss" id="gpNudgeDismiss" aria-label="Dismiss">×</button>';
  const target=main?.hidden?work:main;
  target.prepend(banner);
  $a('#gpNudgeLink')?.addEventListener('click',()=>{banner.remove();void accountDialog()});
+ $a('#gpNudgeSwitch')?.addEventListener('click',async()=>{
+  if(!await gpConfirm('Switch accounts? Your existing project data is kept under its original account; nothing will be merged or deleted.',{confirmLabel:'Switch accounts'}))return;
+  banner.remove();await window.GamePlanSync.signOut();
+ });
  $a('#gpNudgeDismiss').onclick=()=>banner.remove();
 }
 async function accountDialog(){
@@ -217,7 +222,7 @@ function renderTeamPage(){
   return '<article class="gp-person-row"><div class="gp-person-avatar">'+html(initials(name))+'</div>'+
    '<div class="gp-person-copy"><strong>'+html(name)+'</strong><span class="sub">'+html(m.account_name&&m.account_name!==name?'Discord / account name: '+m.account_name:'Linked account')+'</span></div>'+
    '<span class="gp-role-pill">'+html(isOwner?'Owner':m.member_role==='editor'?'Editor':'Viewer')+'</span>'+
-   (owner?'<button type="button" class="button" data-gp-authmember="'+html(m.member_user_id)+'">'+(isOwner?'Rename':'Manage')+'</button>':'')+'</article>';
+   (owner?'<button type="button" class="button" data-gp-authmember="'+html(m.member_user_id)+'"'+(teamUpgradeNeeded?' disabled title="Complete the one-time Supabase team upgrade to manage members"':'')+'>'+(isOwner?'Rename':'Manage')+'</button>':'')+'</article>';
  }).join('');
  area.innerHTML='<div class="gp-team-real-head"><p class="sub">Team members are real signed-in accounts. Permissions are enforced in Supabase, not just by the interface.</p>'+
  (owner?'<button type="button" class="button main" id="gpInviteTeam">+ Invite people</button>':'')+'</div>'+
@@ -230,7 +235,9 @@ function renderTeamPage(){
  area.querySelectorAll('[data-gp-authmember]').forEach(b=>b.onclick=()=>void editTeamMember(b.dataset.gpAuthmember));
 }
 async function editTeamMember(id){
- const member=teamRows.find(m=>m.member_user_id===id);if(!member||accountRole!=='owner')return;
+ const member=teamRows.find(m=>m.member_user_id===id);
+ if(!member||accountRole!=='owner')return;
+ if(teamUpgradeNeeded){gpAlert('Run supabase/team-accounts.sql in your Supabase SQL Editor to enable renaming and permissions.');return}
  const owner=member.member_role==='owner',assigned=new Set(teamRows.map(m=>m.legacy_member_id).filter(Boolean));
  const options=(data.team||[]).filter(x=>x.project_id===activeProject&&(x.member_id===member.legacy_member_id||!assigned.has(x.member_id)))
   .map(x=>({id:x.member_id,name:data.members.find(m=>m.member_id===x.member_id)?.display_name||x.member_id}));
