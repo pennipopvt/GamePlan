@@ -738,6 +738,26 @@ button,input,textarea,select{font-family:inherit}
  #milestoneList .feature-summary{padding:15px 13px;min-height:65px}
  #milestoneList .milestone-tools{flex-wrap:wrap}
 }
+
+/* Muted print palette applied to the navigation and general controls, too. */
+:root{color:#384b53;background:#fbfcfc}
+body{background:#fbfcfc}
+.sidebar{background:#f8fafb;border-right-color:#e2e9ec}
+#gpPrimary>.gp-nav{color:#667d87}
+#gpPrimary>.gp-nav.active{background:#e1edf2;color:#39778e}
+#gpPrimary>.gp-nav:hover{background:#eaf2f5}
+#gpBoardNav .side-nav .active{color:#39778e}
+.gp-header-actions .button{color:#538294}
+.gp-header-actions .button:hover{color:#2a718b}
+.gp-overview-heading #pmActions .button,.gp-overview-heading #gpSelectTasks{color:#397e95}
+.gp-overview-heading #pmActions .button:hover,.gp-overview-heading #gpSelectTasks:hover{color:#225e73}
+.button.main{background:#427f96;color:#fff;border-color:#427f96}
+.button.main:hover{background:#346e85}
+.button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline-color:#4896ae}
+.gp-board-footer{background:#f5f9fa;border-color:#dce8ed}
+.gp-board-footer h2{color:#426c79}
+.gp-header-project #gpProjectTrigger{color:#4c879d}
+.gp-header-project #gpProjectTrigger:hover{background:#e5f0f4;color:#2b728d}
 </style></head>
 <body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.15</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
