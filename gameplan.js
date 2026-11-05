@@ -93,7 +93,7 @@ function gpAddShell(){
  projectSwitcher.innerHTML='<button id="gpProjectTrigger" class="gp-project-trigger" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="gpProjectMenu"><span class="gp-project-trigger-name"></span><svg class="gp-project-switch-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h14m-4-4 4 4-4 4M17 17H3m4-4-4 4 4 4"/></svg></button><div id="gpProjectMenu" class="gp-project-menu" hidden></div>';
  const logo=sidebar.querySelector('.sidebar-brand');
  const topRow=document.createElement('div');topRow.id='gpSidebarTop';
- logo.before(topRow);topRow.append(logo,sidebarToggle);
+ logo.before(topRow);topRow.append(sidebarToggle,logo);
  topRow.after(projectSwitcher,nav);
  const trigger=$('#gpProjectTrigger'),menu=$('#gpProjectMenu');
  const closeMenu=()=>{menu.hidden=true;trigger.setAttribute('aria-expanded','false')};
