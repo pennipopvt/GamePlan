@@ -549,6 +549,11 @@ button,input,textarea,select{font-family:inherit}
  #milestoneList .feature-summary{padding:10px 11px;min-height:49px}
  #milestoneList .task-entry:has(.gp-task-drag-handle){padding-left:40px}
 }
+
+/* Consistent lightweight type in overlays and utility links. */
+.gp-header-actions .button{font-family:inherit;font-weight:500}
+.modal h2,.gp-dialog-card h2,#gpExtra h1,#gpExtra h2,#gpExtra h3{font-family:inherit!important;font-weight:550!important;letter-spacing:-.3px}
+.gp-project-menu,.gp-project-menu button{font-family:inherit;font-weight:500}
 </style></head>
 <body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.12</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
