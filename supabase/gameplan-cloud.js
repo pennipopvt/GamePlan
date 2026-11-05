@@ -99,10 +99,18 @@ export function createGamePlanCloud({url,publishableKey}){
    const user=await currentUser();
    const created=await this.createProject(source.project_name);
    const rows=[];
+   const projectTaskIds=new Set((localData.tasks||[])
+    .filter(task=>String(task.project_id)===String(localProjectId))
+    .map(task=>String(task.task_id)));
    for(const kind of ITEM_KINDS){
     const items=Array.isArray(localData[kind])?localData[kind]:[];
     for(const [position,item] of items.entries()){
-     if(String(item.project_id)!==String(localProjectId))continue;
+     // Time logs have a task_id rather than a project_id in local GamePlan.
+     // Match via the owning task so the imported copy retains logged hours.
+     const belongs=kind==='logs'
+      ?projectTaskIds.has(String(item.task_id))
+      :String(item.project_id)===String(localProjectId);
+     if(!belongs)continue;
      const identifier=ID_FIELD[kind]||'id';
      const itemId=kind==='custom_tag_colors'?'color:'+item.color:kind==='team'?'member:'+item.member_id:String(item[identifier]||'');
      if(!itemId)continue;
