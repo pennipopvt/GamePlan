@@ -651,6 +651,7 @@ const gpFacetGroups=[
  {key:'priority',title:'Priority'},
  {key:'milestone',title:'Milestones'}
 ];
+const gpHasFacetFilters=()=>gpFacetGroups.some(group=>gpFacets[group.key].size||gpExcludedFacets[group.key].size);
 function gpFacetOptions(key){
  const tasks=projectTasks();
  if(key==='person'){
