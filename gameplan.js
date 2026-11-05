@@ -156,30 +156,22 @@ function gpAddShell(){
  sidebarToggle.innerHTML='<span aria-hidden="true">☰</span><span class="gp-toggle-text">Collapse sidebar</span>';
  sidebarToggle.setAttribute('aria-label','Collapse sidebar');
  const projectSwitcher=document.createElement('div');projectSwitcher.id='gpProjectSwitcher';
- projectSwitcher.innerHTML='<button id="gpProjectTrigger" class="gp-project-trigger" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="gpProjectMenu"><span class="gp-project-trigger-name"></span><svg class="gp-project-switch-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h14m-4-4 4 4-4 4M17 17H3m4-4-4 4 4 4"/></svg></button><div id="gpProjectMenu" class="gp-project-menu" hidden></div>';
+ projectSwitcher.innerHTML='<button id="gpProjectTrigger" class="gp-project-trigger" type="button" aria-haspopup="dialog" aria-label="Switch project" title="Switch project"><svg class="gp-project-switch-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h14m-4-4 4 4-4 4M17 17H3m4-4-4 4 4 4"/></svg></button>';
  const logo=sidebar.querySelector('.sidebar-brand');
  const topRow=document.createElement('div');topRow.id='gpSidebarTop';
  logo.before(topRow);topRow.append(sidebarToggle,logo);
  topRow.after(projectSwitcher,nav);
- const trigger=$('#gpProjectTrigger'),menu=$('#gpProjectMenu');
- const closeMenu=()=>{menu.hidden=true;trigger.setAttribute('aria-expanded','false')};
- trigger.onclick=()=>{const open=menu.hidden;menu.hidden=!open;trigger.setAttribute('aria-expanded',String(open));if(open)menu.querySelector('[aria-current="true"]')?.focus()};
- menu.onclick=ev=>{
-  const item=ev.target.closest('[data-gp-project]');
-  if(item){closeMenu();gpSwitchProject(item.dataset.gpProject)}
-  if(ev.target.closest('[data-gp-new-project]')){closeMenu();quickCreate('project')}
- };
- document.addEventListener('click',ev=>{if(!projectSwitcher.contains(ev.target))closeMenu()});
- document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&!menu.hidden){closeMenu();trigger.focus()}});
+ const trigger=$('#gpProjectTrigger');
+ trigger.onclick=gpOpenProjectDialog;
 
  const header=$('.workspace .top');
  const titleWrap=document.createElement('div');titleWrap.className='gp-header-project';
- titleWrap.innerHTML='<div class="gp-project-overline"><label for="gpProjectTitle" class="gp-project-label">CURRENT PROJECT</label></div><input id="gpProjectTitle" aria-label="Edit current project name" autocomplete="off" spellcheck="false" title="Click to rename project">';
+ titleWrap.innerHTML='<div class="gp-project-overline"><label for="gpProjectTitle" class="gp-project-label">CURRENT PROJECT</label></div><div class="gp-project-title-line"><input id="gpProjectTitle" aria-label="Edit current project name" autocomplete="off" spellcheck="false" title="Click to rename project"></div>';
  const oldHeader=header.firstElementChild;
  const versionLabel=$('#appVersion');
  const mobileToggle=$('#menuToggle');
  header.prepend(mobileToggle,titleWrap);
- titleWrap.querySelector('.gp-project-overline').appendChild(projectSwitcher);
+ titleWrap.querySelector('.gp-project-title-line').prepend(projectSwitcher);
  oldHeader.remove();
  $('#gpProjectTitle').addEventListener('change',gpRenameProjectInline);
  $('#gpProjectTitle').addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();ev.currentTarget.blur()}if(ev.key==='Escape'){ev.currentTarget.value=find(data.projects,activeProject,'project_id')?.project_name||'';ev.currentTarget.blur()}});
@@ -462,11 +454,27 @@ function gpRenameProjectInline(){
 }
 function gpRenderProjectControls(){
  const project=find(data.projects,activeProject,'project_id');
- const picker=$('#gpProjectTrigger'),menu=$('#gpProjectMenu');
- if(picker)picker.querySelector('.gp-project-trigger-name').textContent=project?.project_name||'Select project';
- if(menu)menu.innerHTML=data.projects.map(p=>'<button type="button" class="gp-project-option" data-gp-project="'+e(p.project_id)+'" aria-current="'+(String(p.project_id)===String(activeProject))+'"><span>'+e(p.project_name)+'</span><span aria-hidden="true">'+(String(p.project_id)===String(activeProject)?'✓':'')+'</span></button>').join('')+'<div class="gp-project-menu-divider"></div><button type="button" class="gp-project-create" data-gp-new-project><span aria-hidden="true">＋</span> Create project</button>';
- const title=$('#gpProjectTitle');if(title&&document.activeElement!==title)title.value=project?.project_name||'';
+ const title=$('#gpProjectTitle');
+ if(title&&document.activeElement!==title)title.value=project?.project_name||'';
 }
+function gpOpenProjectDialog(){
+ const rows=data.projects.map(p=>
+  '<button type="button" class="gp-project-choice" data-gp-project="'+e(p.project_id)+'" aria-current="'+(String(p.project_id)===String(activeProject))+'">'+
+   '<span>'+e(p.project_name)+'</span>'+
+   (String(p.project_id)===String(activeProject)?'<span class="gp-choice-current">Current project ✓</span>':'')+
+  '</button>'
+ ).join('');
+ modal('Switch Project','<p class="sub">Choose a project to open, or create a new one.</p><div class="gp-project-chooser">'+rows+'</div><button type="button" class="gp-project-chooser-create" id="gpProjectCreate">+ Create Project</button>');
+ const body=$('#modalBody');
+ body.querySelectorAll('[data-gp-project]').forEach(btn=>btn.addEventListener('click',()=>{
+  const id=btn.dataset.gpProject;
+  closeModal();
+  gpSwitchProject(id);
+ }));
+ body.querySelector('#gpProjectCreate').onclick=()=>{closeModal();quickCreate('project')};
+ body.querySelector('[aria-current="true"]')?.focus()||body.querySelector('[data-gp-project]')?.focus();
+}
+
 function gpTeamPage(){
  const memberships=(data.team||[]).filter(m=>m.project_id===activeProject);
  const roster=data.roster||data.members;
