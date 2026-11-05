@@ -941,19 +941,20 @@ function gpGroupedChartData(){
  }
  return {entries,total,count:tasks.length};
 }
+const gpChartTimeValue=v=>['tasks','done'].includes(gpChartSettings.metric)?gpNum(v):formatHours(v);
 function gpGraphView(rows){
  if(!rows.length||!rows.some(r=>r.value>0))return '<p class="gp-chart-empty">No matching data. Try different filters, or log time on your tasks.</p>';
  const max=Math.max(1,...rows.map(r=>r.value)),total=rows.reduce((n,r)=>n+r.value,0);
  if(gpChartSettings.type==='donut'){
   let pos=0;const stops=rows.map((r,i)=>{const end=pos+r.value/total*100;const item=gpChartPalette[i%gpChartPalette.length]+' '+pos.toFixed(2)+'% '+end.toFixed(2)+'%';pos=end;return item});
-  return '<div class="gp-donut-layout"><div class="gp-donut" style="background:conic-gradient('+stops.join(',')+')" role="img" aria-label="Doughnut chart"><div class="gp-donut-middle"><b>'+gpNum(total)+'</b><small>Total</small></div></div><div class="gp-donut-legend">'+rows.map((r,i)=>'<div><i style="background:'+gpChartPalette[i%gpChartPalette.length]+'"></i><span>'+e(r.name)+'</span><b>'+gpNum(r.value)+'</b></div>').join('')+'</div></div>';
+  return '<div class="gp-donut-layout"><div class="gp-donut" style="background:conic-gradient('+stops.join(',')+')" role="img" aria-label="Doughnut chart"><div class="gp-donut-middle"><b>'+gpChartTimeValue(total)+'</b><small>Total</small></div></div><div class="gp-donut-legend">'+rows.map((r,i)=>'<div><i style="background:'+gpChartPalette[i%gpChartPalette.length]+'"></i><span>'+e(r.name)+'</span><b>'+gpChartTimeValue(r.value)+'</b></div>').join('')+'</div></div>';
  }
  if(gpChartSettings.type==='line'){
   const w=760,h=280,x0=50,y0=210,span=660;
   const pts=rows.map((r,i)=>({x:x0+(rows.length===1?.5:i/(rows.length-1))*span,y:y0-r.value/max*175,...r}));
-  return '<div class="gp-line-holder"><svg viewBox="0 0 760 280" role="img" aria-label="Line graph">'+[0,.25,.5,.75,1].map(fr=>'<line x1="50" y1="'+(y0-fr*175)+'" x2="710" y2="'+(y0-fr*175)+'" stroke="#eae4e8"/><text x="42" y="'+(y0-fr*175+4)+'" fill="#817784" font-size="12" text-anchor="end">'+gpNum(max*fr)+'</text>').join('')+'<polyline points="'+pts.map(p=>p.x+','+p.y).join(' ')+'" stroke="#ff3cc7" stroke-width="3" fill="none"/>'+pts.map(p=>'<circle cx="'+p.x+'" cy="'+p.y+'" r="5" fill="#ff3cc7"><title>'+e(p.name)+': '+gpNum(p.value)+'</title></circle><text x="'+p.x+'" y="233" text-anchor="end" transform="rotate(-35 '+p.x+' 233)" fill="#766b7a" font-size="11">'+e(p.name.length>15?p.name.slice(0,14)+'…':p.name)+'</text>').join('')+'</svg></div>';
+  return '<div class="gp-line-holder"><svg viewBox="0 0 760 280" role="img" aria-label="Line graph">'+[0,.25,.5,.75,1].map(fr=>'<line x1="50" y1="'+(y0-fr*175)+'" x2="710" y2="'+(y0-fr*175)+'" stroke="#eae4e8"/><text x="42" y="'+(y0-fr*175+4)+'" fill="#817784" font-size="12" text-anchor="end">'+gpChartTimeValue(max*fr)+'</text>').join('')+'<polyline points="'+pts.map(p=>p.x+','+p.y).join(' ')+'" stroke="#ff3cc7" stroke-width="3" fill="none"/>'+pts.map(p=>'<circle cx="'+p.x+'" cy="'+p.y+'" r="5" fill="#ff3cc7"><title>'+e(p.name)+': '+gpChartTimeValue(p.value)+'</title></circle><text x="'+p.x+'" y="233" text-anchor="end" transform="rotate(-35 '+p.x+' 233)" fill="#766b7a" font-size="11">'+e(p.name.length>15?p.name.slice(0,14)+'…':p.name)+'</text>').join('')+'</svg></div>';
  }
- return '<div class="gp-graph-bars">'+rows.map((r,i)=>'<div class="gp-graph-bar"><span title="'+e(r.name)+'">'+e(r.name)+'</span><div><i style="background:'+gpChartPalette[i%gpChartPalette.length]+';width:'+(100*r.value/max).toFixed(2)+'%"></i></div><b>'+gpNum(r.value)+'</b></div>').join('')+'</div>';
+ return '<div class="gp-graph-bars">'+rows.map((r,i)=>'<div class="gp-graph-bar"><span title="'+e(r.name)+'">'+e(r.name)+'</span><div><i style="background:'+gpChartPalette[i%gpChartPalette.length]+';width:'+(100*r.value/max).toFixed(2)+'%"></i></div><b>'+gpChartTimeValue(r.value)+'</b></div>').join('')+'</div>';
 }
 const gpPreviousAnalytics=gpAnalytics;
 gpAnalytics=function(){
