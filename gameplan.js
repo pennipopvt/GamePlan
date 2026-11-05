@@ -480,7 +480,7 @@ async function gpDeleteProject(){
 }
 function gpSwitchProject(id){
  if(!data.projects.some(p=>String(p.project_id)===String(id)))return;
- activeProject=id;activeView='all';gpSelected.clear();gpSelecting=false;saveProject();
+ activeProject=id;activeView='all';gpMyOnly=false;gpSelected.clear();gpSelecting=false;saveProject();
  $('#assigneeFilter').value='';$('#searchTasks').value='';
  render();
 }
