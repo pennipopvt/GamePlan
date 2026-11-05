@@ -120,7 +120,7 @@ async function checkAccount(){
  if(!navigator.onLine)return false;
  const cfg=config();if(!cfg?.url||!cfg?.key)return false;
  if(!api){
-  const module=await import('./supabase/gameplan-cloud.js?v=2026.11.05.58');
+  const module=await import('./supabase/gameplan-cloud.js?v=2026.11.05.59');
   api=module.createGamePlanCloud({url:cfg.url,publishableKey:cfg.key});
  }
  const {data:result,error}=await api.client.auth.getUser();
