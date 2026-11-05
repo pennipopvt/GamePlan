@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GamePlan · Cloud Preview</title><link rel="icon" href="../gameplan-mark.svg" type="image/svg+xml">
+<title>GamePlan · Cloud Preview (Discord)</title><link rel="icon" href="../gameplan-mark.svg" type="image/svg+xml">
 <style>
 :root{font-family:Inter,ui-sans-serif,system-ui,sans-serif;color:#33253a;background:#f9f7fa}
 *{box-sizing:border-box}body{margin:0}main{max-width:900px;margin:auto;padding:35px 20px 80px}
@@ -34,9 +34,9 @@ label{font-size:13px;font-weight:600;display:grid;gap:6px}form{display:grid;gap:
 <label>Publishable key<input id="key" required autocomplete="off" placeholder="sb_publishable_..."></label>
 <div class="row"><button class="primary">Save browser configuration</button><button type="button" id="clearConfig">Clear configuration</button></div></form>
 </section>
-<section class="card" id="auth" hidden>
-<h2>Sign in</h2><p class="muted">Sign in with Discord to share projects with your team. Add this page URL to Supabase's allowed redirect URLs.</p>
-<div class="row"><button id="login" class="primary">Continue with Discord</button><button id="logout" hidden>Sign out</button><span id="identity" class="muted"></span></div>
+<section class="card" id="auth">
+<h2>Sign in</h2><p class="muted">Sign in with Discord to share projects with your team. If the button is disabled, save your Supabase project URL and publishable key above first.</p>
+<div class="row"><button id="login" class="primary" disabled title="Save Supabase configuration above first">Continue with Discord</button><button id="logout" hidden>Sign out</button><span id="identity" class="muted"></span></div>
 </section>
 <section id="app" hidden>
 <section class="card"><h2>Your cloud projects</h2>
@@ -64,7 +64,7 @@ label{font-size:13px;font-weight:600;display:grid;gap:6px}form{display:grid;gap:
 </section>
 </main>
 <script type="module">
-import {createGamePlanCloud} from './gameplan-cloud.js';
+import {createGamePlanCloud} from './gameplan-cloud.js?v=discord-2';
 const $=id=>document.getElementById(id);
 const STORAGE='gameplan-cloud-config-v1',LOCAL_KEY='little-dock-local-v2';
 let cloud=null,active=null,unsubscribe=null,refreshTimer=null;
@@ -83,7 +83,7 @@ function saveConfig(ev){
  if(/service_role|sb_secret_/i.test(key))throw Error('Never use a secret/service-role key in browser code.');
  const instance=createGamePlanCloud({url,publishableKey:key});
  localStorage.setItem(STORAGE,JSON.stringify({url,key}));
- cloud=instance;$('auth').hidden=false;void checkAuth();
+ cloud=instance;$('login').disabled=false;void checkAuth();
 }
 async function checkAuth(){
  if(!cloud)return;
@@ -139,8 +139,8 @@ async function showItems(){
  }
 }
 $('configForm').addEventListener('submit',ev=>run(()=>saveConfig(ev)));
-$('clearConfig').onclick=()=>{localStorage.removeItem(STORAGE);cloud=null;active=null;unsubscribe?.();$('auth').hidden=true;$('app').hidden=true;message('Configuration cleared from this browser.')};
-$('login').onclick=()=>run(()=>cloud.signInWithDiscord());
+$('clearConfig').onclick=()=>{localStorage.removeItem(STORAGE);cloud=null;active=null;unsubscribe?.();$('login').disabled=true;$('login').hidden=false;$('logout').hidden=true;$('identity').textContent='';$('app').hidden=true;message('Configuration cleared from this browser.')};
+$('login').onclick=()=>run(()=>{if(!cloud)throw Error('Save the Supabase project URL and publishable key first.');return cloud.signInWithDiscord()});
 $('logout').onclick=()=>run(async()=>{await cloud.signOut();await checkAuth()});
 $('createProject').addEventListener('submit',ev=>{ev.preventDefault();void run(async()=>{await cloud.createProject($('newProjectName').value);$('newProjectName').value='';await showProjects()})});
 $('inviteForm').addEventListener('submit',ev=>{ev.preventDefault();void run(async()=>{await cloud.inviteByEmail(active.id,$('inviteEmail').value,$('inviteRole').value);$('inviteEmail').value='';message('Invitation saved. Your teammate can join by signing in with that email.')})});
@@ -154,5 +154,5 @@ $('importLocal').onclick=()=>run(async()=>{
  message('Imported '+result.importedItems+' items into a new cloud project.');await showProjects();
  await openProject(result);
 });
-try{const saved=JSON.parse(localStorage.getItem(STORAGE)||'null');if(saved){$('url').value=saved.url||'';$('key').value=saved.key||'';cloud=createGamePlanCloud({url:saved.url,publishableKey:saved.key});$('auth').hidden=false;await checkAuth()}}catch(err){message(err.message,true)}
+try{const saved=JSON.parse(localStorage.getItem(STORAGE)||'null');if(saved){$('url').value=saved.url||'';$('key').value=saved.key||'';cloud=createGamePlanCloud({url:saved.url,publishableKey:saved.key});$('login').disabled=false;await checkAuth()}}catch(err){message(err.message,true)}
 </script></body></html>
