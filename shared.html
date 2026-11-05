@@ -1,13 +1,54 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GamePlan · Shared</title>
 <style>
 :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;color:#273c43;background:#f7f8f5;font-size:14px}*{box-sizing:border-box}body{margin:0}button,input,textarea,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #4c9b97;outline-offset:2px}.app{min-height:100vh;max-width:1220px;margin:auto;padding:30px 22px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center}.brand{font:700 29px Georgia,serif;letter-spacing:-.7px}.brand span{color:#31847c}.sub{color:#778987;font-size:12px}.top-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.button{border:1px solid #c9d8d4;padding:10px 15px;border-radius:9px;background:white;color:#355951;font-weight:600}.button.main{background:#317d73;color:white;border-color:#317d73}.button:hover{filter:brightness(.96)}.button.danger{color:#9d3030;border-color:#e6bebe;background:#fff7f7}.card{background:white;border:1px solid #e0e7e3;border-radius:15px;padding:22px;box-shadow:0 5px 22px #152b2107}.banner{margin:22px 0}.muted{color:#758680}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:21px 0}.stat b{font-size:27px;display:block;margin-top:8px}.head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}.filters{display:flex;gap:9px;flex-wrap:wrap}select,input,textarea{border:1px solid #cbd9d5;background:white;border-radius:8px;padding:9px 11px;color:inherit;min-width:0}textarea{min-height:110px;resize:vertical}label{display:flex;flex-direction:column;gap:5px;color:#4d6563;font-size:12px;font-weight:650}.table-wrap{overflow-x:auto;margin-top:15px}table{border-collapse:collapse;width:100%;min-width:750px}th{text-align:left;background:#eef4f1;color:#56726c;font-size:11px;text-transform:uppercase;letter-spacing:.6px}td,th{padding:13px 11px;border-bottom:1px solid #ebefed;vertical-align:middle}.task-title{border:0;background:none;padding:0;text-align:left;color:#204e50;font-weight:700}.tag{font-size:11px;border-radius:50px;background:#eaf3ef;padding:4px 9px;display:inline-block}.actions{display:flex;gap:6px;flex-wrap:wrap}.actions .button{padding:6px 9px;font-size:12px}.empty{text-align:center;padding:50px 20px;color:#84918d}.modal-back{position:fixed;inset:0;background:#132d3199;display:none;align-items:center;justify-content:center;padding:20px;z-index:3}.modal-back.show{display:flex}.modal{background:white;border-radius:16px;width:min(620px,100%);max-height:90vh;overflow:auto;padding:25px}.modal h2{margin:0 0 12px;font:700 25px Georgia,serif}.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:15px 0}.fields .wide{grid-column:1/-1}.fields input,.fields textarea,.fields select{width:100%}.desc{white-space:pre-wrap;line-height:1.7;padding:10px 0;min-height:40px}.note{padding:9px 0;border-bottom:1px solid #e9efed}.controls{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:15px}.error{color:#ad3939}.success{color:#28796b}#connectFrame{display:none;width:1px;height:1px;border:0;position:absolute;pointer-events:none}.link{color:#287d73;text-decoration:none}.link:hover{text-decoration:underline}@media(max-width:700px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.fields{grid-template-columns:1fr}.fields .wide{grid-column:1}.app{padding:18px 12px}}
+
+/* Shared board companion theme — Coolors amethyst / fuchsia / yellow / cyan / ocean. */
+:root{--gp-amethyst:#4c1a57;--gp-fuchsia:#ff3cc7;--gp-yellow:#f0f600;--gp-cyan:#00e5e8;--gp-ocean:#007c77;--gp-line:#e8e4eb;background:#fafafb;color:#2e2933;font-family:Arial,"Helvetica Neue",system-ui,sans-serif;font-size:15px}
+body{background:#fafafb;color:#2e2933}
+.card{background:#fff;border-color:var(--gp-line);box-shadow:0 3px 14px #4c1a5708;border-radius:12px}
+.top{border-bottom:1px solid var(--gp-line);padding:0 0 24px;margin-bottom:25px}
+.brand{font:600 25px/1.2 Arial,"Helvetica Neue",sans-serif;letter-spacing:-.5px;color:var(--gp-amethyst)}
+.brand span{color:var(--gp-ocean)}
+#mainApp h1,#mainApp h2,.modal h2{font-family:inherit!important;letter-spacing:-.4px;color:var(--gp-amethyst)}
+#mainApp h1{font-weight:550!important}
+#mainApp h2{font-weight:550!important}
+.sub,.muted{color:#7a7380}
+.button{border-color:#dcd7df;color:var(--gp-amethyst);background:#fff}
+.button:hover{filter:none;background:#f8f3fa}
+.button.main{background:var(--gp-ocean);border-color:var(--gp-ocean);color:#fff}
+.button.main:hover{background:#005d5a}
+.button.danger{color:#a72b79;background:#fff5fb;border-color:#ebbeda}
+.link{color:var(--gp-ocean)}
+.link:hover{color:#005c5b}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline-color:#00aeb2}
+input,textarea,select{border-color:#dcd7df}
+.grid{gap:14px}
+.grid .stat{padding:18px 21px;border:0;box-shadow:none}
+.grid .stat:nth-child(1){background:var(--gp-fuchsia);color:#3d1740}
+.grid .stat:nth-child(2){background:var(--gp-ocean);color:#fff}
+.grid .stat:nth-child(3){background:var(--gp-cyan);color:#163539}
+.grid .stat .muted,.grid .stat b{color:inherit}
+.grid .stat .muted{opacity:.85;font-size:12px;font-weight:600}
+th{background:#f1ecf4;color:#6c5075}
+td,th{border-bottom-color:#ebe6ed}
+.task-title{color:var(--gp-amethyst);font-weight:600}
+.tag{background:#e8f4f2;color:#006d66}
+.modal-back{background:#30103799}
+.modal{border:1px solid #e5dfe8;box-shadow:0 22px 70px #4c1a5724}
+.modal>.head{position:relative;padding-right:50px;align-items:flex-start;min-height:37px}
+.modal #close{position:absolute;right:0;top:-7px;background:transparent;border:0;font-size:25px;color:#88758a;padding:0;width:36px;height:36px;border-radius:6px}
+.modal #close:hover{background:#f4eaf6;color:var(--gp-amethyst)}
+.desc{background:#faf7fb;border:1px solid #ede5ef;border-radius:9px;padding:17px 19px}
+label{color:#635369}
+.note{border-bottom-color:var(--gp-line)}
+@media(max-width:700px){.grid{gap:10px}}
 </style><script>
 window.PROJECT_PLANNER_CONFIG = {
   appsScriptUrl: 'https://script.google.com/macros/s/AKfycbwZSpAYRa9jYrh9Sv_W4ERRobu9IwrA1M7A0Tky6C11uEuacWL0m9QfThHHd0rpocxw/exec',
   googleClientId: '536538016403-td6otlsafg785ulub02vm46mbt6i28a2.apps.googleusercontent.com'
 };
 </script><script src="https://accounts.google.com/gsi/client" async defer></script></head>
-<body><iframe id="connectFrame" title="Secure Google Sheets connection"></iframe><div class="app"><header class="top"><div><div class="brand">✳ Game<span>Plan</span></div><div class="sub">Shared projects, teams, and hours · Google Sheets</div></div><div class="top-actions"><a class="link" href="index.html">Local board</a><div id="signIn"></div><span class="sub" id="identity"></span><button class="button" id="signOut" hidden>Sign out</button><button class="button" id="reload" disabled>↻ Refresh</button></div></header>
+<body><iframe id="connectFrame" title="Secure Google Sheets connection"></iframe><div class="app"><header class="top"><div><div class="brand">✳ Game<span>Plan</span></div><div class="sub">Shared projects, teams, and hours · Google Sheets</div></div><div class="top-actions"><a class="link" href="index.html?v=2026.11.04.17">Local board</a><div id="signIn"></div><span class="sub" id="identity"></span><button class="button" id="signOut" hidden>Sign out</button><button class="button" id="reload" disabled>↻ Refresh</button></div></header>
 <div class="card banner" id="notice">Checking shared backend setup…</div>
 <section id="mainApp" hidden><div class="head"><div><h1 style="margin:0 0 8px;font:700 27px Georgia,serif">Tasks</h1><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><select id="assigneeFilter"><option value="">All assignees</option></select><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div class="grid"><div class="card stat"><span class="muted">Total tasks</span><b id="total">0</b></div><div class="card stat"><span class="muted">Completed</span><b id="completed">0</b></div><div class="card stat"><span class="muted">Logged hours</span><b id="hours">0h</b></div></div>
