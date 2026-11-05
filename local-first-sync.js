@@ -266,6 +266,10 @@ async function reconcile(pid,{allowWrites=true}={}){
   mergeRemote(pid,safeRemote,base,liveLocal,confirmedLegacyDeletes);
   persistBaseline(pid,safeRemote);
   const local=projectRows(pid),pending=pendingChanges(pid,safeRemote,local);
+  // A row absent on the server but changed locally is a potential conflict,
+  // not permission to resurrect the deleted feature. Keep its browser copy,
+  // omit it from automatic uploads and display the unresolved conflict status.
+  for(const k of missing)if(!confirmedLegacyDeletes.has(k))delete pending[k];
   if(!allowWrites||!Object.keys(pending).length){
    lastSyncError=null;lastSyncAt=Date.now();return;
   }
