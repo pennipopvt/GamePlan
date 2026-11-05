@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GamePlan · Local</title>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GamePlan</title><link rel="icon" type="image/svg+xml" href="gameplan-mark.svg">
 <style>
 :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;color:#273c43;background:#f7f8f5;font-size:14px}*{box-sizing:border-box}body{margin:0}button,input,textarea,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #4c9b97;outline-offset:2px}.app{min-height:100vh;max-width:1220px;margin:auto;padding:30px 22px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center}.brand{font:700 29px Georgia,serif;letter-spacing:-.7px}.brand span{color:#31847c}.sub{color:#778987;font-size:12px}.top-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.button{border:1px solid #c9d8d4;padding:10px 15px;border-radius:9px;background:white;color:#355951;font-weight:600}.button.main{background:#317d73;color:white;border-color:#317d73}.button:hover{filter:brightness(.96)}.button.danger{color:#9d3030;border-color:#e6bebe;background:#fff7f7}.card{background:white;border:1px solid #e0e7e3;border-radius:15px;padding:22px;box-shadow:0 5px 22px #152b2107}.banner{margin:22px 0}.muted{color:#758680}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:21px 0}.stat b{font-size:27px;display:block;margin-top:8px}.head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}.filters{display:flex;gap:9px;flex-wrap:wrap}select,input,textarea{border:1px solid #cbd9d5;background:white;border-radius:8px;padding:9px 11px;color:inherit;min-width:0}textarea{min-height:110px;resize:vertical}label{display:flex;flex-direction:column;gap:5px;color:#4d6563;font-size:12px;font-weight:650}.table-wrap{overflow-x:auto;margin-top:15px}table{border-collapse:collapse;width:100%;min-width:750px}th{text-align:left;background:#eef4f1;color:#56726c;font-size:11px;text-transform:uppercase;letter-spacing:.6px}td,th{padding:13px 11px;border-bottom:1px solid #ebefed;vertical-align:middle}.task-title{border:0;background:none;padding:0;text-align:left;color:#204e50;font-weight:700}.tag{font-size:11px;border-radius:50px;background:#eaf3ef;padding:4px 9px;display:inline-block}.actions{display:flex;gap:6px;flex-wrap:wrap}.actions .button{padding:6px 9px;font-size:12px}.empty{text-align:center;padding:50px 20px;color:#84918d}.modal-back{position:fixed;inset:0;background:#132d3199;display:none;align-items:center;justify-content:center;padding:20px;z-index:3}.modal-back.show{display:flex}.modal{background:white;border-radius:16px;width:min(620px,100%);max-height:90vh;overflow:auto;padding:25px}.modal h2{margin:0 0 12px;font:700 25px Georgia,serif}.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:15px 0}.fields .wide{grid-column:1/-1}.fields input,.fields textarea,.fields select{width:100%}.desc{white-space:pre-wrap;line-height:1.7;padding:10px 0;min-height:40px}.note{padding:9px 0;border-bottom:1px solid #e9efed}.controls{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:15px}.error{color:#ad3939}.success{color:#28796b}#connectFrame{display:none;width:1px;height:1px;border:0;position:absolute;pointer-events:none}.link{color:#287d73;text-decoration:none}.link:hover{text-decoration:underline}@media(max-width:700px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.fields{grid-template-columns:1fr}.fields .wide{grid-column:1}.app{padding:18px 12px}}
 
@@ -376,12 +376,38 @@ details[open]>summary .chevron{transform:rotate(90deg)}
  .sidebar{padding:22px 10px}
 }
 
+
+/* Page hierarchy: project title first, contextual actions in Board footer. */
+.workspace>.top{display:flex;align-items:flex-start;justify-content:flex-start;margin:0 0 25px;min-height:0}
+.workspace>.top>.gp-header-project{margin:0;gap:0;width:min(620px,100%)}
+.workspace>.top .gp-header-project .gp-project-label{font-size:9px}
+#gpProjectTitle{font-size:21px;line-height:1.2;padding:4px 7px;margin-left:-7px}
+.workspace>.top>.brand,#gpHeaderBrand,#gpHeaderDescription{display:none}
+#notice[hidden]{display:none!important}
+.gp-board-footer{margin-top:28px;padding:19px 21px;border:1px solid #dce7df;border-radius:12px;background:#f8faf8}
+.gp-board-footer h2{font:700 17px Georgia,serif;margin:0 0 6px;color:#2f5852}
+.gp-board-footer p{margin:0 0 14px;font-size:12px;color:#758a81}
+.gp-board-footer .top-actions{display:flex;justify-content:flex-start;align-items:center;gap:8px;flex-wrap:wrap}
+.gp-board-footer .top-actions .button{font-size:12px;padding:9px 12px}
+.gp-site-footer{margin-top:28px;padding:16px 0 2px;border-top:1px solid #dce6df;color:#7a9188;font-size:11px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.gp-site-footer p{margin:0}
+.gp-brand-mark{display:block;width:24px;height:24px;flex:none;object-fit:contain}
+#gpSidebarTop .sidebar-brand{display:flex;align-items:center;gap:7px;font:700 18px Georgia,serif;line-height:1}
+#gpSidebarTop .sidebar-brand>span{color:#2b5f5b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gp-collapsed #gpSidebarTop .sidebar-brand{display:none}
+@media(max-width:680px){
+ .workspace>.top{display:flex;gap:10px;align-items:center;margin-bottom:18px}
+ #menuToggle{display:inline-flex;flex:0 0 auto}
+ .workspace>.top>.gp-header-project{min-width:0}
+ #gpProjectTitle{font-size:19px}
+ .gp-board-footer{padding:15px}
+}
 </style></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand">✳ Game<span>Plan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav><div class="sidebar-foot">Local only · your board is saved in this browser.</div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.4</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
-<div class="card banner" id="notice">Your changes are saved instantly in this browser. Export a backup occasionally.</div>
-<section id="mainApp" hidden><div class="head"><div><h1 id="pageHeading" style="margin:0 0 8px;font:700 27px Georgia,serif">Project overview</h1><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter"><option value="">All assignees</option></select><button class="button main" id="newTask" hidden>+ Task</button></div></div>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav><div class="sidebar-foot">Local only · your board is saved in this browser.</div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.4</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+<div class="card banner" id="notice" hidden></div>
+<section id="mainApp" hidden><div class="head"><div><h1 id="pageHeading" style="margin:0 0 8px;font:700 27px Georgia,serif">Project Overview</h1><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter"><option value="">All assignees</option></select><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div class="grid"><div class="card stat"><span class="muted">Total tasks</span><b id="total">0</b></div><div class="card stat"><span class="muted">Completed</span><b id="completed">0</b></div><div class="card stat"><span class="muted">Time logged</span><b id="hours">0h</b></div></div>
-<div class="card" style="margin-bottom:16px"><div class="head"><h2 style="font:700 19px Georgia,serif;margin:0">Work breakdown</h2><div class="section-actions" id="pmActions"></div></div><div id="milestoneList"></div></div><details class="card" id="teamSection"><summary><h2 style="font:700 19px Georgia,serif">Project team</h2><div class="section-actions"><button class="button main" id="inviteMember" hidden>+ Add member</button><span class="sub">▸ Team details</span></div></summary><div id="teamList" style="margin-top:14px"></div></details></section></main></div>
+<div class="card" style="margin-bottom:16px"><div class="head"><h2 style="font:700 19px Georgia,serif;margin:0">Work Breakdown</h2><div class="section-actions" id="pmActions"></div></div><div id="milestoneList"></div></div><details class="card" id="teamSection"><summary><h2 style="font:700 19px Georgia,serif">Project Team</h2><div class="section-actions"><button class="button main" id="inviteMember" hidden>+ Add member</button><span class="sub">▸ Team details</span></div></summary><div id="teamList" style="margin-top:14px"></div></details></section></main></div>
 <div class="modal-back" id="back"><div class="modal" role="dialog" aria-modal="true"><div class="head"><h2 id="modalTitle"></h2><button class="button" id="close">×</button></div><div id="modalBody"></div></div></div>
 <script>
 'use strict';
@@ -459,7 +485,7 @@ function gpAlert(message){
  const dismiss=document.createElement('button');dismiss.className='button';dismiss.type='button';dismiss.textContent='Close';dismiss.onclick=()=>layer.hidden=true;
  layer.append(text,dismiss);layer.hidden=false;
 }
-function setNotice(msg,bad=false){$('#notice').innerHTML=msg;$('#notice').className='card banner'+(bad?' error':'')}
+function setNotice(msg,bad=false){const el=$('#notice');el.innerHTML=msg;el.className='card banner'+(bad?' error':'');el.hidden=/^Local mode ·/.test(msg)}
 
 function rpc(op,p={}){
  try{
@@ -600,8 +626,8 @@ function render(){
  $('#assigneeFilter').value=who.some(m=>String(m.member_id)===oldAssignee)?oldAssignee:'';
  $('#newTask').hidden=true;$('#inviteMember').hidden=false;
  const m=activeView.startsWith('m:')?find(data.milestones,activeView.slice(2),'milestone_id'):null;
- $('#pageHeading').textContent=m?.name||({all:'Project overview',open:'Open tasks',done:'Completed tasks'}[activeView]||'Project overview');
- $('#roleDescription').textContent=m?.description||'Organize milestones, features, and everyone’s assigned work · Local only';
+ $('#pageHeading').textContent=m?.name||({all:'Project Overview',open:'Open Tasks',done:'Completed Tasks'}[activeView]||'Project Overview');
+ $('#roleDescription').textContent=m?.description||'Organize milestones, features, and everyone’s assigned work';
  const actions=$('#pmActions');
  actions.innerHTML='<button class="button" data-action="milestone">+ Milestone</button><button class="button" data-action="project">+ Project</button>';
  actions.onclick=ev=>{const a=ev.target.closest('[data-action]');if(a)quickCreate(a.dataset.action)};
@@ -704,7 +730,7 @@ async function removeMember(id,name){
 function details(id){
  const t=find(data.tasks,id,'task_id');if(!t)return;
  const f=feature(t.feature_id),m=milestone(f),logs=data.logs.filter(x=>String(x.task_id)===String(id));
- modal(t.title,`<div class="sub">${e(m?.name||'No milestone')} / ${e(f?.name||'No feature')}</div><p class="desc">${e(t.description||'No description yet.')}</p><p><b>Assigned:</b> ${e(member(t.assignee_member_id))} · <b>Status:</b> ${e(t.status)} · <b>Remaining:</b> ${formatHours(t.remaining_hours)}</p><h3>Time entries</h3>${logs.length?logs.map(l=>`<div class="note"><div class="head"><div>${e(member(l.member_id))} · ${e(l.work_date)} · <b>${formatHours(l.hours)}</b></div>${canUpdate(t)?`<div class="actions"><button class="button" type="button" data-edit-log="${e(l.log_id)}">Edit</button><button class="button danger" type="button" data-delete-log="${e(l.log_id)}">Delete</button></div>`:''}</div><div class="sub">${e(l.note)}</div></div>`).join(''):'<p class="muted">No work logged yet.</p>'}<div class="controls">${canUpdate(t)?'<button class="button main" id="detailLog">Log time</button>':''}${isPM()?'<button class="button" id="detailEdit">Edit task</button>':''}</div>`);
+ modal(t.title,`<div class="sub">${e(m?.name||'No milestone')} / ${e(f?.name||'No feature')}</div><p class="desc">${e(t.description||'No description yet.')}</p><p><b>Assigned:</b> ${e(member(t.assignee_member_id))} · <b>Status:</b> ${e(t.status)} · <b>Remaining:</b> ${formatHours(t.remaining_hours)}</p><h3>Time Entries</h3>${logs.length?logs.map(l=>`<div class="note"><div class="head"><div>${e(member(l.member_id))} · ${e(l.work_date)} · <b>${formatHours(l.hours)}</b></div>${canUpdate(t)?`<div class="actions"><button class="button" type="button" data-edit-log="${e(l.log_id)}">Edit</button><button class="button danger" type="button" data-delete-log="${e(l.log_id)}">Delete</button></div>`:''}</div><div class="sub">${e(l.note)}</div></div>`).join(''):'<p class="muted">No work logged yet.</p>'}<div class="controls">${canUpdate(t)?'<button class="button main" id="detailLog">Log time</button>':''}${isPM()?'<button class="button" id="detailEdit">Edit task</button>':''}</div>`);
  if($('#detailLog'))$('#detailLog').onclick=()=>logHours(id);
  if($('#detailEdit'))$('#detailEdit').onclick=()=>editTask(id);
  $('#modalBody').onclick=ev=>{
@@ -732,7 +758,7 @@ function editTask(id){const t=find(data.tasks,id,'task_id');if(t&&isPM())taskFor
 function logHours(id){
  const t=find(data.tasks,id,'task_id');if(!t||!canUpdate(t))return;
  const logs=data.logs.filter(l=>String(l.task_id)===String(id));
- const past=logs.length?`<h3 style="margin:22px 0 8px">Previous time entries</h3>${logs.map(l=>`<div class="note"><div class="head"><div><b>${formatHours(l.hours)}</b> · ${e(l.work_date)}<div class="sub">${e(l.note||'')}</div></div><div class="actions"><button class="button" type="button" data-edit-log="${e(l.log_id)}">Edit</button><button class="button danger" type="button" data-delete-log="${e(l.log_id)}">Delete</button></div></div></div>`).join('')}`:'<p class="sub" style="margin-top:16px">No previous time entries for this task.</p>';
+ const past=logs.length?`<h3 style="margin:22px 0 8px">Previous Time Entries</h3>${logs.map(l=>`<div class="note"><div class="head"><div><b>${formatHours(l.hours)}</b> · ${e(l.work_date)}<div class="sub">${e(l.note||'')}</div></div><div class="actions"><button class="button" type="button" data-edit-log="${e(l.log_id)}">Edit</button><button class="button danger" type="button" data-delete-log="${e(l.log_id)}">Delete</button></div></div></div>`).join('')}`:'<p class="sub" style="margin-top:16px">No previous time entries for this task.</p>';
  modal('Manage time',`<form id="actionForm"><div class="fields"><label>Minutes worked<input name="minutes" type="number" min="1" step="1" value="17" required></label>${field('work_date','Work date',new Date().toLocaleDateString('en-CA'),'date')}<label class="wide">Notes<textarea name="note" placeholder="What did you complete?"></textarea></label></div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="submit" class="button main">Add time</button></div></form>${past}`);
  $('#cancel').onclick=closeModal;
  $('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit('logHours',{task_id:id,...Object.fromEntries(new FormData(ev.currentTarget).entries())})};
