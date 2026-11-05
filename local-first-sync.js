@@ -553,7 +553,12 @@ persist=function(){
  oldPersist();schedule();
 };
 const originalHistory=gpHistoryNavigate;
-gpHistoryNavigate=function(...args){const result=originalHistory(...args);schedule();return result};
+gpHistoryNavigate=function(...args){
+ if(user&&activatedUserId&&current()&&roleFor(activeProject)==='viewer'){
+  gpAlert('Viewer access is read-only. Ask the owner for Editor permission.');return;
+ }
+ const result=originalHistory(...args);schedule();return result;
+};
 const oldSwitch=gpSwitchProject;
 gpSwitchProject=function(pid){oldSwitch(pid);void watch();void reloadTeam(pid);schedule()};
 const originalLocalRpc=rpc;
@@ -570,6 +575,25 @@ rpc=async function(op,p={}){
 };
 // Existing project delete button was local-only. Never let it hide a live
 // shared project without deleting the server record and its memberships.
+const previousRenameProject=gpRenameProjectInline;
+gpRenameProjectInline=function(...args){
+ if(current()&&roleFor(activeProject)!=='owner'){
+  const title=$s('#gpProjectTitle');
+  if(title)title.value=data.projects.find(p=>p.project_id===activeProject)?.project_name||'';
+  gpAlert('Only the project owner can rename the shared project.');return;
+ }
+ return previousRenameProject(...args);
+};
+const previousSettings=gpSettings;
+gpSettings=function(...args){
+ const value=previousSettings(...args);
+ if(current()&&roleFor(activeProject)!=='owner'){
+  for(const id of ['gpRename','gpDeleteProject']){
+   const btn=$s('#'+id);if(btn){btn.disabled=true;btn.title='Only the owner can do this'}
+  }
+ }
+ return value;
+};
 const previousDeleteProject=gpDeleteProject;
 gpDeleteProject=async function(){
  if(current()){
