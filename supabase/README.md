@@ -1,74 +1,32 @@
-# GamePlan Cloud — initial Supabase test
+# GamePlan cloud sync (local-first)
 
-This is a **separate opt-in prototype**, not a replacement for the working local GamePlan. Do not delete the existing Google Sheets app or your local browser data during setup.
+GamePlan has **one main board**: [open GamePlan](https://pennipopvt.github.io/ProjectPlanner/index.html).
 
-## Why Supabase?
+- Everything is saved immediately into browser localStorage under `little-dock-local-v2`, even if Supabase or the internet is unavailable.
+- Supabase is optional for collaboration. Use **Connect Discord**, then **Share project** to publish the currently open browser project or link to an existing shared project.
+- The cloud uploader preserves task IDs, all related time logs, tags, features, milestones and display names. In particular, time logs have no local `project_id`: they are included via their `task_id`.
+- An explicitly linked project uses a durable local baseline plus per-row Supabase updates. Pending changes remain in the browser until they can be uploaded.
+- Changes from other members are merged only when they don't conflict with local edits. Local changes to the same item take precedence. A missing/partial cloud read never silently deletes the browser copy.
+- A new team member can join with the project link and their invited Discord email. A new local project is created for that team member without overwriting their other local projects.
+- **Import full board** is a recovery action under the More menu, not a cloud-copy workflow. It requires confirmation, saves a prior local backup and pauses cloud syncing for review.
 
-- Google Sheets/Apps Script uses an iframe and message/response requests for each operation.
-- Supabase offers direct database APIs and realtime subscriptions with per-project access control.
-- Individual records are stored separately to avoid overwriting the entire board on every edit.
-- Actual performance depends on network conditions; test with two browsers before migrating the main interface.
+## Cloud configuration
 
-## Set up the database
+The Supabase project has already been provisioned and configured for Discord OAuth. New browsers may still need the Supabase **project URL** and **publishable key**, which are public client values. No secret or service-role key belongs in the browser.
 
-1. Create a Supabase project at https://supabase.com/dashboard.
-2. In **SQL Editor**, execute [schema.sql](./schema.sql). It creates projects, memberships, invitations and item rows with Row Level Security.
-3. In **Database → Publications**, enable realtime publication for `public.gp_items`. Only run `alter publication supabase_realtime add table public.gp_items;` once if it is not already enabled.
-4. Open the [Discord Developer Portal](https://discord.com/developers/applications) and create a Discord app. In **OAuth2 → Redirects**, add the callback URL shown under **Supabase → Authentication → Sign In / Providers → Discord**, then save. Enable Discord in Supabase and enter your Discord Client ID and Client Secret there. Never put the secret in GitHub.
-5. In Supabase **Authentication → URL Configuration**, add this exact allowed redirect URL:
-   `https://pennipopvt.github.io/ProjectPlanner/supabase/`
-   Set your Site URL to the same address if you intend to use this prototype as your primary test page.
-6. Visit [the Cloud Preview](https://pennipopvt.github.io/ProjectPlanner/supabase/) and enter the Supabase **Project URL** and **publishable (or anon) key** shown in Supabase project settings. These are public client-side values; never enter a service-role key or an `sb_secret_` key.
+If provisioning a new Supabase project, execute [schema.sql](schema.sql) first and enable Realtime publication for `public.gp_items`. Create a Discord application and configure its OAuth callback to `https://YOUR-PROJECT.supabase.co/auth/v1/callback`. Configure the allowed redirect URL `https://pennipopvt.github.io/ProjectPlanner/supabase/discord.html` in Supabase Auth URL Configuration.
 
-The preview stores the Supabase URL and publishable key in **this browser's localStorage** only. OAuth sessions are managed by supabase-js.
+The old `supabase/discord.html` is now only a callback bridge: it processes the session and automatically returns to the main board. `supabase/index.html` and `shared.html` redirect to GamePlan. The obsolete separate cloud mode has been removed.
 
-## Test collaboration
+## Data safety and limitations
 
-1. Sign in with Discord and create a cloud project.
-2. Add a milestone, a feature, and a task. Change its status.
-3. Invite a teammate by the email associated with their Discord account.
-4. Have the teammate open the same Cloud Preview URL, enter the same Supabase project URL and publishable key, and sign in with their Discord account using that email.
-5. After signing in, the invitation is claimed automatically. Open the project in both browsers; changing task status should update in both.
-6. For migration testing, use **Copy a local project into the cloud**. The source remains in your original local browser storage.
+- Before the first cloud link, verify the correct local project and export a JSON backup.
+- When linking an existing shared project, the browser copy is uploaded without deleting additional cloud records. The existing cloud snapshot is stored locally for recovery.
+- An import does **not** automatically replace server records. Sync pauses until explicitly resumed.
+- The app shell is cached by a service worker after an online visit, supporting later offline loading; first-time offline loading is not supported.
+- Sync is currently **beta**. Concurrent edits to the same record are last-write-wins. Missing remote rows are treated as conflicts and kept locally, which can require manual review for teammates' deletions.
+- The browser's localStorage is not as durable as a backed-up database. Export periodic backups; clearing browser data can remove unsynced work.
+- Project invitation access is enforced through Supabase Row Level Security. Discord-account email must match the invited address.
+- Cloud configuration and browser data remain on the current device. No service-role key or Discord client secret is committed to the repository.
 
-## Full shared GamePlan interface (Cloud beta)
-
-The **complete local layout and features** now run in a second mode on the *same* `index.html` and `gameplan.js`:
-
-- **Local:** https://pennipopvt.github.io/ProjectPlanner/index.html
-- **Cloud beta:** https://pennipopvt.github.io/ProjectPlanner/index.html?cloud=1
-
-After signing in via `supabase/discord.html` and importing a local project, open the full cloud page. It reuses the exact board, filters, task editing, templates, analytics, time logs, and drag handles. The additional `cloud-mode.js` adapter loads the signed-in user's cloud projects, writes changed rows individually to Supabase, listens for team changes, and exposes a **Share project** button for owners.
-
-Cloud mode uses a **different localStorage key**, so it does not overwrite your original local Fishing Game project. Supabase remains authoritative for cloud data. The original Google Sheets site is not required.
-
-### Important beta notes
-
-- **Test on a small project first.** Cloud mode passed JavaScript syntax checks, but realtime collaboration and every complex editing path have **not yet** been verified in a browser with multiple accounts.
-- Cloud synchronization is *optimistic* and queued. The status near the header reports sync errors. Do not treat unsynced changes as saved; retry after fixing errors.
-- Updates to *different* items are independent, but concurrent edits to the same item are **last-write-wins**.
-- Offline editing and reliable conflict merging aren't implemented.
-- Project invites use the teammate's **Discord account email**, which must match their sign-in email. Share the GamePlan URL yourself; inviting doesn't automatically send an email.
-- Existing imported task assignees use their original legacy IDs. Invited Discord users are distinct account members until explicitly assigned; the member display names are stored with project team items on subsequent saves.
-- Viewers have database-enforced read-only access. For now, use **Editor** invitations for actual collaborators.
-- A manual **Sync** button is available if an incoming update couldn't be shown during a modal edit.
-
-## Current limitations
-
-- This is a **backend and collaboration smoke test** with a small UI, not the finished GamePlan interface. The original local page remains authoritative until migration is complete.
-- No server project is provisioned by committing these files; you must create a Supabase project and configure Discord OAuth.
-- Invites work by matching the recipient's signed-in Discord account email. The prototype does not send an invitation email automatically; share the preview URL separately.
-- Local team members and historical assignee IDs are preserved as data, but have **not** yet been mapped to authenticated Supabase user accounts.
-- Import creates a new cloud copy; it does not merge with an existing cloud project.
-- Save operations are per item, but concurrent edits of the *same task* are currently last-write-wins. Conflict handling/offline queuing and full production migration are still future work.
-- Cloud Preview supports only minimal project/milestone/feature/task creation, status editing, and invitations. More GamePlan UI features must be connected to the backend before switching the main app.
-- Members currently have an owner/editor/viewer role in the database; the preview exposes invite-by-email for the project owner.
-- The Supabase free plan may pause projects after inactivity; see current pricing.
-
-## Security
-
-All cloud rows use RLS: project members can read them, editors/owners can change items, and only owners can issue invitations. Do not commit any Google OAuth secret or Supabase service-role token. Review database policies and test cross-project access before letting a larger group use this.
-
-## Next engineering phase
-
-Add a cloud-backed data adapter to the full `index.html` interface, keeping local mode as an option. Map roster members to authenticated accounts, handle realtime selective updates without disrupting in-progress forms, and verify conflict behavior and backup/rollback.
+This is still a collaboration beta, not a fully conflict-free distributed offline database.
