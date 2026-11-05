@@ -154,7 +154,7 @@ function accountLabel(){return user?.user_metadata?.name||user?.user_metadata?.p
 function makeLocalRow(record,pid){
  return {...clone(record.payload),project_id:pid};
 }
-function mergeRemote(pid,remote,base,local){
+function mergeRemote(pid,remote,base,local,confirmedLegacyDeletes=new Set()){
  const pending=pendingChanges(pid,base,local),toApply=[];
  for(const k of new Set([...Object.keys(base),...Object.keys(remote)])){
   if(Object.prototype.hasOwnProperty.call(pending,k))continue;
@@ -162,7 +162,7 @@ function mergeRemote(pid,remote,base,local){
   const src=remote[k]||base[k];
   if(src)toApply.push({kind:src.kind,id:src.item_id,
    record:remote[k]?.payload?.__gp_deleted?null:(remote[k]||null),
-   explicitDelete:!!remote[k]?.payload?.__gp_deleted});
+   explicitDelete:!!remote[k]?.payload?.__gp_deleted||confirmedLegacyDeletes.has(k)});
  }
  if(!toApply.length)return false;
  const draft=clone(data);
@@ -235,12 +235,35 @@ async function reconcile(pid,{allowWrites=true}={}){
   }
   if(confirmedDeletes)store(DELETED,deletedIntents);
   const missing=Object.keys(base).filter(k=>base[k]&&!remote[k]&&liveLocal[k]);
-  remoteMissingCount=missing.length;
-  // Retain local rows missing remotely without re-uploading them automatically.
-  // Other local edits should still be allowed to sync.
+  const confirmedLegacyDeletes=new Set();
+  // Compatibility with older GamePlan versions that hard-deleted records.
+  // Verify each missing item with a separate query before considering it
+  // an intentional deletion; NEVER infer bulk deletions from an empty feed.
+  const remoteCount=Object.keys(remote).length;
+  const safeRead=remoteCount>=5&&remoteCount>=Math.ceil(Object.keys(base).length*0.65);
+  const smallGap=missing.length>0&&missing.length<=Math.max(3,Math.floor(Object.keys(base).length*0.15));
+  if(safeRead&&smallGap){
+   for(const k of missing){
+    // Preserve any local edit newer than this browser's previous baseline.
+    if(!equal(canonical(base[k]),canonical(liveLocal[k])))continue;
+    const row=base[k];
+    const {data:found,error:verifyError}=await api.client.from('gp_items')
+     .select('item_id').eq('project_id',cloudId)
+     .eq('kind',row.kind).eq('item_id',row.item_id).limit(1);
+    if(verifyError)throw verifyError;
+    if(Array.isArray(found)&&found.length===0)confirmedLegacyDeletes.add(k);
+   }
+  }
+  if(confirmedLegacyDeletes.size){
+   // Keep a recovery copy of records removed through legacy reconciliation.
+   const recovered={};
+   for(const k of confirmedLegacyDeletes)recovered[k]=liveLocal[k];
+   store('gp-legacy-delete-backup-'+Date.now(),{project_id:pid,items:recovered});
+  }
+  remoteMissingCount=missing.length-confirmedLegacyDeletes.size;
   const safeRemote={...remote};
-  for(const k of missing)safeRemote[k]=base[k];
-  mergeRemote(pid,safeRemote,base,liveLocal);
+  for(const k of missing)if(!confirmedLegacyDeletes.has(k))safeRemote[k]=base[k];
+  mergeRemote(pid,safeRemote,base,liveLocal,confirmedLegacyDeletes);
   persistBaseline(pid,safeRemote);
   const local=projectRows(pid),pending=pendingChanges(pid,safeRemote,local);
   if(!allowWrites||!Object.keys(pending).length){
