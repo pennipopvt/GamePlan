@@ -1965,11 +1965,18 @@ function rpc(op,p={}){
    Object.assign(f,{name:required(p.name,'Feature name'),description:p.description||'',milestone_id:m.milestone_id});
   }else if(op==='deleteFeature'){
    const f=parent(data.features,'feature_id',p.feature_id);
-   const removedTasks=data.tasks.filter(t=>t.project_id===projectId&&String(t.feature_id)===String(f.feature_id));
-   const ids=new Set(removedTasks.map(t=>String(t.task_id)));
-   data.logs=data.logs.filter(l=>!ids.has(String(l.task_id)));
-   data.tasks=data.tasks.filter(t=>!ids.has(String(t.task_id)));
+   // Delete the feature and its descendants atomically. A storage failure
+   // restores all arrays instead of leaving the running board half-deleted.
+   const previous={features:data.features,tasks:data.tasks,logs:data.logs};
+   const ids=new Set(data.tasks.filter(t=>t.project_id===projectId&&String(t.feature_id)===String(f.feature_id)).map(t=>String(t.task_id)));
    data.features=data.features.filter(x=>x!==f);
+   data.tasks=data.tasks.filter(t=>!ids.has(String(t.task_id)));
+   data.logs=data.logs.filter(l=>!ids.has(String(l.task_id)));
+   try{persist()}catch(err){
+    Object.assign(data,previous);
+    throw err;
+   }
+   return Promise.resolve({ok:true});
   }else if(op==='createTask'){
    const f=parent(data.features,'feature_id',p.feature_id);
    data.tasks.push({task_id:uid(),project_id:projectId,feature_id:f.feature_id,title:required(p.title,'Task title'),description:p.description||'',assignee_member_id:p.assignee_member_id||'',status:p.status||'To do',priority:p.priority||'Normal',estimated_hours:hours(p.estimated_hours),remaining_hours:hours(p.remaining_hours),created_by_member_id:'penni',updated_at:new Date().toISOString()});
@@ -2263,7 +2270,12 @@ async function deleteItem(kind,id,name){
  const logs=kind==='feature'?data.logs.filter(l=>taskIds.has(String(l.task_id))).length:kind==='task'?data.logs.filter(l=>String(l.task_id)===String(id)).length:0;
  const message=kind==='feature'? `Permanently delete feature “${name}” and everything inside it?\n\nThis deletes:\n• ${tasksInFeature.length} task(s)\n• ${logs} time log(s)\n\nThis cannot be undone. Other features will not be affected.`:`Permanently delete ${kind} “${name}”?\n\n${logs?'This also permanently deletes '+logs+' time log(s).\n\n':''}This cannot be undone.`;
  if(!await gpConfirm(message,{danger:true,confirmLabel:'Delete '+kind}))return;
- rpc('delete'+kind[0].toUpperCase()+kind.slice(1),{[kind+'_id']:id}).then(async()=>{closeModal();await refresh()}).catch(err=>gpAlert(err.message));
+ try{
+  await rpc('delete'+kind[0].toUpperCase()+kind.slice(1),{[kind+'_id']:id,project_id:activeProject});
+  if(kind==='feature')collapsedFeatures.delete(String(id));
+  closeModal();
+  await refresh();
+ }catch(err){gpAlert('Could not delete '+kind+': '+err.message)}
 }
 $('#inviteMember').onclick=ev=>{ev.preventDefault();ev.stopPropagation();quickCreate('member')};
 $('#newTask').onclick=()=>taskForm(null);$('#project').onchange=ev=>{activeProject=ev.target.value;activeView='all';saveProject();render()};$('#assigneeFilter').onchange=render;$('#searchTasks').oninput=render;$('#menuToggle').onclick=()=>$('#sidebar').classList.toggle('visible');$('#reload').onclick=()=>{const url=new URL(location.href);url.searchParams.set('v',APP_VERSION);location.assign(url.toString())};
