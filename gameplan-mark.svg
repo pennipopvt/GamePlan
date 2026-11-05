@@ -1,7 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="GamePlan">
-<rect x="3" y="3" width="58" height="58" rx="14" fill="#235e56"/>
-<rect x="13" y="13" width="38" height="38" rx="6" fill="#e8f4ed"/>
-<path d="M22 22h20M22 31h12M22 40h8" stroke="#6a9e8c" stroke-width="3" stroke-linecap="round"/>
-<path d="m34 39 5 5 10-13" fill="none" stroke="#247e69" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M14 16h5" stroke="#b8dccb" stroke-width="2" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="GamePlan Branch">
+  <g fill="none" stroke="#2b766a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 12V7M12 12 6.5 17M12 12l5.5 5"/>
+  </g>
+  <g fill="#2b766a">
+    <circle cx="12" cy="5" r="2.7"/>
+    <circle cx="5" cy="18.5" r="2.7"/>
+    <circle cx="19" cy="18.5" r="2.7"/>
+  </g>
 </svg>
