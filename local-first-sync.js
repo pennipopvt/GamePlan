@@ -866,11 +866,21 @@ setInterval(()=>{
  void initialize().then(schedule);
 },12000);
 async function initialize(){
- if(!navigator.onLine){refreshStatus();return}
  try{
   const online=await checkAccount();
-  if(!online){refreshStatus();return}
-  ready=true;
+  if(!online){
+   ready=false;activatedUserId='';
+   const panel=$s('#gpLogin');
+   if(!panel||panel.hidden)window.GamePlanAccounts?.showLogin?.({configured:!!(config()?.url&&config()?.key)});
+   refreshStatus();return;
+  }
+  await activateAccount();
+  if(!navigator.onLine){
+   window.GamePlanAccounts?.onAuthenticated?.(user);
+   refreshStatus();return;
+  }
+  await refreshProjectList();
+  if(activeProject)await reloadTeam(activeProject);
   await watch();
   // Redeem secret links server-side before reading any project data.
   const token=sessionStorage.getItem(PENDING_INVITE);
@@ -902,6 +912,51 @@ async function initialize(){
 }
 void initialize();
 // Optional API for the main page's project management UI.
-window.GamePlanSync={connect,shareCurrent,shareInvite,schedule,backup:downloadBackup,
- isLinked:pid=>!!links[String(pid)],status:refreshStatus};
+window.GamePlanSync={
+ connect,shareCurrent,shareInvite,schedule,backup:downloadBackup,
+ isLinked:pid=>!!links[String(pid)],status:refreshStatus,
+ currentUser:()=>user,api:()=>api,roleFor,
+ async signInProvider(provider){
+  if(!config()?.url||!config()?.key)throw Error('Connect a GamePlan workspace first.');
+  api=null;await checkAccount();
+  return api.signInWithProvider(provider);
+ },
+ async signInEmail(email){
+  if(!config()?.url||!config()?.key)throw Error('Connect a GamePlan workspace first.');
+  api=null;await checkAccount();return api.signInWithEmail(email);
+ },
+ async setPublicConfig(url,key){
+  const clean=String(url||'').trim().replace(/\/$/,'');
+  const publicKey=String(key||'').trim();
+  if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(clean))throw Error('Invalid Supabase workspace URL.');
+  if(!publicKey||/sb_secret_|service_role/i.test(publicKey))throw Error('Use only the public publishable key.');
+  store(CFG,{url:clean,key:publicKey});api=null;
+ },
+ resetClient(){if(!user)api=null},
+ async signOut(){
+  if(api)await api.signOut();
+  user=null;ready=false;activatedUserId='';teamByProject={};cloudProjectList=[];
+  subscription?.();subscription=null;watched='';
+  $s('#mainApp').hidden=true;
+  window.GamePlanAccounts?.showLogin?.({configured:!!(config()?.url&&config()?.key)});
+  refreshStatus();
+ },
+ async identities(){if(!api)throw Error('Not connected');return api.linkedIdentities()},
+ async linkIdentity(provider){if(!api)throw Error('Not connected');return api.linkIdentity(provider)},
+ async addEmail(email){if(!api)throw Error('Not connected');return api.addEmailIdentity(email)},
+ async createProject(name){return createAuthenticatedProject(name)},
+ async reloadTeam(){return reloadTeam(activeProject)},
+ async setMemberDetails(id,name,legacyId){
+  if(roleFor()!=='owner')throw Error('Only project owners can rename teammates.');
+  return api.setTeamMember(current(),id,name,legacyId);
+ },
+ async setMemberRole(id,role){
+  if(roleFor()!=='owner')throw Error('Only project owners can change permissions.');
+  return api.setTeamRole(current(),id,role);
+ },
+ async removeMemberAccess(id){
+  if(roleFor()!=='owner')throw Error('Only project owners can remove access.');
+  return api.removeTeamMember(current(),id);
+ }
+};
 })();
