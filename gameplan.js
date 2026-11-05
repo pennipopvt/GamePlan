@@ -843,6 +843,114 @@ document.addEventListener('keydown',ev=>{
  const open=gpTaskList.querySelector('.gp-tags-open');
  if(open){open.classList.remove('gp-tags-open');const btn=open.querySelector('.gp-tag-peek');btn?.setAttribute('aria-expanded','false');btn?.focus()}
 });
+
+/* Analytics chart explorer: preserves the detailed original table below visualizations. */
+const gpChartSettings={project:'',metric:'logged',group:'assignee',type:'bar',status:'all',tag:'all',member:'all',order:'value',limit:'10'};
+const gpChartPalette=['#ff3cc7','#7775cf','#32956d','#d94b58','#00aeb3','#e9a25a','#4c1a57','#6d88a4','#a980bd','#81959a'];
+const gpMetricLabels={logged:'Hours logged',estimated:'Estimated hours',remaining:'Hours remaining',tasks:'Task count',done:'Completed tasks'};
+const gpGroupLabels={assignee:'Assignee',tag:'Primary tag',status:'Status',priority:'Priority',feature:'Feature',milestone:'Milestone',week:'Log week',month:'Log month'};
+const gpNum=n=>(Math.round(n*100)/100).toLocaleString(undefined,{maximumFractionDigits:2});
+function gpGroupedChartData(){
+ const tasks=projectTasks().filter(t=>{
+  if(gpChartSettings.status!=='all'&&t.status!==gpChartSettings.status)return false;
+  if(gpChartSettings.member!=='all'&&String(t.assignee_member_id)!==gpChartSettings.member)return false;
+  if(gpChartSettings.tag!=='all'){
+   const ids=(t.tag_ids||[]).map(String);
+   if(gpChartSettings.tag==='none'){if(ids.length)return false}
+   else if(!ids.includes(gpChartSettings.tag))return false;
+  }
+  return true;
+ });
+ const taskMap=new Map(tasks.map(t=>[String(t.task_id),t])),groups=new Map();
+ const add=(name,num)=>groups.set(name,(groups.get(name)||0)+num);
+ const groupName=(t,log)=>{
+  const feat=feature(t.feature_id),ms=milestone(feat),primary=gpTags().find(tag=>String(tag.tag_id)===String((t.tag_ids||[])[0]));
+  const key=gpChartSettings.group;
+  if(key==='assignee')return member(t.assignee_member_id)||'Unassigned';
+  if(key==='tag')return primary?.name||'Untagged';
+  if(key==='status')return t.status||'To do';
+  if(key==='priority')return t.priority||'Normal';
+  if(key==='feature')return feat?.name||'No feature';
+  if(key==='milestone')return ms?.name||'No milestone';
+  const raw=log?.work_date||log?.date||log?.created_at||t.updated_at||t.created_at;
+  const date=new Date(raw||'');
+  if(!Number.isFinite(date.getTime()))return 'Undated';
+  if(key==='month')return date.toISOString().slice(0,7);
+  const monday=new Date(Date.UTC(date.getUTCFullYear(),date.getUTCMonth(),date.getUTCDate()));
+  monday.setUTCDate(monday.getUTCDate()-(monday.getUTCDay()+6)%7);
+  return monday.toISOString().slice(0,10);
+ };
+ if(gpChartSettings.metric==='logged'){
+  for(const log of data.logs){
+   const t=taskMap.get(String(log.task_id));if(!t)continue;
+   add(groupName(t,log),Math.max(0,Number(log.hours)||0));
+  }
+ }else{
+  for(const t of tasks){
+   const metric=gpChartSettings.metric;
+   const val=metric==='tasks'?1:metric==='done'?(t.status==='Done'?1:0):Math.max(0,Number(metric==='estimated'?t.estimated_hours:t.remaining_hours)||0);
+   add(groupName(t),val);
+  }
+ }
+ let entries=[...groups].map(([name,value])=>({name,value}));
+ if(gpChartSettings.order==='name'||['month','week'].includes(gpChartSettings.group))entries.sort((a,b)=>a.name.localeCompare(b.name));
+ else entries.sort((a,b)=>b.value-a.value);
+ const total=entries.reduce((n,r)=>n+r.value,0),limit=gpChartSettings.limit==='all'?entries.length:Number(gpChartSettings.limit)||10;
+ if(entries.length>limit){
+  if(['month','week'].includes(gpChartSettings.group))entries=entries.slice(-limit);
+  else{const other=entries.slice(limit).reduce((n,r)=>n+r.value,0);entries=entries.slice(0,limit);if(other)entries.push({name:'Other',value:other})}
+ }
+ return {entries,total,count:tasks.length};
+}
+function gpGraphView(rows){
+ if(!rows.length||!rows.some(r=>r.value>0))return '<p class="gp-chart-empty">No matching data. Try different filters, or log time on your tasks.</p>';
+ const max=Math.max(1,...rows.map(r=>r.value)),total=rows.reduce((n,r)=>n+r.value,0);
+ if(gpChartSettings.type==='donut'){
+  let pos=0;const stops=rows.map((r,i)=>{const end=pos+r.value/total*100;const item=gpChartPalette[i%gpChartPalette.length]+' '+pos.toFixed(2)+'% '+end.toFixed(2)+'%';pos=end;return item});
+  return '<div class="gp-donut-layout"><div class="gp-donut" style="background:conic-gradient('+stops.join(',')+')" role="img" aria-label="Doughnut chart"><div class="gp-donut-middle"><b>'+gpNum(total)+'</b><small>Total</small></div></div><div class="gp-donut-legend">'+rows.map((r,i)=>'<div><i style="background:'+gpChartPalette[i%gpChartPalette.length]+'"></i><span>'+e(r.name)+'</span><b>'+gpNum(r.value)+'</b></div>').join('')+'</div></div>';
+ }
+ if(gpChartSettings.type==='line'){
+  const w=760,h=280,x0=50,y0=210,span=660;
+  const pts=rows.map((r,i)=>({x:x0+(rows.length===1?.5:i/(rows.length-1))*span,y:y0-r.value/max*175,...r}));
+  return '<div class="gp-line-holder"><svg viewBox="0 0 760 280" role="img" aria-label="Line graph">'+[0,.25,.5,.75,1].map(fr=>'<line x1="50" y1="'+(y0-fr*175)+'" x2="710" y2="'+(y0-fr*175)+'" stroke="#eae4e8"/><text x="42" y="'+(y0-fr*175+4)+'" fill="#817784" font-size="12" text-anchor="end">'+gpNum(max*fr)+'</text>').join('')+'<polyline points="'+pts.map(p=>p.x+','+p.y).join(' ')+'" stroke="#ff3cc7" stroke-width="3" fill="none"/>'+pts.map(p=>'<circle cx="'+p.x+'" cy="'+p.y+'" r="5" fill="#ff3cc7"><title>'+e(p.name)+': '+gpNum(p.value)+'</title></circle><text x="'+p.x+'" y="233" text-anchor="end" transform="rotate(-35 '+p.x+' 233)" fill="#766b7a" font-size="11">'+e(p.name.length>15?p.name.slice(0,14)+'…':p.name)+'</text>').join('')+'</svg></div>';
+ }
+ return '<div class="gp-graph-bars">'+rows.map((r,i)=>'<div class="gp-graph-bar"><span title="'+e(r.name)+'">'+e(r.name)+'</span><div><i style="background:'+gpChartPalette[i%gpChartPalette.length]+';width:'+(100*r.value/max).toFixed(2)+'%"></i></div><b>'+gpNum(r.value)+'</b></div>').join('')+'</div>';
+}
+const gpPreviousAnalytics=gpAnalytics;
+gpAnalytics=function(){
+ if(gpChartSettings.project!==String(activeProject))Object.assign(gpChartSettings,{project:String(activeProject),metric:'logged',group:'assignee',type:'bar',status:'all',tag:'all',member:'all',order:'value',limit:'10'});
+ const options=(pairs,key)=>pairs.map(([v,l])=>'<option value="'+e(v)+'" '+(gpChartSettings[key]===v?'selected':'')+'>'+e(l)+'</option>').join('');
+ const settings=[
+  ['type','Chart type',[['bar','Bar'],['line','Line'],['donut','Doughnut']]],
+  ['metric','Measure',Object.entries(gpMetricLabels)],
+  ['group','Group by',Object.entries(gpGroupLabels)],
+  ['status','Status',[['all','All statuses'],['To do','To Do'],['In progress','In Progress'],['Blocked','Blocked'],['Done','Done']]],
+  ['member','Assignee',[['all','All members'],...projectMembers().map(p=>[String(p.member_id),p.display_name])]],
+  ['tag','Tag',[['all','All tags'],['none','Untagged'],...gpTags().map(t=>[String(t.tag_id),t.name])]],
+  ['order','Sort',[['value','Highest first'],['name','Alphabetical']]],
+  ['limit','Groups',[['5','Top 5'],['10','Top 10'],['20','Top 20'],['all','All']]]
+ ];
+ const view=gpGroupedChartData();
+ const root=$('#gpExtra');
+ root.innerHTML='<h1>Analytics</h1><p class="sub">Explore task activity. Customize the graph using any combination of settings.</p><div class="gp-chart-controls">'+settings.map(([key,label,choices])=>'<label>'+e(label)+'<select data-gp-chart="'+key+'">'+options(choices,key)+'</select></label>').join('')+'</div>'+
+ '<div class="gp-chart-card"><div class="gp-chart-heading"><div><h2>'+e(gpMetricLabels[gpChartSettings.metric])+' by '+e(gpGroupLabels[gpChartSettings.group])+'</h2><p class="sub">'+view.count+' matching tasks · '+view.entries.length+' groups</p></div><div class="gp-chart-total"><strong>'+gpNum(view.total)+'</strong><span>'+(['tasks','done'].includes(gpChartSettings.metric)?'tasks':'hours')+'</span></div></div>'+gpGraphView(view.entries)+'</div>'+
+ '<details class="gp-original-analytics"><summary>Detailed time log breakdown</summary><div id="gpOriginalAnalyticsTable"></div></details>';
+ root.querySelectorAll('[data-gp-chart]').forEach(el=>el.onchange=()=>{
+  gpChartSettings[el.dataset.gpChart]=el.value;
+  if(['month','week'].includes(gpChartSettings.group)&&gpChartSettings.metric!=='logged')gpChartSettings.metric='logged';
+  gpAnalytics();
+ });
+ const graphHTML=root.innerHTML;
+ gpPreviousAnalytics();
+ const oldTable=root.querySelector('.table-wrap')?.outerHTML||'<p class="sub">No time entries.</p>';
+ root.innerHTML=graphHTML;
+ root.querySelector('#gpOriginalAnalyticsTable').innerHTML='<p class="sub">Time by member and first task tag; hours are not double-counted across tags.</p>'+oldTable;
+ root.querySelectorAll('[data-gp-chart]').forEach(el=>el.onchange=()=>{
+  gpChartSettings[el.dataset.gpChart]=el.value;
+  if(['month','week'].includes(gpChartSettings.group)&&gpChartSettings.metric!=='logged')gpChartSettings.metric='logged';
+  gpAnalytics();
+ });
+};
 gpAddShell();
 gpSetupHierarchyAnimation();
 gpSetupHistoryControls();
