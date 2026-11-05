@@ -10,6 +10,21 @@ GamePlan has **one main board**: [open GamePlan](https://pennipopvt.github.io/Pr
 - A new team member can join with the project link and their invited Discord email. A new local project is created for that team member without overwriting their other local projects.
 - **Import full board** is a recovery action under the More menu, not a cloud-copy workflow. It requires confirmation, saves a prior local backup and pauses cloud syncing for review.
 
+## Email-free Discord invite links
+
+**One-time database upgrade for existing GamePlan Supabase projects:**
+Run [link-invites.sql](link-invites.sql) in your project's Supabase **SQL Editor**. Do not rerun the complete `schema.sql` or create a new Supabase project. This migration adds an independent invite-link table and four restricted RPC functions; it does not change existing boards, task data, hours, memberships or email invitations.
+
+After applying the migration, open the existing GamePlan main board and click **Share project**:
+- Choose Editor (can edit) or Viewer (read-only cloud access), and an expiration period of 1, 7 or 30 days.
+- Click **Generate invite link**, then **Copy invite link** and send it via Discord. No recipient email is required.
+- The secret token is in the URL's **fragment**, so it isn't included in ordinary server requests. Supabase stores only the SHA-256 hash of each token. Each link can admit up to 25 Discord accounts.
+- Recipients open the same GamePlan URL, sign in with Discord if necessary, and join automatically. Existing local data in their browser is kept separately.
+- The project owner can view active/expired link metadata and **Revoke** a link from the Share dialog. Revoking stops new users joining; it doesn't kick out teammates who've already joined.
+- The previous email-invitation form remains under **Invite by email instead (optional)**.
+
+**Safety:** Treat each link like a password to join that project. Anyone who obtains it and signs in with Discord can claim its assigned role until it expires, is revoked or reaches its usage limit. Database Row Level Security still controls actual project data after redemption; nonmembers cannot access private project items.
+
 ## Cloud configuration
 
 The Supabase project has already been provisioned and configured for Discord OAuth. New browsers may still need the Supabase **project URL** and **publishable key**, which are public client values. No secret or service-role key belongs in the browser.
