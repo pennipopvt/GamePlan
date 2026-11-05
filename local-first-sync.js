@@ -235,6 +235,7 @@ async function activateAccount(){
   links=read(LINKS,{});bases=read(BASE,{});deletedIntents=read(DELETED,{});
   nameDirty=read(NAME_DIRTY,{});knownNames=read(NAME_KNOWN,{});
   data=loadLocal();
+  gpMyOnly=false;
   const cloudCacheKey='gp-account-cloud-projects-v1:'+id;
   cloudProjectList=navigator.onLine
    ?await api.listProjects().catch(()=>read(cloudCacheKey,[]))
@@ -357,6 +358,8 @@ async function reloadTeam(pid=activeProject){
    }catch(err){console.warn('[GamePlan owner legacy link]',err)}
   }
  }
+ const prior=teamByProject[String(pid)]||[];
+ const mappingChanged=JSON.stringify(prior.map(m=>[m.member_user_id,m.legacy_member_id,m.member_role,m.display_name]))!==JSON.stringify(rows.map(m=>[m.member_user_id,m.legacy_member_id,m.member_role,m.display_name]));
  teamByProject[String(pid)]=rows;
  store('gp-account-teams-v1:'+user.id,teamByProject);
  const shadows=data.team.filter(t=>t.project_id===pid&&t.__gp_account_shadow);
@@ -376,6 +379,7 @@ async function reloadTeam(pid=activeProject){
  oldPersist();
  window.GamePlanAccounts?.setTeam?.(rows,roleFor(pid),upgrade);
  if(gpPage==='team')window.GamePlanAccounts?.renderTeamPage?.();
+ else if(gpPage==='board'&&mappingChanged&&!isEditing()&&String(pid)===String(activeProject))render();
  if(roleFor(pid)==='viewer')document.body.classList.add('gp-readonly');
  else document.body.classList.remove('gp-readonly');
  return rows;
