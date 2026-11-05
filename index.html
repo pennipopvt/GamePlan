@@ -2006,8 +2006,9 @@ a:hover,.link:hover{color:#80115c}
  padding:3px 6px;border-radius:5px;background:#f8ddec;color:#98216e;font-size:10px;
  font-weight:750;line-height:1.2;vertical-align:middle}
 @media(max-width:900px){#milestoneList .task-entry .meta-person{display:block}}
-</style><link rel="stylesheet" href="account-ui.css?v=2026.11.05.65"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.05.65</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+.gp-running-clock{position:fixed;bottom:20px;right:20px;z-index:999;background:#fff;border:1px solid #e0d3e1;border-radius:14px;box-shadow:0 9px 34px #38223830;padding:12px 15px;display:flex;gap:14px;align-items:center;max-width:min(92vw,680px);flex-wrap:wrap}.gp-running-clock[hidden]{display:none}.gp-clock-label{font-size:13px;color:#655669;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gp-clock-elapsed{font-variant-numeric:tabular-nums;font-weight:700;font-size:17px;color:#452347}@media(max-width:650px){.gp-running-clock{left:12px;right:12px;bottom:12px;justify-content:space-between}}
+</style><link rel="stylesheet" href="account-ui.css?v=2026.11.05.66"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.05.66</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><button type="button" class="button gp-my-filter" id="gpMyTasks" aria-pressed="false" title="Show only your unfinished assigned tasks">My tasks <span id="gpMyCount" class="gp-my-count">0</span></button><select id="assigneeFilter" hidden aria-hidden="true"><option value="">All assignees</option></select><div class="gp-filter-wrap"><button type="button" class="button gp-filter-trigger" id="gpFilterTrigger" aria-expanded="false" aria-controls="gpFilterPanel"><span aria-hidden="true">⚲</span> Filters <span id="gpFilterCount" class="gp-filter-count" hidden>0</span></button><div class="gp-filter-panel" id="gpFilterPanel" hidden></div></div><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div id="gpFilterChips" class="gp-filter-chips" hidden></div>
@@ -2017,7 +2018,7 @@ a:hover,.link:hover{color:#80115c}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.05.65';
+let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.05.66';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=[];
@@ -2067,7 +2068,9 @@ function loadLocal(){
 }
 const e=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const nice=n=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:2});
-const formatHours=n=>{const total=Math.round(Number(n||0)*60),h=Math.floor(total/60),m=total%60;return h&&m?`${h}h ${m}m`:h?`${h}h`:`${m}m`};
+const formatHours=n=>{const total=Math.round(Number(n||0)*60),h=Math.floor(total/60),m=total%60;return `${h}h ${m}m`};
+const gpTimeFields=(minutes=0)=>{const n=Math.max(0,Math.round(Number(minutes)||0));return `<label>Hours<input name="time_hours" type="number" min="0" step="1" value="${Math.floor(n/60)}" required></label><label>Minutes<input name="time_minutes" type="number" min="0" max="59" step="1" value="${n%60}" required></label>`};
+const gpGetMinutes=form=>{const h=Number(form.get('time_hours')),m=Number(form.get('time_minutes'));if(!Number.isSafeInteger(h)||h<0||!Number.isSafeInteger(m)||m<0||m>59||h*60+m<=0)throw Error('Enter a time greater than zero (minutes must be 0–59)');return h*60+m};
 const find=(arr,id,key)=>arr.find(x=>String(x[key])===String(id));
 const member=id=>find(data.members,id,'member_id')?.display_name||'Unassigned';
 const feature=id=>find(data.features,id,'feature_id');
@@ -2252,13 +2255,13 @@ function render(){
  const actions=$('#pmActions');
  actions.innerHTML='<button class="button" data-action="milestone">+ Milestone</button>';
  actions.onclick=ev=>{const a=ev.target.closest('[data-action]');if(a)quickCreate(a.dataset.action)};
- renderNavigation();renderMilestones();renderTeam();
+ renderNavigation();renderMilestones();renderTeam();gpRenderClock();
 }
 function taskRow(t){
  const logs=taskHours(t);
  const statusClass=({'To do':'status-todo','In progress':'status-progress','Blocked':'status-blocked','Done':'status-done'})[t.status]||'status-todo';
  const isMine=gpTaskIsMine(t);
- return `<div class="task-entry ${statusClass}"><div><button class="task-title ${t.status==='Done'?'task-done':''}" data-detail="${e(t.task_id)}">${e(t.title)}</button><div class="sub">${e(t.priority)} · ${formatHours(t.estimated_hours)} estimated · ${formatHours(logs)} logged</div></div><div class="meta-person sub">${isMine?'<span class="gp-mine-tag" title="Assigned to you">You</span>':e(member(t.assignee_member_id))}</div><select class="status-select ${statusClass}" data-status="${e(t.task_id)}" aria-label="Status for ${e(t.title)}">${ST.map(status=>`<option value="${e(status)}" ${t.status===status?'selected':''}>${e(status)}</option>`).join('')}</select><div class="actions"><button data-log="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Manage time: ${e(t.title)}" title="Manage time"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button><button class="icon-edit" data-edit="${e(t.task_id)}" type="button" aria-label="Edit task: ${e(t.title)}" title="Edit task"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></div>`;
+ return `<div class="task-entry ${statusClass}"><div><button class="task-title ${t.status==='Done'?'task-done':''}" data-detail="${e(t.task_id)}">${e(t.title)}</button><div class="sub">${e(t.priority)} · ${formatHours(t.estimated_hours)} estimated · ${formatHours(logs)} logged</div></div><div class="meta-person sub">${isMine?'<span class="gp-mine-tag" title="Assigned to you">You</span>':e(member(t.assignee_member_id))}</div><select class="status-select ${statusClass}" data-status="${e(t.task_id)}" aria-label="Status for ${e(t.title)}">${ST.map(status=>`<option value="${e(status)}" ${t.status===status?'selected':''}>${e(status)}</option>`).join('')}</select><div class="actions"><button data-clock-in="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Clock in: ${e(t.title)}" title="Clock in">▶</button><button data-log="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Manage time: ${e(t.title)}" title="Manage time"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button><button class="icon-edit" data-edit="${e(t.task_id)}" type="button" aria-label="Edit task: ${e(t.title)}" title="Edit task"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></div>`;
 }
 function renderMilestones(){
  const filtered=visibleTasks(),project=projectTasks(),isFiltered=gpMyOnly||activeView==='open'||activeView==='done'||!!$('#assigneeFilter').value||!!$('#searchTasks').value||(typeof gpHasFacetFilters==='function'&&gpHasFacetFilters());
@@ -2299,6 +2302,7 @@ function renderMilestones(){
   else if(btn.dataset.detail)details(btn.dataset.detail);
   else if(btn.dataset.edit)editTask(btn.dataset.edit);
   else if(btn.dataset.log)logHours(btn.dataset.log);
+   else if(btn.dataset.clockIn)gpClockIn(btn.dataset.clockIn);
  };
  root.onchange=async ev=>{
   const sel=ev.target.closest('[data-status]');if(!sel)return;
@@ -2374,9 +2378,10 @@ function details(id){
   <h3>Time Entries</h3>
   ${logs.length?logs.map(l=>`<div class="note"><div class="head"><div><strong>${e(member(l.member_id))}</strong><span class="gp-detail-log-meta">${e(l.work_date)} · ${formatHours(l.hours)}</span></div>${canUpdate(t)?`<div class="actions"><button class="button" type="button" data-edit-log="${e(l.log_id)}">Edit</button><button class="button danger" type="button" data-delete-log="${e(l.log_id)}">Delete</button></div>`:''}</div><div class="sub">${e(l.note)}</div></div>`).join(''):'<p class="muted">No time logged yet.</p>'}
  </section>
- <div class="controls gp-detail-controls">${canUpdate(t)?'<button class="button main" id="detailLog">Log time</button>':''}${isPM()?'<button class="button" id="detailEdit">Edit task</button>':''}</div>`);
+ <div class="controls gp-detail-controls">${canUpdate(t)?'<button class="button" id="detailClockIn">▶ Clock in</button><button class="button main" id="detailLog">Log time</button>':''}${isPM()?'<button class="button" id="detailEdit">Edit task</button>':''}</div>`);
  $('#back').classList.add('gp-task-detail');
  if($('#detailLog'))$('#detailLog').onclick=()=>logHours(id);
+  if($('#detailClockIn'))$('#detailClockIn').onclick=()=>gpClockIn(id);
  if($('#detailEdit'))$('#detailEdit').onclick=()=>editTask(id);
  $('#modalBody').onclick=ev=>{
   const edit=ev.target.closest('[data-edit-log]'),del=ev.target.closest('[data-delete-log]');
@@ -2389,9 +2394,9 @@ function editLog(taskId,logId){
  const task=find(data.tasks,taskId,'task_id'),log=find(data.logs,logId,'log_id');
  if(!task||!canUpdate(task)||!log||String(log.task_id)!==String(taskId))return;
  const minutes=Math.round(Number(log.hours||0)*60);
- modal('Edit time',`<form id="actionForm"><div class="fields"><label>Minutes worked<input name="minutes" type="number" min="1" step="1" value="${minutes}" required></label>${field('work_date','Work date',log.work_date||'','date')}<label class="wide">Notes<textarea name="note">${e(log.note||'')}</textarea></label></div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="submit" class="button main">Save time</button></div></form>`);
+ modal('Edit time',`<form id="actionForm"><div class="fields">${gpTimeFields(minutes)}${field('work_date','Work date',log.work_date||'','date')}<label class="wide">Notes<textarea name="note">${e(log.note||'')}</textarea></label></div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="submit" class="button main">Save time</button></div></form>`);
  $('#cancel').onclick=()=>details(taskId);
- $('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit('editLog',{task_id:taskId,log_id:logId,...Object.fromEntries(new FormData(ev.currentTarget).entries())})};
+ $('#actionForm').onsubmit=async ev=>{ev.preventDefault();await gpSubmitTime('editLog',taskId,ev.currentTarget,logId)};
 }
 async function deleteLog(taskId,logId,onDone=null){
  const task=find(data.tasks,taskId,'task_id'),log=find(data.logs,logId,'log_id');
@@ -2401,13 +2406,14 @@ async function deleteLog(taskId,logId,onDone=null){
 }
 function taskForm(t,preferredFeatureId=''){const fs=projectFeatures(),who=projectMembers(),f=fs.find(x=>String(x.feature_id)===String(t?.feature_id||preferredFeatureId));modal(t?'Edit task':'New task',`<form id="actionForm"><div class="fields">${field('title','Task title',t?.title||'','text',true)}<label class="wide">Description<textarea name="description">${e(t?.description||'')}</textarea></label>${select('feature_id','Feature',opts(fs,'feature_id'),f?.feature_id||fs[0]?.feature_id)}${select('assignee_member_id','Assigned to',opts(who,'member_id','display_name'),t?.assignee_member_id||who[0]?.member_id)}${select('status','Status',ST.map(x=>({value:x,label:x})),t?.status||'To do')}${select('priority','Priority',PRI.map(x=>({value:x,label:x})),t?.priority||'Normal')}${field('estimated_hours','Estimated hours',t?.estimated_hours||0,'number')}${field('remaining_hours','Remaining hours',t?.remaining_hours||0,'number')}</div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button>${t?'<button class="button danger" type="button" id="deleteTask">Delete task</button>':''}<button class="button main" type="submit">Save task</button></div></form>`);$('#cancel').onclick=closeModal;if(t)$('#deleteTask').onclick=()=>deleteItem('task',t.task_id,t.title);$('#actionForm').onsubmit=async ev=>{ev.preventDefault();const p=Object.fromEntries(new FormData(ev.currentTarget).entries());p.project_id=activeProject;if(t)p.task_id=t.task_id;await submit(t?'editTask':'createTask',p)}}
 function editTask(id){const t=find(data.tasks,id,'task_id');if(t&&isPM())taskForm(t)}
+async function gpSubmitTime(op,taskId,form,logId){try{const fields=new FormData(form),minutes=gpGetMinutes(fields);await submit(op,{task_id:taskId,...(logId?{log_id:logId}:{}),minutes,work_date:fields.get('work_date'),note:fields.get('note')})}catch(err){gpAlert(err.message)}}
 function logHours(id){
  const t=find(data.tasks,id,'task_id');if(!t||!canUpdate(t))return;
  const logs=data.logs.filter(l=>String(l.task_id)===String(id));
  const past=logs.length?`<h3 style="margin:22px 0 8px">Previous Time Entries</h3>${logs.map(l=>`<div class="note"><div class="head"><div><b>${formatHours(l.hours)}</b> · ${e(l.work_date)}<div class="sub">${e(l.note||'')}</div></div><div class="actions"><button class="button" type="button" data-edit-log="${e(l.log_id)}">Edit</button><button class="button danger" type="button" data-delete-log="${e(l.log_id)}">Delete</button></div></div></div>`).join('')}`:'<p class="sub" style="margin-top:16px">No previous time entries for this task.</p>';
- modal('Manage time',`<form id="actionForm"><div class="fields"><label>Minutes worked<input name="minutes" type="number" min="1" step="1" value="17" required></label>${field('work_date','Work date',new Date().toLocaleDateString('en-CA'),'date')}<label class="wide">Notes<textarea name="note" placeholder="What did you complete?"></textarea></label></div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="submit" class="button main">Add time</button></div></form>${past}`);
+ modal('Manage time',`<form id="actionForm"><div class="fields">${gpTimeFields()}${field('work_date','Work date',new Date().toLocaleDateString('en-CA'),'date')}<label class="wide">Notes<textarea name="note" placeholder="What did you complete?"></textarea></label></div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="submit" class="button main">Add time</button></div></form>${past}`);
  $('#cancel').onclick=closeModal;
- $('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit('logHours',{task_id:id,...Object.fromEntries(new FormData(ev.currentTarget).entries())})};
+ $('#actionForm').onsubmit=async ev=>{ev.preventDefault();await gpSubmitTime('logHours',id,ev.currentTarget)};
  $('#modalBody').onclick=ev=>{
   const edit=ev.target.closest('[data-edit-log]'),del=ev.target.closest('[data-delete-log]');
   if(edit)editLog(id,edit.dataset.editLog);
@@ -2447,6 +2453,38 @@ async function deleteItem(kind,id,name){
   await refresh();
  }catch(err){gpAlert('Could not delete '+kind+': '+err.message)}
 }
+
+const GP_CLOCK_KEY='gameplan-active-clock-v1';
+function gpClockRead(){try{const a=JSON.parse(localStorage.getItem(GP_CLOCK_KEY)||'null');if(a&&a.user===String(data?.me?.member_id||'')&&Number.isFinite(a.start)&&a.start>0)return a}catch{}return null}
+function gpRenderClock(){
+ let el=document.getElementById('gpRunningClock');
+ if(!el){el=document.createElement('div');el.id='gpRunningClock';el.className='gp-running-clock';document.body.appendChild(el)}
+ const a=gpClockRead(),t=a&&data?.tasks?.find(t=>String(t.task_id)===String(a.taskId));
+ if(!a||!t){el.hidden=true;return}
+ el.hidden=false;
+ const seconds=Math.floor(Math.max(0,Date.now()-a.start)/1000),h=Math.floor(seconds/3600),m=Math.floor(seconds%3600/60),sec=seconds%60;
+ el.innerHTML='<span class="gp-clock-label">Working on <strong>'+e(t.title)+'</strong></span><span class="gp-clock-elapsed">'+[h,m,sec].map(v=>String(v).padStart(2,'0')).join(':')+'</span><button type="button" class="button main" id="gpClockOut">■ Clock out</button>';
+ el.querySelector('#gpClockOut').onclick=gpClockOut;
+}
+function gpClockIn(id){
+ const task=find(data.tasks,id,'task_id');if(!task||!canUpdate(task)){gpAlert('You cannot track time on this task.');return}
+ if(gpClockRead()){gpAlert('Clock out of your current task before starting another.');return}
+ localStorage.setItem(GP_CLOCK_KEY,JSON.stringify({user:String(data.me.member_id||''),taskId:String(id),start:Date.now()}));
+ closeModal();gpRenderClock();
+}
+async function gpClockOut(){
+ const a=gpClockRead();if(!a)return;
+ const task=find(data.tasks,a.taskId,'task_id');if(!task||!canUpdate(task)){gpAlert('This task is no longer available to log time.');return}
+ const minutes=Math.max(1,Math.round(Math.max(0,Date.now()-a.start)/60000));
+ const button=document.getElementById('gpClockOut');if(button)button.disabled=true;
+ try{
+  await rpc('logHours',{task_id:a.taskId,minutes,work_date:new Date().toLocaleDateString('en-CA'),note:'Tracked with stopwatch'});
+  localStorage.removeItem(GP_CLOCK_KEY);await refresh();
+  gpAlert('Saved '+formatHours(minutes/60)+' on '+task.title+'.');
+ }catch(err){gpAlert('Could not save time: '+err.message);gpRenderClock()}
+}
+setInterval(()=>{if(gpClockRead()&&!document.hidden)gpRenderClock()},1000);
+
 $('#inviteMember').onclick=ev=>{ev.preventDefault();ev.stopPropagation();quickCreate('member')};
 $('#newTask').onclick=()=>taskForm(null);$('#project').onchange=ev=>{activeProject=ev.target.value;activeView='all';saveProject();render()};$('#assigneeFilter').onchange=render;$('#searchTasks').oninput=render;$('#gpMyTasks').onclick=()=>{gpMyOnly=!gpMyOnly;activeView='all';render()};$('#menuToggle').onclick=()=>$('#sidebar').classList.toggle('visible');$('#reload').onclick=()=>{const url=new URL(location.href);url.searchParams.set('v',APP_VERSION);location.assign(url.toString())};
 
@@ -2560,4 +2598,4 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="gameplan.js?v=2026.11.05.65"></script><script src="local-first-sync.js?v=2026.11.05.65"></script><script src="account-ui.js?v=2026.11.05.65"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
+</script><script src="gameplan.js?v=2026.11.05.66"></script><script src="local-first-sync.js?v=2026.11.05.66"></script><script src="account-ui.js?v=2026.11.05.66"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
