@@ -40,10 +40,8 @@ const gpOriginalRow=taskRow;
 taskRow=function(t){
  let html=gpOriginalRow(t);
  const tags=(t.tag_ids||[]).map(id=>gpTags().find(tag=>String(tag.tag_id)===String(id))).filter(Boolean);
- const preview=tags.slice(0,3).map(tag=>'<span class="gp-tag-dot" style="--tc:'+e(tag.color||'#b18aa6')+'"></span>').join('');
- const extra=tags.length>3?'<span class="gp-tag-more">+'+(tags.length-3)+'</span>':'';
- const all=tags.map(tag=>'<span class="gp-tag" style="--tc:'+e(tag.color||'#b18aa6')+'">'+e(tag.name)+'</span>').join('');
- const tagMarkup=tags.length?'<div class="gp-task-tags"><button type="button" class="gp-tag-peek" aria-label="'+e(tags.length+' task tags: '+tags.map(tag=>tag.name).join(', '))+'" aria-expanded="false" title="Show task tags">'+preview+extra+'</button><div class="gp-tag-popover"><span class="gp-tag-popover-label">Tags</span>'+all+'</div></div>':'<div class="gp-task-tags gp-no-tags" aria-hidden="true"></div>';
+ const strips=tags.map(tag=>'<span class="gp-tag-rail" style="--tc:'+e(tag.color||'#b18aa6')+'"><span class="gp-tag-rail-mark" aria-hidden="true"></span><span class="gp-tag-rail-name">'+e(tag.name)+'</span></span>').join('');
+ const tagMarkup=tags.length?'<div class="gp-task-tags"><button type="button" class="gp-tag-peek" aria-label="'+e('Task tags: '+tags.map(tag=>tag.name).join(', '))+'" aria-expanded="false" title="'+e(tags.map(tag=>tag.name).join(', '))+'">'+strips+'</button></div>':'<div class="gp-task-tags gp-no-tags" aria-hidden="true"></div>';
  html=html.replace('<div class="meta-person sub">',tagMarkup+'<div class="meta-person sub">');
  if(gpSelecting)html=html.replace(/(<div class="task-entry [^"]*)(")/,(_match,classes,quote)=>classes+' gp-template-selectable'+(gpSelected.has(String(t.task_id))?' gp-template-selected':'')+quote+' data-gp-template-task="'+e(t.task_id)+'" aria-selected="'+String(gpSelected.has(String(t.task_id)))+'"');
  return html;
@@ -766,19 +764,20 @@ taskForm=function(t,featureId=''){
  field.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();makeTag()}});
 };
 gpSetupFacetEvents();
-/* Hover, keyboard, and touch access for side-mounted task tags. */
+/* Keep compact tag strips open for touch/keyboard; hovering expands them with CSS. */
 const gpTaskList=$('#milestoneList');
 gpTaskList.addEventListener('click',ev=>{
  const trigger=ev.target.closest('.gp-tag-peek');
  if(!trigger)return;
  ev.preventDefault();
- const row=trigger.closest('.task-entry'),isOpen=row.classList.contains('gp-tags-open');
+ ev.stopPropagation();
+ const row=trigger.closest('.task-entry'),open=!row.classList.contains('gp-tags-open');
  gpTaskList.querySelectorAll('.gp-tags-open').forEach(item=>{
   item.classList.remove('gp-tags-open');
   item.querySelector('.gp-tag-peek')?.setAttribute('aria-expanded','false');
  });
- row.classList.toggle('gp-tags-open',!isOpen);
- trigger.setAttribute('aria-expanded',String(!isOpen));
+ row.classList.toggle('gp-tags-open',open);
+ trigger.setAttribute('aria-expanded',String(open));
 },true);
 document.addEventListener('click',ev=>{
  if(ev.target.closest('.gp-task-tags'))return;
