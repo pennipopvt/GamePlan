@@ -61,7 +61,7 @@ function saveLater(){
  // Preserve local undo/redo and a separate offline mirror; NEVER touch local mode data.
  oldPersist();
  if(loading||!api||!currentProjectId)return;
- if(role==='viewer'){gpAlert('This project is read-only for your account.');return}
+ if(role==='viewer'){gpAlert('This project is read-only for your account.');void loadProject(currentProjectId);return}
  const projectId=currentProjectId;
  const snapshot=existingSnapshot(projectId);
  const currentName=data.projects.find(p=>p.project_id===projectId)?.project_name||'Untitled';
@@ -156,7 +156,7 @@ async function loadProject(preferredId){
     catch(err){note('Cloud refresh failed: '+err.message,true)}
    },650);
   });
- }catch(err){note('Cloud load failed: '+err.message,true);showWelcome('Could not load projects: '+err.message)}
+ }catch(err){note('Cloud load failed: '+err.message,true);if(!$cloud('#mainApp')||!$cloud('#mainApp').offsetParent)showWelcome('Could not load projects: '+err.message)}
  finally{loading=false;document.documentElement.classList.remove('gp-cloud-loading')}
 }
 const previousRefresh=refresh;
@@ -173,6 +173,8 @@ rpc=async function(op,p={}){
  return previousRpc(op,p);
 };
 const originalSwitch=gpSwitchProject;
+const originalRename=gpRenameProjectInline;
+gpRenameProjectInline=function(){if(role!=='owner'){gpAlert('Only the project owner can rename a shared project.');$cloud('#gpProjectTitle').value=data.projects.find(p=>p.project_id===activeProject)?.project_name||'';return}return originalRename()};
 gpSwitchProject=function(id){
  if(!api)return originalSwitch(id);
  if(id===currentProjectId)return;
@@ -206,12 +208,13 @@ function ensureCloudUI(){
  if(!header)return;
  const status=document.createElement('div');
  status.className='gp-cloud-toolbar';
- status.innerHTML='<span class="gp-cloud-status">☁ <strong>Shared GamePlan</strong> · <span id="gpCloudState">Connecting…</span> · <span id="gpCloudRole"></span> · <span id="gpCloudAccount"></span></span><button type="button" class="button" id="gpCloudShare" hidden>Share project</button><a class="button" href="index.html">Local board</a><button type="button" class="button" id="gpCloudReload">↻ Sync</button>';
+ status.innerHTML='<span class="gp-cloud-status">☁ <strong>Shared GamePlan</strong> · <span id="gpCloudState">Connecting…</span> · <span id="gpCloudRole"></span> · <span id="gpCloudAccount"></span></span><button type="button" class="button" id="gpCloudShare" hidden>Share project</button><a class="button" href="index.html">Local board</a><button type="button" class="button" id="gpCloudReload">↻ Sync</button><button type="button" class="button" id="gpCloudSignOut">Sign out</button>';
  header.append(status);
  $cloud('#gpCloudShare').onclick=inviteTeammate;
  $cloud('#gpCloudReload').onclick=()=>void loadProject(currentProjectId);
+ $cloud('#gpCloudSignOut').onclick=async()=>{try{await api?.signOut();location.href='supabase/discord.html'}catch(err){gpAlert('Could not sign out: '+err.message)}};
  const version=$cloud('#appVersion');if(version)version.textContent='Cloud beta · v2026.11.05.51';
- const oldLink=$cloud('.top-actions a[href^="shared.html"]');if(oldLink)oldLink.remove();
+ const oldLink=$cloud('.top-actions a[href*="cloud=1"]');if(oldLink)oldLink.remove();
  // Full-board file replacement could overwrite teammates' changes; keep export,
  // but disable the destructive whole-board import in cloud mode.
  $cloud('#import')?.setAttribute('hidden','');
