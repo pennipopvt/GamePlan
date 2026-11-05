@@ -41,7 +41,9 @@ taskRow=function(t){
  let html=gpOriginalRow(t);
  const tags=(t.tag_ids||[]).map(id=>gpTags().find(tag=>String(tag.tag_id)===String(id))).filter(Boolean);
  const strips=tags.map(tag=>'<span class="gp-tag-rail" style="--tc:'+e(tag.color||'#b18aa6')+'"><span class="gp-tag-rail-mark" aria-hidden="true"></span><span class="gp-tag-rail-name">'+e(tag.name)+'</span></span>').join('');
- const tagMarkup=tags.length?'<div class="gp-task-tags"><button type="button" class="gp-tag-peek" aria-label="'+e('Task tags: '+tags.map(tag=>tag.name).join(', '))+'" aria-expanded="false" title="'+e(tags.map(tag=>tag.name).join(', '))+'">'+strips+'</button></div>':'<div class="gp-task-tags gp-no-tags" aria-hidden="true"></div>';
+ const tagMarkup='<div class="gp-task-tags'+(tags.length?'':' gp-no-tags')+'">'+
+ (tags.length?'<button type="button" class="gp-tag-peek" aria-label="'+e('Task tags: '+tags.map(tag=>tag.name).join(', '))+'" aria-expanded="false" title="'+e(tags.map(tag=>tag.name).join(', '))+'">'+strips+'</button>':'')+
+ '<button type="button" class="gp-tag-add" data-gp-tag-add="'+e(t.task_id)+'" aria-label="Add or remove tags for '+e(t.title)+'" title="Add tags">+</button></div>';
  html=html.replace('<div class="meta-person sub">',tagMarkup+'<div class="meta-person sub">');
  if(gpSelecting)html=html.replace(/(<div class="task-entry [^"]*)(")/,(_match,classes,quote)=>classes+' gp-template-selectable'+(gpSelected.has(String(t.task_id))?' gp-template-selected':'')+quote+' data-gp-template-task="'+e(t.task_id)+'" aria-selected="'+String(gpSelected.has(String(t.task_id)))+'"');
  return html;
@@ -766,6 +768,56 @@ taskForm=function(t,featureId=''){
 gpSetupFacetEvents();
 /* Keep compact tag strips open for touch/keyboard; hovering expands them with CSS. */
 const gpTaskList=$('#milestoneList');
+
+/* Quick tag assignment, including tasks with no existing tags. */
+function gpOpenQuickTags(taskId){
+ const task=data.tasks.find(t=>String(t.task_id)===String(taskId)&&t.project_id===activeProject);
+ if(!task)return;
+ const palette=gpTags();
+ const marked=new Set((task.tag_ids||[]).map(String));
+ const html='<div class="gp-quick-tag-picker"><p class="sub">Select any tags for this task. Changes save immediately.</p>'+
+ (palette.length?palette.map(tag=>
+  '<button type="button" class="gp-quick-tag-option" data-quick-tag="'+e(tag.tag_id)+'" aria-pressed="'+marked.has(String(tag.tag_id))+'">'+
+  '<span class="gp-quick-tag-color" style="--tc:'+e(tag.color||'#b18aa6')+'"></span><span>'+e(tag.name)+'</span><span class="gp-quick-tag-check">'+(marked.has(String(tag.tag_id))?'✓':'+')+'</span></button>'
+ ).join(''):'<p class="sub">No tags in this project yet.</p>')+
+ '<div class="gp-quick-tag-new"><input type="text" id="gpQuickTagName" placeholder="Create a new tag…" maxlength="60" aria-label="New tag name"><button class="button" type="button" id="gpQuickTagCreate">Create</button></div></div>';
+ modal('Tags · '+task.title,html);
+ const root=$('#modalBody');
+ root.querySelectorAll('[data-quick-tag]').forEach(btn=>btn.onclick=()=>{
+  const id=btn.dataset.quickTag;
+  const old=[...(task.tag_ids||[])];const set=new Set(old.map(String));
+  if(set.has(id))set.delete(id);else set.add(id);
+  task.tag_ids=[...set];
+  try{persist()}catch(err){task.tag_ids=old;gpAlert('Unable to save tag: '+err.message);return}
+  btn.setAttribute('aria-pressed',String(set.has(id)));
+  btn.querySelector('.gp-quick-tag-check').textContent=set.has(id)?'✓':'+';
+  render();
+ });
+ const input=root.querySelector('#gpQuickTagName');
+ const create=()=>{
+  const name=input.value.trim();if(!name)return;
+  const existing=gpTags().find(t=>t.name.toLowerCase()===name.toLowerCase());
+  if(existing){
+   if(!(task.tag_ids||[]).some(id=>String(id)===String(existing.tag_id))){
+    const old=[...(task.tag_ids||[])];task.tag_ids=[...old,existing.tag_id];
+    try{persist()}catch(err){task.tag_ids=old;gpAlert(err.message);return}
+   }
+  }else{
+   const newTag={tag_id:uid(),project_id:activeProject,name,color:GP_COLORS[gpTags().length%GP_COLORS.length]?.hex||'#db8bac'};
+   data.tags.push(newTag);task.tag_ids=[...(task.tag_ids||[]),newTag.tag_id];
+   try{persist()}catch(err){data.tags.pop();task.tag_ids=task.tag_ids.filter(id=>id!==newTag.tag_id);gpAlert(err.message);return}
+  }
+  render();gpOpenQuickTags(taskId);
+ };
+ root.querySelector('#gpQuickTagCreate').onclick=create;
+ input.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();create()}};
+}
+gpTaskList.addEventListener('click',ev=>{
+ const add=ev.target.closest('[data-gp-tag-add]');
+ if(!add)return;
+ ev.preventDefault();ev.stopPropagation();
+ gpOpenQuickTags(add.dataset.gpTagAdd);
+},true);
 gpTaskList.addEventListener('click',ev=>{
  const trigger=ev.target.closest('.gp-tag-peek');
  if(!trigger)return;
