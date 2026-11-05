@@ -326,6 +326,31 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 .gp-collapsed #gpProjectSwitcher .gp-project-label,.gp-collapsed #gpProjectSelect{display:none}
 .gp-collapsed .gp-project-add{width:36px}
 @media(max-width:680px){#menuToggle{display:inline-flex}#gpProjectSwitcher{padding:2px 8px}#gpProjectTitle{font-size:19px}.gp-header-project{margin-top:8px}}
+
+/* Project switcher: a quiet transparent trigger with an in-app project menu. */
+#gpProjectSwitcher{position:relative;display:block;padding:2px 8px 5px}
+#gpProjectSwitcher .gp-project-label{display:block;margin:0 4px 4px}
+.gp-project-trigger{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:39px;padding:8px 9px;border:1px solid transparent;border-radius:9px;background:transparent;color:#315d53;font-size:13px;font-weight:700;text-align:left;cursor:pointer}
+.gp-project-trigger:hover,.gp-project-trigger[aria-expanded="true"]{background:#dceae1;border-color:#c6dbce}
+.gp-project-trigger:focus-visible{outline:2px solid #5d9d87;outline-offset:1px}
+.gp-project-trigger-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gp-project-chevron{font-size:20px;flex-shrink:0;color:#709588;line-height:1}
+.gp-project-menu[hidden]{display:none!important}
+.gp-project-menu{position:absolute;z-index:20;left:8px;top:100%;width:max(210px,100%);max-width:min(330px,calc(100vw - 26px));max-height:340px;overflow-y:auto;padding:6px;background:#fff;border:1px solid #d4e4d9;border-radius:12px;box-shadow:0 12px 35px #1e483529}
+.gp-project-option,.gp-project-create{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:0;border-radius:7px;background:transparent;color:#365e55;cursor:pointer;text-align:left;padding:10px 11px;font-size:13px}
+.gp-project-option span:first-child{overflow-wrap:anywhere}
+.gp-project-option:hover,.gp-project-option:focus-visible,.gp-project-create:hover,.gp-project-create:focus-visible{background:#eaf4ed;outline:none}
+.gp-project-option[aria-current="true"]{font-weight:750;background:#f1f7f3}
+.gp-project-menu-divider{height:1px;background:#e0ebe3;margin:5px}
+.gp-project-create{justify-content:flex-start;gap:10px;font-weight:700;color:#2d786b}
+.gp-project-create span{font-size:21px;line-height:1}
+.gp-danger-zone{margin-top:30px;padding:18px;border:1px solid #e8cccc;border-radius:11px}
+.gp-danger-zone h2{margin-top:0;color:#a44848}
+.gp-collapsed #gpProjectSwitcher{padding:0}
+.gp-collapsed #gpProjectSwitcher .gp-project-label,.gp-collapsed .gp-project-trigger-name{display:none}
+.gp-collapsed .gp-project-trigger{justify-content:center;min-height:40px;padding:8px 3px}
+.gp-collapsed .gp-project-menu{left:48px;top:0}
+@media(max-width:680px){#gpProjectSwitcher{padding:2px 8px 5px}.gp-project-menu{width:calc(100% - 16px)}}
 </style></head>
 <body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand">✳ Game<span>Plan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav><div class="sidebar-foot">Local only · your board is saved in this browser.</div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.4</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice">Your changes are saved instantly in this browser. Export a backup occasionally.</div>
