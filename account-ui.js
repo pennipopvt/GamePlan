@@ -237,6 +237,15 @@ async function editTeamMember(id){
   catch(err){gpAlert('Could not remove access: '+err.message)}
  });
 }
+// Every clickable control gives a brief, persistent pressed-state response,
+// including keyboard activation; no navigation or form behavior is changed.
+document.addEventListener('click',event=>{
+ const button=event.target.closest?.('button,.button,a.button,[role="button"]');
+ if(!button||button.disabled||button.getAttribute('aria-disabled')==='true')return;
+ button.classList.add('gp-tapped');
+ clearTimeout(button.__gpTapTimer);
+ button.__gpTapTimer=setTimeout(()=>button.classList.remove('gp-tapped'),280);
+},true);
 window.GamePlanAccounts={
  showLogin,showWorkspace,requestMigration,emptyWorkspace,hideEmpty,onAuthenticated,accountDialog,
  setTeam,renderTeamPage,teamRole:currentTeamRole,createProjectDialog,loginMessage
