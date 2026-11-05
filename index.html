@@ -599,17 +599,93 @@ button,input,textarea,select{font-family:inherit}
 @media(prefers-reduced-motion:reduce){
  #gpBoardNav:not([hidden]){transition:none}
 }
+
+/* Overview is the only section title; milestones are the standalone cards. */
+.gp-overview-head{align-items:flex-start;gap:14px 22px}
+.gp-overview-intro{min-width:0;flex:1}
+.gp-overview-heading{display:flex;align-items:center;gap:15px 22px;flex-wrap:wrap;margin-bottom:9px}
+.gp-overview-heading #pageHeading{margin:0!important}
+.gp-overview-heading .gp-breakdown-actions{gap:14px;justify-content:flex-start}
+.gp-overview-heading .section-actions{gap:14px}
+.gp-overview-heading #pmActions .button,
+.gp-overview-heading #gpSelectTasks{
+ padding:3px 0;background:transparent;border:0;border-radius:0;
+ box-shadow:none;color:#357e6c;font-weight:500;font-size:13px
+}
+.gp-overview-heading #pmActions .button:hover,
+.gp-overview-heading #gpSelectTasks:hover{background:transparent;border:0;filter:none;color:#235f50;text-decoration:underline;text-underline-offset:3px}
+.gp-overview-heading #gpSelectTasks{color:#648b7b}
+.gp-work-breakdown{margin-top:5px}
+.gp-work-breakdown #milestoneList>.milestone-section:first-child{margin-top:6px}
+.gp-overview-head+.grid{margin-top:21px;margin-bottom:21px}
+/* Stronger but still calm fills. Nested level stays visibly distinct. */
+#milestoneList .milestone-section{border-color:#c9ddce;box-shadow:0 3px 12px #507c5a0b;margin:17px 0 23px}
+#milestoneList .milestone-summary{background:#dfede1;border-bottom-color:#c9ddce;padding:19px 23px;min-height:78px}
+#milestoneList .milestone-summary .title-stack strong{color:#2d5644}
+#milestoneList .feature-section{margin:17px 21px 18px 31px;border-color:#d4e5da;border-left-width:4px;background:#f5faf6;box-shadow:0 2px 8px #4178550a}
+#milestoneList .feature-summary,
+#milestoneList .feature-section.status-todo>.feature-summary{background:#eaf4ed;border-bottom-color:#d8e8dc;padding:16px 20px;min-height:67px}
+#milestoneList .feature-section.status-progress>.feature-summary{background:#e3eefb}
+#milestoneList .feature-section.status-blocked>.feature-summary{background:#fae9e2}
+#milestoneList .feature-section.status-done>.feature-summary{background:#e1f1e6}
+#milestoneList .feature-summary .title-stack strong{color:#335e4d}
+#milestoneList .task-entry,
+#milestoneList .task-entry.status-todo,
+#milestoneList .task-entry.status-progress,
+#milestoneList .task-entry.status-blocked,
+#milestoneList .task-entry.status-done{padding-top:15px;padding-bottom:15px;min-height:66px;border-top-color:#e0eae3}
+#milestoneList .task-entry.status-todo{background:#f1f5f2;border-left-color:#97b6a7}
+#milestoneList .task-entry.status-progress{background:#eaf3fd;border-left-color:#5796d9}
+#milestoneList .task-entry.status-blocked{background:#fceee9;border-left-color:#d58268}
+#milestoneList .task-entry.status-done{background:#e8f5ed;border-left-color:#4d9f79}
+#milestoneList .task-entry.status-todo:hover{background:#e6efea}
+#milestoneList .task-entry.status-progress:hover{background:#dcebf9}
+#milestoneList .task-entry.status-blocked:hover{background:#f8e2d9}
+#milestoneList .task-entry.status-done:hover{background:#d9eee1}
+#milestoneList .task-entry:has(.gp-task-drag-handle){padding-left:47px}
+#milestoneList .gp-task-drag-handle{left:11px}
+#milestoneList .task-entry .task-title{color:#36594b}
+#milestoneList .task-entry .sub{color:#698477}
+#milestoneList .feature-summary .title-stack .sub,#milestoneList .milestone-summary .title-stack .sub{color:#668575}
+#milestoneList .feature-section.status-progress{border-left-color:#86b4e0}
+#milestoneList .feature-section.status-blocked{border-left-color:#e3a18c}
+#milestoneList .feature-section.status-done{border-left-color:#76b998}
+#milestoneList .milestone-tools .tag{background:#d5e9da;color:#3d7861}
+/* Switch project is an unboxed action immediately before the editable project name. */
+.gp-header-project .gp-project-title-line{display:flex;align-items:center;gap:5px;min-width:0}
+.gp-header-project .gp-project-title-line #gpProjectTitle{flex:1;min-width:0}
+.gp-header-project .gp-project-overline{min-height:15px;display:block}
+.gp-header-project #gpProjectSwitcher{flex:0 0 auto}
+.gp-header-project #gpProjectTrigger{width:29px;height:29px}
+.gp-header-project #gpProjectTrigger .gp-project-switch-icon{width:19px;height:19px}
+.gp-project-chooser{display:grid;gap:7px;margin:15px 0 18px}
+.gp-project-choice{display:flex;align-items:center;justify-content:space-between;gap:13px;width:100%;text-align:left;border:1px solid #d9e6dd;border-radius:9px;background:#f8fbf9;padding:14px 15px;font-size:14px;font-weight:500;color:#375c4c}
+.gp-project-choice:hover{background:#e7f3eb;border-color:#a6cfb4}
+.gp-project-choice[aria-current="true"]{background:#e1f2e7;border-color:#8fc5a5}
+.gp-project-choice .gp-choice-current{font-size:11px;color:#3f886a;white-space:nowrap}
+.gp-project-chooser-create{border:0;background:transparent;padding:10px 3px;text-align:left;color:#327e65;font-weight:550;font-size:13px}
+.gp-project-chooser-create:hover{text-decoration:underline}
+@media(max-width:900px){.gp-overview-head{flex-wrap:wrap}}
+@media(max-width:680px){
+ .gp-overview-heading{gap:9px 15px}
+ .gp-overview-heading #pageHeading{font-size:21px!important}
+ #milestoneList .milestone-summary{padding:15px;min-height:70px}
+ #milestoneList .feature-section{margin:12px 9px 13px 14px}
+ #milestoneList .feature-summary{padding:13px 12px;min-height:60px}
+ #milestoneList .task-entry:has(.gp-task-drag-handle){padding-left:42px}
+ #milestoneList .gp-task-drag-handle{left:7px}
+}
 </style></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.13</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.14</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
-<section id="mainApp" hidden><div class="head"><div><h1 id="pageHeading" style="margin:0 0 8px;font:700 27px Georgia,serif">Project Overview</h1><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter"><option value="">All assignees</option></select><button class="button main" id="newTask" hidden>+ Task</button></div></div>
+<section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter"><option value="">All assignees</option></select><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div class="grid"><div class="card stat"><span class="muted">Total tasks</span><b id="total">0</b></div><div class="card stat"><span class="muted">Completed</span><b id="completed">0</b></div><div class="card stat"><span class="muted">Time logged</span><b id="hours">0h</b></div></div>
-<div class="gp-work-breakdown"><div class="head"><h2 style="margin:0">Work Breakdown</h2><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div id="milestoneList"></div></div><details class="card" id="teamSection"><summary><h2 style="font:700 19px Georgia,serif">Project Team</h2><div class="section-actions"><button class="button main" id="inviteMember" hidden>+ Add member</button><span class="sub">▸ Team details</span></div></summary><div id="teamList" style="margin-top:14px"></div></details></section></main></div>
+<div class="gp-work-breakdown"><div id="milestoneList"></div></div><details class="card" id="teamSection"><summary><h2 style="font:700 19px Georgia,serif">Project Team</h2><div class="section-actions"><button class="button main" id="inviteMember" hidden>+ Add member</button><span class="sub">▸ Team details</span></div></summary><div id="teamList" style="margin-top:14px"></div></details></section></main></div>
 <div class="modal-back" id="back"><div class="modal" role="dialog" aria-modal="true"><div class="head"><h2 id="modalTitle"></h2><button class="button" id="close">×</button></div><div id="modalBody"></div></div></div>
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.04.13';
+const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.04.14';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=['Ethan','Jerry','Jenny'];
@@ -1106,4 +1182,4 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="gameplan.js?v=2026.11.04.13"></script></body></html>
+</script><script src="gameplan.js?v=2026.11.04.14"></script></body></html>
