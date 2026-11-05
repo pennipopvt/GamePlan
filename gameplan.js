@@ -80,7 +80,7 @@ render=function(){
 function gpNavigate(page){gpPage=page;gpSelected.clear();gpSelecting=false;$('#sidebar').classList.remove('visible');render()}
 function gpAddShell(){
  const sidebar=$('#sidebar');
- sidebar.querySelector('.sidebar-brand').innerHTML='<span class="gp-long">✳ Game<span>Plan</span></span><span class="gp-short">✳</span>';
+ sidebar.querySelector('.sidebar-brand').innerHTML='<img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span>';
  const nav=document.createElement('nav');nav.id='gpPrimary';nav.className='side-nav';
  const gpBoardIcon='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>';
  const gpGraphIcon='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m6 16 5-6 4 3 5-7"/></svg>';
@@ -109,10 +109,13 @@ function gpAddShell(){
  document.addEventListener('click',ev=>{if(!projectSwitcher.contains(ev.target))closeMenu()});
  document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&!menu.hidden){closeMenu();trigger.focus()}});
 
- const header=$('.workspace .top .brand');
+ const header=$('.workspace .top');
  const titleWrap=document.createElement('div');titleWrap.className='gp-header-project';
  titleWrap.innerHTML='<label for="gpProjectTitle" class="gp-project-label">CURRENT PROJECT</label><input id="gpProjectTitle" aria-label="Edit current project name" autocomplete="off" spellcheck="false" title="Click to rename project">';
- header.parentElement.appendChild(titleWrap);
+ const oldHeader=header.firstElementChild;
+ const mobileToggle=$('#menuToggle');
+ header.prepend(mobileToggle,titleWrap);
+ oldHeader.remove();
  $('#gpProjectTitle').addEventListener('change',gpRenameProjectInline);
  $('#gpProjectTitle').addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();ev.currentTarget.blur()}if(ev.key==='Escape'){ev.currentTarget.value=find(data.projects,activeProject,'project_id')?.project_name||'';ev.currentTarget.blur()}});
 
@@ -122,6 +125,15 @@ function gpAddShell(){
  nav.insertBefore(boardNav,nav.children[1]);
  const main=$('#mainApp');const board=document.createElement('div');board.id='gpBoardView';while(main.firstChild)board.append(main.firstChild);main.append(board);
  const extra=document.createElement('section');extra.id='gpExtra';extra.className='card';main.append(extra);
+ const boardFooter=document.createElement('section');boardFooter.className='gp-board-footer';
+ boardFooter.innerHTML='<h2>Board Tools</h2><p>Export a backup, restore your board, or manage milestone imports.</p>';
+ boardFooter.appendChild($('.top-actions'));
+ board.append(boardFooter);
+ const siteFooter=document.createElement('footer');siteFooter.className='gp-site-footer';
+ siteFooter.innerHTML='<p>Local projects, teams, and hours · Saved in this browser</p>';
+ const version=document.createElement('p');version.appendChild($('#appVersion'));
+ siteFooter.appendChild(version);
+ main.append(siteFooter);
  const selectButton=document.createElement('button');selectButton.id='gpSelectTasks';selectButton.className='button';selectButton.textContent='☑ Select tasks';$('#pmActions').before(selectButton);
  const bar=document.createElement('div');bar.id='gpSelectionBar';bar.hidden=true;$('#milestoneList').before(bar);
  $('#gpPrimary').onclick=ev=>{const b=ev.target.closest('[data-page]');if(b)gpNavigate(b.dataset.page)};
