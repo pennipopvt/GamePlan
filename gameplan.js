@@ -612,6 +612,153 @@ function gpSetupHierarchyAnimation(){
   animation.oncancel=finish;
  },true);
 }
+
+/* Faceted deckbuilder filters: OR within category, AND across categories. */
+const gpFacets={person:new Set(),tag:new Set(),status:new Set(),priority:new Set(),milestone:new Set()};
+const gpFacetGroups=[
+ {key:'person',title:'Assignees'},
+ {key:'tag',title:'Tags'},
+ {key:'status',title:'Status'},
+ {key:'priority',title:'Priority'},
+ {key:'milestone',title:'Milestones'}
+];
+const gpHasFacetFilters=()=>gpFacetGroups.some(group=>gpFacets[group.key].size>0);
+function gpFacetOptions(key){
+ const tasks=projectTasks();
+ if(key==='person'){
+  const roster=projectMembers().map(p=>({id:String(p.member_id),name:p.display_name}));
+  if(tasks.some(t=>!t.assignee_member_id))roster.push({id:'__unassigned',name:'Unassigned'});
+  return roster;
+ }
+ if(key==='tag')return [
+  ...gpTags().map(t=>({id:String(t.tag_id),name:t.name,color:t.color})),
+  {id:'__untagged',name:'Untagged',color:'#a6adb8'}
+ ];
+ if(key==='status')return ST.map((name,i)=>({id:name,name,color:['#a6adb8','#7775cf','#db4aa7','#32956d'][i]}));
+ if(key==='priority')return PRI.map(name=>({id:name,name}));
+ if(key==='milestone')return data.milestones.filter(m=>m.project_id===activeProject).map(m=>({id:String(m.milestone_id),name:m.name}));
+ return [];
+}
+const gpBaseVisibleTasks=visibleTasks;
+visibleTasks=function(){
+ return gpBaseVisibleTasks().filter(t=>gpFacetGroups.every(group=>{
+  const chosen=gpFacets[group.key];if(!chosen.size)return true;
+  const featureOfTask=feature(t.feature_id);
+  if(group.key==='person')return chosen.has(String(t.assignee_member_id||'__unassigned'));
+  if(group.key==='tag')return (t.tag_ids||[]).some(id=>chosen.has(String(id)))||(!(t.tag_ids||[]).length&&chosen.has('__untagged'));
+  if(group.key==='status')return chosen.has(t.status||'To do');
+  if(group.key==='priority')return chosen.has(t.priority||'Normal');
+  if(group.key==='milestone')return chosen.has(String(featureOfTask?.milestone_id||''));
+  return true;
+ }));
+};
+function gpResetFacets(){
+ gpFacetGroups.forEach(group=>gpFacets[group.key].clear());
+}
+function gpRenderFacetControls(){
+ const panel=$('#gpFilterPanel'),button=$('#gpFilterTrigger'),chips=$('#gpFilterChips'),count=$('#gpFilterCount');
+ if(!panel||!button||!chips||!count)return;
+ let total=0;
+ const chosen=[];
+ for(const group of gpFacetGroups){
+  const options=gpFacetOptions(group.key);
+  for(const option of options){
+   if(gpFacets[group.key].has(option.id)){
+    chosen.push({key:group.key,id:option.id,label:option.name,group:group.title});
+    total++;
+   }
+  }
+ }
+ count.textContent=String(total);count.hidden=total===0;
+ chips.hidden=total===0;
+ chips.innerHTML=chosen.map(o=>'<button type="button" class="gp-filter-chip" data-gp-remove-key="'+e(o.key)+'" data-gp-remove-id="'+e(o.id)+'" aria-label="Remove '+e(o.group+': '+o.label)+'">'+e(o.group)+': '+e(o.label)+' <span aria-hidden="true">×</span></button>').join('')+(total?'<button type="button" class="gp-filter-clear" id="gpClearAllChips">Clear all</button>':'');
+ panel.innerHTML='<div class="gp-filter-panel-header"><strong>Filter tasks</strong><button type="button" class="gp-filter-clear" id="gpClearFilters">Clear all</button></div>'+
+  gpFacetGroups.map(group=>{
+   const opts=gpFacetOptions(group.key);
+   return '<section class="gp-filter-group"><div class="gp-filter-group-heading">'+e(group.title)+'</div><div class="gp-filter-choices">'+
+    (opts.length?opts.map(o=>'<button type="button" class="gp-filter-choice" data-gp-facet="'+e(group.key)+'" data-gp-id="'+e(o.id)+'" aria-pressed="'+String(gpFacets[group.key].has(o.id))+'">'+(o.color?'<span class="gp-filter-dot" style="--gp-dot:'+e(o.color)+'"></span>':'')+e(o.name)+'</button>').join(''):'<span class="sub">None yet</span>')+
+    '</div></section>';
+  }).join('')+'<p class="gp-filter-help">Multiple choices within a category match any; combining categories narrows your results.</p>';
+}
+function gpSetupFacetEvents(){
+ const root=$('#gpFilterPanel'),trigger=$('#gpFilterTrigger'),chips=$('#gpFilterChips');
+ const close=()=>{root.hidden=true;trigger.setAttribute('aria-expanded','false')};
+ trigger.addEventListener('click',()=>{
+  const opening=root.hidden;
+  root.hidden=!opening;trigger.setAttribute('aria-expanded',String(opening));
+ });
+ root.addEventListener('click',ev=>{
+  const choice=ev.target.closest('[data-gp-facet]');
+  if(choice){
+   const key=choice.dataset.gpFacet,id=choice.dataset.gpId;
+   if(!Object.hasOwn(gpFacets,key))return;
+   const set=gpFacets[key];
+   if(set.has(id))set.delete(id);else set.add(id);
+   render();return;
+  }
+  if(ev.target.closest('#gpClearFilters')){gpResetFacets();render()}
+ });
+ chips.addEventListener('click',ev=>{
+  const remove=ev.target.closest('[data-gp-remove-key]');
+  if(remove){
+   gpFacets[remove.dataset.gpRemoveKey]?.delete(remove.dataset.gpRemoveId);
+   render();return;
+  }
+  if(ev.target.closest('#gpClearAllChips')){gpResetFacets();render()}
+ });
+ document.addEventListener('click',ev=>{
+  if(!ev.target.closest('.gp-filter-wrap'))close();
+ });
+ document.addEventListener('keydown',ev=>{
+  if(ev.key==='Escape'&&!root.hidden){close();trigger.focus()}
+ });
+}
+const gpPreviousSwitchProject=gpSwitchProject;
+gpSwitchProject=function(id){gpResetFacets();gpPreviousSwitchProject(id)};
+const gpPreviousRenderWithFacets=render;
+render=function(){gpPreviousRenderWithFacets();gpRenderFacetControls()};
+
+/* Task tag picker: one-click chips, with a quick-create field in the task dialog. */
+const gpPriorTaskFormWithTags=taskForm;
+taskForm=function(t,featureId=''){
+ gpPriorTaskFormWithTags(t,featureId);
+ const area=$('#actionForm .gp-tag-editor');
+ if(!area)return;
+ const existing=new Set((t?.tag_ids||[]).map(String));
+ const options=()=>gpTags().map(tag=>
+  '<label class="gp-tag-chip" style="--tc:'+e(tag.color||'#db8bac')+'">'+
+  '<input type="checkbox" name="gp_tag" value="'+e(tag.tag_id)+'" '+(existing.has(String(tag.tag_id))?'checked':'')+'>'+
+  '<span class="gp-tag-indicator" aria-hidden="true"></span>'+
+  '<span class="gp-tag">'+e(tag.name)+'</span><span class="gp-tag-check" aria-hidden="true">✓</span></label>'
+ ).join('');
+ area.innerHTML='<div class="gp-tag-heading"><strong>Tags</strong><button type="button" class="gp-tag-add-inline" id="gpTagQuickToggle">+ New tag</button></div>'+
+  '<div class="gp-tag-list" id="gpTaskTagOptions">'+(options()||'<span class="sub">No tags yet. Add one below.</span>')+'</div>'+
+  '<div class="gp-tag-quick" id="gpTagQuickForm" hidden><input type="text" id="gpNewTagName" maxlength="60" placeholder="New tag name" aria-label="New tag name"><button type="button" class="button main" id="gpQuickCreateTag">Add</button></div>';
+ const field=area.querySelector('#gpNewTagName');
+ area.querySelector('#gpTagQuickToggle').onclick=()=>{
+  const quick=area.querySelector('#gpTagQuickForm');quick.hidden=!quick.hidden;if(!quick.hidden)field.focus();
+ };
+ const makeTag=()=>{
+  const name=field.value.trim();
+  if(!name)return;
+  const already=gpTags().find(tag=>tag.name.toLowerCase()===name.toLowerCase());
+  if(already){
+   const checkbox=[...area.querySelectorAll('[name="gp_tag"]')].find(el=>el.value===String(already.tag_id));
+   if(checkbox)checkbox.checked=true;
+  }else{
+   const color=GP_COLORS[gpTags().length%GP_COLORS.length]?.hex||'#db8bac';
+   const tag={tag_id:uid(),project_id:activeProject,name,color};
+   data.tags.push(tag);
+   try{persist()}catch(err){data.tags.pop();gpAlert(err.message);return}
+   existing.add(String(tag.tag_id));
+   area.querySelector('#gpTaskTagOptions').innerHTML=options();
+  }
+  field.value='';area.querySelector('#gpTagQuickForm').hidden=true;
+ };
+ area.querySelector('#gpQuickCreateTag').onclick=makeTag;
+ field.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();makeTag()}});
+};
+gpSetupFacetEvents();
 gpAddShell();
 gpSetupHierarchyAnimation();
 gpSetupHistoryControls();
