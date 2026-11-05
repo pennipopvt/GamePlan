@@ -487,4 +487,4 @@ $('#milestoneList').addEventListener('click',ev=>{
  if(object&&object.project_id===activeProject)deleteItem(kind,id,object.name||object.title);
 },true);
 
-gpAddShell();gpRenderPage();gpRenderProjectControls();gpDecorateDeletes();
+gpAddShell();render();
