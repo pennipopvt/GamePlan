@@ -33,6 +33,14 @@ If provisioning a new Supabase project, execute [schema.sql](schema.sql) first a
 
 The old `supabase/discord.html` is now only a callback bridge: it processes the session and automatically returns to the main board. `supabase/index.html` and `shared.html` redirect to GamePlan. The obsolete separate cloud mode has been removed.
 
+## Deleting shared features and tasks
+
+Deleting a feature now leaves an explicit **tombstone** inside its existing `gp_items` row. Teammates receiving that row remove the feature from their visible board; included tasks and time logs are likewise marked deleted. This prevents an outdated local cache from silently restoring a legitimate deletion.
+
+No additional SQL setup is necessary: these markers use the existing `gp_items` schema and permissions. Browser clients retain a local deletion intent until the cloud acknowledges the marker, including if the deletion happened offline or immediately after receiving another user's feature.
+
+For deletions made by older GamePlan releases, the sync client independently checks isolated missing records against Supabase before removing them locally. It refuses to infer a large/empty-board deletion and keeps a local recovery copy. Both collaborators should refresh the latest main GamePlan page after an upgrade.
+
 ## Data safety and limitations
 
 - Before the first cloud link, verify the correct local project and export a JSON backup.
