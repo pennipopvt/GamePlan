@@ -231,7 +231,12 @@ async function activateAccount(){
   LINKS=linksKey;BASE=baseKey;DELETED=deletedKey;
   links=read(LINKS,{});bases=read(BASE,{});deletedIntents=read(DELETED,{});
   data=loadLocal();
-  cloudProjectList=await api.listProjects().catch(()=>[]);
+  const cloudCacheKey='gp-account-cloud-projects-v1:'+id;
+  cloudProjectList=navigator.onLine
+   ?await api.listProjects().catch(()=>read(cloudCacheKey,[]))
+   :read(cloudCacheKey,[]);
+  if(navigator.onLine&&cloudProjectList.length)store(cloudCacheKey,cloudProjectList);
+  teamByProject=read('gp-account-teams-v1:'+id,{});
   const owned=Object.entries(links).some(([localId,cloudId])=>
    cloudProjectList.some(p=>p.id===cloudId&&p.owner_id===id)&&
    String(data.projects.find(p=>String(p.project_id)===localId)?.project_manager_member_id)===String(data.me?.member_id));
@@ -259,6 +264,7 @@ async function activateAccount(){
 async function refreshProjectList(){
  if(!api||!user)return;
  cloudProjectList=await api.listProjects();
+ if(user)store('gp-account-cloud-projects-v1:'+user.id,cloudProjectList);
  // Import projects that this authenticated account can read and does not
  // already have locally. No existing project or local cache is replaced.
  for(const project of cloudProjectList){
@@ -302,6 +308,7 @@ async function reloadTeam(pid=activeProject){
   }
  }
  teamByProject[String(pid)]=rows;
+ store('gp-account-teams-v1:'+user.id,teamByProject);
  const shadows=data.team.filter(t=>t.project_id===pid&&t.__gp_account_shadow);
  data.team=data.team.filter(t=>!(t.project_id===pid&&t.__gp_account_shadow));
  for(const m of rows){
