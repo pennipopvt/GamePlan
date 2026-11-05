@@ -554,17 +554,62 @@ button,input,textarea,select{font-family:inherit}
 .gp-header-actions .button{font-family:inherit;font-weight:500}
 .modal h2,.gp-dialog-card h2,#gpExtra h1,#gpExtra h2,#gpExtra h3{font-family:inherit!important;font-weight:550!important;letter-spacing:-.3px}
 .gp-project-menu,.gp-project-menu button{font-family:inherit;font-weight:500}
+
+/* Typography and unboxed work breakdown: milestone cards are the primary sections. */
+:root{font-size:15px}
+.gp-work-breakdown{margin:10px 0 22px}
+.gp-work-breakdown>.head{padding:4px 0 16px;margin-bottom:5px;border-bottom:1px solid #e9eee9}
+.gp-work-breakdown>.head h2{font-family:inherit!important;font-size:18px!important;font-weight:550!important;letter-spacing:-.35px;color:#354f45}
+#pmActions .button,#gpSelectTasks{font-size:13px;padding:9px 12px}
+#pageHeading{font-size:23px!important}
+#roleDescription{font-size:13px}
+.gp-project-label{font-size:10px!important}
+#gpProjectTitle{font-size:22px}
+#gpPrimary>.gp-nav{font-size:14px}
+#gpBoardNav .side-nav button{font-size:12px}
+#gpBoardNav .side-label{font-size:10px}
+#milestoneList .milestone-summary .title-stack strong{font-size:16px}
+#milestoneList .feature-summary .title-stack strong{font-size:14px}
+#milestoneList .task-entry .task-title{font-size:14px}
+#milestoneList .task-entry .sub{font-size:12px}
+#milestoneList .task-entry .meta-person{font-size:12px}
+#milestoneList .task-entry .status-select{font-size:12px}
+#milestoneList .milestone-summary .sub,#milestoneList .feature-summary .sub{font-size:12px}
+.stat .muted{font-size:12px}
+.gp-header-actions .button{font-size:12px}
+#milestoneList .task-entry,
+#milestoneList .task-entry.status-todo,
+#milestoneList .task-entry.status-progress,
+#milestoneList .task-entry.status-blocked,
+#milestoneList .task-entry.status-done{border-left-width:4px;border-left-style:solid}
+#milestoneList .task-entry.status-todo{border-left-color:#b5c5c1}
+#milestoneList .task-entry.status-progress{border-left-color:#639bd7}
+#milestoneList .task-entry.status-blocked{border-left-color:#d88d76}
+#milestoneList .task-entry.status-done{border-left-color:#5ba68c}
+/* Vertical expansion uses measured height for stable cross-browser animation. */
+#milestoneList details.gp-details-animating{overflow:hidden;will-change:height}
+#gpBoardNav:not([hidden]){
+ overflow:hidden;
+ max-height:var(--gp-board-nav-height,1500px);opacity:1;
+ transition:max-height .24s cubic-bezier(.22,.68,.25,1),opacity .18s ease;
+}
+#gpBoardNav.gp-subtabs-closed:not([hidden]){
+ max-height:0;opacity:0;visibility:hidden;pointer-events:none;
+}
+@media(prefers-reduced-motion:reduce){
+ #gpBoardNav:not([hidden]){transition:none}
+}
 </style></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.12</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.13</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head"><div><h1 id="pageHeading" style="margin:0 0 8px;font:700 27px Georgia,serif">Project Overview</h1><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter"><option value="">All assignees</option></select><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div class="grid"><div class="card stat"><span class="muted">Total tasks</span><b id="total">0</b></div><div class="card stat"><span class="muted">Completed</span><b id="completed">0</b></div><div class="card stat"><span class="muted">Time logged</span><b id="hours">0h</b></div></div>
-<div class="card" style="margin-bottom:16px"><div class="head"><h2 style="font:700 19px Georgia,serif;margin:0">Work Breakdown</h2><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div id="milestoneList"></div></div><details class="card" id="teamSection"><summary><h2 style="font:700 19px Georgia,serif">Project Team</h2><div class="section-actions"><button class="button main" id="inviteMember" hidden>+ Add member</button><span class="sub">▸ Team details</span></div></summary><div id="teamList" style="margin-top:14px"></div></details></section></main></div>
+<div class="gp-work-breakdown"><div class="head"><h2 style="margin:0">Work Breakdown</h2><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div id="milestoneList"></div></div><details class="card" id="teamSection"><summary><h2 style="font:700 19px Georgia,serif">Project Team</h2><div class="section-actions"><button class="button main" id="inviteMember" hidden>+ Add member</button><span class="sub">▸ Team details</span></div></summary><div id="teamList" style="margin-top:14px"></div></details></section></main></div>
 <div class="modal-back" id="back"><div class="modal" role="dialog" aria-modal="true"><div class="head"><h2 id="modalTitle"></h2><button class="button" id="close">×</button></div><div id="modalBody"></div></div></div>
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.04.12';
+const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.04.13';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=['Ethan','Jerry','Jenny'];
@@ -1061,4 +1106,4 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="gameplan.js?v=2026.11.04.12"></script></body></html>
+</script><script src="gameplan.js?v=2026.11.04.13"></script></body></html>
