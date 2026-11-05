@@ -6,11 +6,11 @@
 (function(){
 'use strict';
 const $s=q=>document.querySelector(q);
-const CFG='gameplan-cloud-config-v1',LINKS='gp-sync-links-v1',BASE='gp-sync-baselines-v1',LAST='gp-sync-backup-import-v1',PENDING_INVITE='gp-pending-link-invite';
+const CFG='gameplan-cloud-config-v1',LINKS='gp-sync-links-v1',BASE='gp-sync-baselines-v1',LAST='gp-sync-backup-import-v1',PENDING_INVITE='gp-pending-link-invite',DELETED='gp-sync-deleted-v1';
 const KINDS=['milestones','features','tasks','logs','tags','templates','team','custom_tag_colors'];
 const IDS={milestones:'milestone_id',features:'feature_id',tasks:'task_id',logs:'log_id',tags:'tag_id',templates:'template_id',team:'member_id'};
 let api=null,user=null,links=read(LINKS,{}),bases=read(BASE,{}),busy=false,loop=null,subscription=null,watched='',ready=false,blocked=false,inviteAttempted=false;
-let lastSyncError=null,lastSyncAt=0,remoteMissingCount=0;
+let lastSyncError=null,lastSyncAt=0,remoteMissingCount=0,deletedIntents=read(DELETED,{});
 const unique=(kind,obj)=>kind==='team'?'member:'+obj.member_id:kind==='custom_tag_colors'?'color:'+obj.color:String(obj[IDS[kind]]||'');
 const key=(kind,id)=>kind+'\u0000'+id;
 // PostgreSQL JSONB may reorder object keys without changing record values.
@@ -76,9 +76,19 @@ function remoteRows(items,pid){
  return out;
 }
 function canonical(record){return record?{kind:record.kind,item_id:record.item_id,payload:record.payload,sort_order:record.sort_order}:null}
+function deletedMarker(record,pid){
+ const kind=record.kind,id=record.item_id,source=record.payload||{};
+ let identity={};
+ if(kind==='team')identity={member_id:source.member_id||id.slice('member:'.length)};
+ else if(kind==='custom_tag_colors')identity={color:source.color||id.slice('color:'.length)};
+ else identity={[IDS[kind]]:source[IDS[kind]]||id};
+ return {kind,item_id:id,sort_order:record.sort_order,
+  payload:{...identity,project_id:pid,__gp_deleted:true,__gp_deleted_at:new Date().toISOString()}};
+}
 function changesSince(base,local){
  const diff={};
  for(const k of new Set([...Object.keys(base),...Object.keys(local)]))
+  if(base[k]?.payload?.__gp_deleted&&!local[k])continue;
   if(!equal(canonical(base[k]),canonical(local[k])))diff[k]=local[k]||null;
  return diff;
 }
@@ -88,9 +98,15 @@ function status(message,error=false){
  box.textContent=message;box.title=message;
  box.classList.toggle('gp-sync-error',error);
 }
+function pendingChanges(pid,base,local){
+ const diff=changesSince(base,local);
+ for(const k of Object.keys(deletedIntents[pid]||{}))
+  if(!local[k]&&!base[k]?.payload?.__gp_deleted)diff[k]=null;
+ return diff;
+}
 function counts(pid){
  const snap=projectRows(pid),base=bases[pid]||{};
- return Object.keys(changesSince(base,snap)).length;
+ return Object.keys(pendingChanges(pid,base,snap)).length;
 }
 function refreshStatus(){
  const pid=String(activeProject||''),linked=!!links[pid];
@@ -132,20 +148,21 @@ function makeLocalRow(record,pid){
  return {...clone(record.payload),project_id:pid};
 }
 function mergeRemote(pid,remote,base,local){
- const pending=changesSince(base,local),toApply=[];
+ const pending=pendingChanges(pid,base,local),toApply=[];
  for(const k of new Set([...Object.keys(base),...Object.keys(remote)])){
   if(Object.prototype.hasOwnProperty.call(pending,k))continue;
   if(equal(canonical(base[k]),canonical(remote[k])))continue;
   const src=remote[k]||base[k];
-  if(src)toApply.push({kind:src.kind,id:src.item_id,record:remote[k]||null});
+  if(src)toApply.push({kind:src.kind,id:src.item_id,
+   record:remote[k]?.payload?.__gp_deleted?null:(remote[k]||null),
+   explicitDelete:!!remote[k]?.payload?.__gp_deleted});
  }
  if(!toApply.length)return false;
  const draft=clone(data);
  for(const op of toApply){
   const arr=draft[op.kind];if(!Array.isArray(arr))continue;
   const findIndex=arr.findIndex(x=>unique(op.kind,x)===op.id&&(op.kind==='logs'
-    ?draft.tasks.some(t=>String(t.task_id)===String(x.task_id)&&String(t.project_id)===String(pid))
-    :String(x.project_id)===String(pid)));
+    ?true:String(x.project_id)===String(pid)));
   if(op.record){
    const row=makeLocalRow(op.record,pid);
    if(findIndex>=0)arr[findIndex]=row;else arr.push(row);
@@ -161,9 +178,9 @@ function mergeRemote(pid,remote,base,local){
     }
    }
    }else if(findIndex>=0){
-   // A server-side omission alone is not proof of deletion.
-   // Keep the browser record until a deletion can be verified safely.
-   continue;
+   // A tombstone is a confirmed intentional deletion, unlike a missing row.
+   if(op.explicitDelete)arr.splice(findIndex,1);
+   else continue;
   }
  }
  // Restore task order based on remote sort_order while retaining locally pending rows.
@@ -209,7 +226,7 @@ async function reconcile(pid,{allowWrites=true}={}){
   for(const k of missing)safeRemote[k]=base[k];
   mergeRemote(pid,safeRemote,base,liveLocal);
   persistBaseline(pid,safeRemote);
-  const local=projectRows(pid),pending=changesSince(safeRemote,local);
+  const local=projectRows(pid),pending=pendingChanges(pid,safeRemote,local);
   if(!allowWrites||!Object.keys(pending).length){
    lastSyncError=null;lastSyncAt=Date.now();return;
   }
