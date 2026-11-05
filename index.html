@@ -764,7 +764,7 @@ body{background:#fbfcfc}
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter"><option value="">All assignees</option></select><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div class="grid"><div class="card stat"><span class="muted">Total tasks</span><b id="total">0</b></div><div class="card stat"><span class="muted">Completed</span><b id="completed">0</b></div><div class="card stat"><span class="muted">Time logged</span><b id="hours">0h</b></div></div>
 <div class="gp-work-breakdown"><div id="milestoneList"></div></div><details class="card" id="teamSection"><summary><h2 style="font:700 19px Georgia,serif">Project Team</h2><div class="section-actions"><button class="button main" id="inviteMember" hidden>+ Add member</button><span class="sub">▸ Team details</span></div></summary><div id="teamList" style="margin-top:14px"></div></details></section></main></div>
-<div class="modal-back" id="back"><div class="modal" role="dialog" aria-modal="true"><div class="head"><h2 id="modalTitle"></h2><button class="button" id="close">×</button></div><div id="modalBody"></div></div></div>
+<div class="modal-back" id="back"><div class="modal" role="dialog" aria-modal="true"><div class="head"><h2 id="modalTitle"></h2><button class="button" id="close" type="button" aria-label="Close dialog" title="Close dialog">×</button></div><div id="modalBody"></div></div></div>
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
@@ -941,7 +941,7 @@ function init(){refresh()}
 function field(name,label,value='',type='text',wide=false){return `<label class="${wide?'wide':''}">${e(label)}<input name="${e(name)}" type="${type}" value="${e(value)}" ${type==='number'?'min="0" step="0.25"':''}></label>`}
 function select(name,label,items,selected,wide=false){return `<label class="${wide?'wide':''}">${e(label)}<select name="${e(name)}">${items.map(x=>`<option value="${e(x.value)}" ${String(x.value)===String(selected)?'selected':''}>${e(x.label)}</option>`).join('')}</select></label>`}
 function opts(arr,k,label='name'){return arr.map(x=>({value:x[k],label:x[label]}))}
-function modal(title,body){$('#modalTitle').textContent=title;$('#modalBody').innerHTML=body;$('#back').classList.add('show')}
+function modal(title,body){$('#back').classList.remove('gp-task-detail');$('#modalTitle').textContent=title;$('#modalBody').innerHTML=body;$('#back').classList.add('show')}
 function closeModal(){$('#back').classList.remove('show')}
 $('#close').onclick=closeModal;$('#back').addEventListener('click',ev=>{if(ev.target.id==='back')closeModal()});
 function projectFeatures(){return data.features.filter(x=>x.project_id===activeProject)}
@@ -1016,7 +1016,15 @@ function renderMilestones(){
  }).join('')||'<div class="empty-hierarchy">Nothing matches this view. Try another filter, or create a milestone and feature.</div>';
  const root=$('#milestoneList');
  root.onclick=ev=>{
-  const btn=ev.target.closest('button');if(!btn)return;
+  const btn=ev.target.closest('button');
+  if(!btn){
+   const row=ev.target.closest('.task-entry');
+   if(row&&!ev.target.closest('select,input,textarea,a,.gp-task-drag-handle,[contenteditable]')&&!row.classList.contains('gp-template-selectable')){
+    const title=row.querySelector('[data-detail]');
+    if(title){details(title.dataset.detail);return}
+   }
+   return;
+  }
   ev.preventDefault();ev.stopPropagation();
   if(btn.dataset.addFeature)quickCreate('feature',btn.dataset.addFeature);
   else if(btn.dataset.addTask)taskForm(null,btn.dataset.addTask);
@@ -1086,7 +1094,20 @@ async function removeMember(id,name){
 function details(id){
  const t=find(data.tasks,id,'task_id');if(!t)return;
  const f=feature(t.feature_id),m=milestone(f),logs=data.logs.filter(x=>String(x.task_id)===String(id));
- modal(t.title,`<div class="sub">${e(m?.name||'No milestone')} / ${e(f?.name||'No feature')}</div><p class="desc">${e(t.description||'No description yet.')}</p><p><b>Assigned:</b> ${e(member(t.assignee_member_id))} · <b>Status:</b> ${e(t.status)} · <b>Remaining:</b> ${formatHours(t.remaining_hours)}</p><h3>Time Entries</h3>${logs.length?logs.map(l=>`<div class="note"><div class="head"><div>${e(member(l.member_id))} · ${e(l.work_date)} · <b>${formatHours(l.hours)}</b></div>${canUpdate(t)?`<div class="actions"><button class="button" type="button" data-edit-log="${e(l.log_id)}">Edit</button><button class="button danger" type="button" data-delete-log="${e(l.log_id)}">Delete</button></div>`:''}</div><div class="sub">${e(l.note)}</div></div>`).join(''):'<p class="muted">No work logged yet.</p>'}<div class="controls">${canUpdate(t)?'<button class="button main" id="detailLog">Log time</button>':''}${isPM()?'<button class="button" id="detailEdit">Edit task</button>':''}</div>`);
+ const statusTone=({'To do':'todo','In progress':'progress','Blocked':'blocked','Done':'done'})[t.status]||'todo';
+ modal(t.title,`<div class="gp-detail-path">${e(m?.name||'No milestone')} <span aria-hidden="true">/</span> ${e(f?.name||'No feature')}</div>
+ <section class="gp-detail-section"><h3>Description</h3><div class="gp-detail-description">${e(t.description||'No description yet.')}</div></section>
+ <div class="gp-detail-meta">
+  <div><span class="gp-detail-meta-label">Assigned to</span><strong>${e(member(t.assignee_member_id))}</strong></div>
+  <div><span class="gp-detail-meta-label">Status</span><strong class="gp-detail-status gp-detail-${statusTone}">${e(t.status)}</strong></div>
+  <div><span class="gp-detail-meta-label">Remaining</span><strong>${formatHours(t.remaining_hours)}</strong></div>
+ </div>
+ <section class="gp-detail-section gp-detail-logs">
+  <h3>Time Entries</h3>
+  ${logs.length?logs.map(l=>`<div class="note"><div class="head"><div><strong>${e(member(l.member_id))}</strong><span class="gp-detail-log-meta">${e(l.work_date)} · ${formatHours(l.hours)}</span></div>${canUpdate(t)?`<div class="actions"><button class="button" type="button" data-edit-log="${e(l.log_id)}">Edit</button><button class="button danger" type="button" data-delete-log="${e(l.log_id)}">Delete</button></div>`:''}</div><div class="sub">${e(l.note)}</div></div>`).join(''):'<p class="muted">No time logged yet.</p>'}
+ </section>
+ <div class="controls gp-detail-controls">${canUpdate(t)?'<button class="button main" id="detailLog">Log time</button>':''}${isPM()?'<button class="button" id="detailEdit">Edit task</button>':''}</div>`);
+ $('#back').classList.add('gp-task-detail');
  if($('#detailLog'))$('#detailLog').onclick=()=>logHours(id);
  if($('#detailEdit'))$('#detailEdit').onclick=()=>editTask(id);
  $('#modalBody').onclick=ev=>{
@@ -1095,6 +1116,7 @@ function details(id){
   if(del)deleteLog(id,del.dataset.deleteLog);
  };
 }
+
 function editLog(taskId,logId){
  const task=find(data.tasks,taskId,'task_id'),log=find(data.logs,logId,'log_id');
  if(!task||!canUpdate(task)||!log||String(log.task_id)!==String(taskId))return;
