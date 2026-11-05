@@ -884,7 +884,7 @@ body{background:#fbfcfa}
  --gp-cyan:#00e5e8;--gp-ocean:#007c77;--gp-ink:#252833;
  --gp-paper:#fafafb;--gp-border:#e8e5ec;
  --gp-todo-bg:#f3f4f6;--gp-todo-edge:#adb2ba;
- --gp-progress-bg:#f8f8dc;--gp-progress-edge:#c5c900;
+ --gp-progress-bg:#fcfce9;--gp-progress-edge:#f0f600;
  --gp-blocked-bg:#fce7f5;--gp-blocked-edge:#db4aa7;
  --gp-done-bg:#ddf2ef;--gp-done-edge:#007c77;
  --gp-selection-bg:#d8f8f8;--gp-selection-edge:#00a7ac;
@@ -949,7 +949,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
 #milestoneList .milestone-summary .progress-line span{background:var(--gp-ocean)}
 #milestoneList .feature-section{background:#fff;border-color:#e5e2e8;box-shadow:none}
 #milestoneList .feature-summary,#milestoneList .feature-section.status-todo>.feature-summary{background:#f3f5f6;border-bottom-color:#e5e7eb}
-#milestoneList .feature-section.status-progress>.feature-summary{background:#f7f7d8}
+#milestoneList .feature-section.status-progress>.feature-summary{background:#fbfbe8}
 #milestoneList .feature-section.status-blocked>.feature-summary{background:#fae4f2}
 #milestoneList .feature-section.status-done>.feature-summary{background:#e0f1ee}
 #milestoneList .feature-section.status-todo{border-left-color:var(--gp-todo-edge)}
@@ -959,7 +959,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
 #milestoneList .feature-summary .title-stack strong{color:#443b4b}
 #milestoneList .feature-summary .title-stack .sub{color:#817984}
 #milestoneList .feature-section.status-todo .feature-status-label{color:#687078}
-#milestoneList .feature-section.status-progress .feature-status-label{color:#757900}
+#milestoneList .feature-section.status-progress .feature-status-label{color:#545800}
 #milestoneList .feature-section.status-blocked .feature-status-label{color:#a72b78}
 #milestoneList .feature-section.status-done .feature-status-label{color:#006865}
 #milestoneList .task-entry.status-todo{background:var(--gp-todo-bg);border-left-color:var(--gp-todo-edge)}
@@ -967,13 +967,13 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
 #milestoneList .task-entry.status-blocked{background:var(--gp-blocked-bg);border-left-color:var(--gp-blocked-edge)}
 #milestoneList .task-entry.status-done{background:var(--gp-done-bg);border-left-color:var(--gp-done-edge)}
 #milestoneList .task-entry.status-todo:hover{background:#ebedf0}
-#milestoneList .task-entry.status-progress:hover{background:#efefc8}
+#milestoneList .task-entry.status-progress:hover{background:#f8f9d8}
 #milestoneList .task-entry.status-blocked:hover{background:#f6d4e9}
 #milestoneList .task-entry.status-done:hover{background:#cbe8e4}
 #milestoneList .task-entry .task-title{color:#3d3441}
 #milestoneList .task-entry .sub{color:#726c78}
 #milestoneList .task-entry .status-select.status-todo{background:#e9ebed;color:#5d6470;border-color:#cfd2d6}
-#milestoneList .task-entry .status-select.status-progress{background:#f0f0b7;color:#656a00;border-color:#d9dc69}
+#milestoneList .task-entry .status-select.status-progress{background:var(--gp-yellow);color:#303200;border-color:#d8df00;font-weight:650}
 #milestoneList .task-entry .status-select.status-blocked{background:#f6d2e9;color:#902b6d;border-color:#edadd3}
 #milestoneList .task-entry .status-select.status-done{background:#cde9e5;color:#005e5a;border-color:#95ceca}
 #milestoneList .gp-template-selectable.gp-template-selected,
@@ -1006,15 +1006,22 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
 .gp-detail-meta>div{background:#f8f6f9;border-color:#eae5ed}
 .gp-detail-meta strong{color:#51425a}
 .gp-detail-status.gp-detail-todo{background:#eceef0;color:#5a606a}
-.gp-detail-status.gp-detail-progress{background:#f2f2c2;color:#626800}
+.gp-detail-status.gp-detail-progress{background:var(--gp-yellow);color:#303200}
 .gp-detail-status.gp-detail-blocked{background:#f9dfef;color:#972469}
 .gp-detail-status.gp-detail-done{background:#d6efec;color:#006965}
 .gp-detail-logs,.gp-detail-controls{border-top-color:var(--gp-border)}
 .gp-tag{color:#47374c}
 .gp-color-tile:focus-visible,.gp-color-add:focus-visible{outline-color:var(--gp-cyan)}
 @media(max-width:680px){.grid .stat{padding:12px 14px;min-height:77px}}
+
+/* Lemon-yellow correction: vivid exact Coolors yellow only on status identifiers. */
+#milestoneList .task-entry.status-progress{background:#fcfce9;border-left-color:var(--gp-yellow)}
+#milestoneList .feature-section.status-progress{border-left-color:var(--gp-yellow)}
+#milestoneList .feature-section.status-progress>.feature-summary{background:#fbfbe8}
+#milestoneList .task-entry.status-progress .status-select{background:var(--gp-yellow);color:#303200;border-color:#d9df00}
+#milestoneList .task-entry.status-progress:hover{background:#f8f9d8}
 </style></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.17</span></div></div><div class="top-actions"><a class="link" href="shared.html?v=2026.11.04.17">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg" alt=""><span>GamePlan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.18</span></div></div><div class="top-actions"><a class="link" href="shared.html?v=2026.11.04.17">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter"><option value="">All assignees</option></select><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div class="grid"><div class="card stat"><span class="muted">Total tasks</span><b id="total">0</b></div><div class="card stat"><span class="muted">Completed</span><b id="completed">0</b></div><div class="card stat"><span class="muted">Time logged</span><b id="hours">0h</b></div></div>
@@ -1023,7 +1030,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.04.17';
+const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.04.18';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=['Ethan','Jerry','Jenny'];
@@ -1542,4 +1549,4 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="gameplan.js?v=2026.11.04.17"></script></body></html>
+</script><script src="gameplan.js?v=2026.11.04.18"></script></body></html>
