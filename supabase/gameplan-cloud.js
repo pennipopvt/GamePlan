@@ -22,7 +22,7 @@ export function createGamePlanCloud({url,publishableKey}){
   async signInWithDiscord(){
    const {data,error}=await client.auth.signInWithOAuth({
     provider:'discord',
-    options:{redirectTo:location.origin+location.pathname}
+    options:{redirectTo:location.origin+'/ProjectPlanner/supabase/discord.html'}
    });
    check(error);return data;
   },
