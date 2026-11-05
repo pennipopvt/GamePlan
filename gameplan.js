@@ -40,7 +40,7 @@ const gpOriginalRow=taskRow;
 taskRow=function(t){
  let html=gpOriginalRow(t),extra=gpTagBadges(t);
  if(extra)html=html.replace('</button><div class="sub">','</button><div class="gp-badges">'+extra+'</div><div class="sub">');
- if(gpSelecting)html=html.replace('<div class="task-entry ', '<div class="task-entry gp-selectable ').replace('"><div><button class="task-title','"><label class="gp-task-select"><input type="checkbox" data-gp-select="'+e(t.task_id)+'" '+(gpSelected.has(String(t.task_id))?'checked':'')+' aria-label="Select task"></label><div><button class="task-title');
+ if(gpSelecting)html=html.replace('<div class="task-entry ', '<div class="task-entry gp-template-selectable '+(gpSelected.has(String(t.task_id))?'gp-template-selected ':'')+'" data-gp-template-task="'+e(t.task_id)+'" aria-selected="'+(gpSelected.has(String(t.task_id))?'true':'false')+'" ');
  return html;
 };
 /* Drag-and-drop task reassignment: only the feature ID changes, preserving logs and metadata. */
@@ -202,7 +202,17 @@ function gpAddShell(){
  const bar=document.createElement('div');bar.id='gpSelectionBar';bar.hidden=true;$('#milestoneList').before(bar);
  $('#gpPrimary').onclick=ev=>{const b=ev.target.closest('[data-page]');if(b)gpNavigate(b.dataset.page)};
  $('#gpSelectTasks').onclick=()=>{gpSelecting=!gpSelecting;gpSelected.clear();renderMilestones();gpSelectionBar()};
- $('#milestoneList').addEventListener('change',ev=>{const el=ev.target.closest('[data-gp-select]');if(!el)return;el.checked?gpSelected.add(el.dataset.gpSelect):gpSelected.delete(el.dataset.gpSelect);gpSelectionBar()});
+ $('#milestoneList').addEventListener('click',ev=>{
+  if(!gpSelecting)return;
+  const row=ev.target.closest('.gp-template-selectable[data-gp-template-task]');
+  if(!row||!$('#milestoneList').contains(row)||ev.target.closest('select,input,textarea,.gp-task-drag-handle,[data-gp-delete],.actions,.icon-edit'))return;
+  ev.preventDefault();ev.stopImmediatePropagation();
+  const id=String(row.dataset.gpTemplateTask);
+  if(gpSelected.has(id))gpSelected.delete(id);else gpSelected.add(id);
+  row.classList.toggle('gp-template-selected',gpSelected.has(id));
+  row.setAttribute('aria-selected',String(gpSelected.has(id)));
+  gpSelectionBar();
+ },true);
  const setSidebarState=collapsed=>{
   document.querySelector('.app').classList.toggle('gp-collapsed',collapsed);
   sidebarToggle.setAttribute('aria-expanded',String(!collapsed));
@@ -222,7 +232,7 @@ function gpSelectionBar(){
  const bar=$('#gpSelectionBar');bar.hidden=!gpSelecting;
  $('#gpSelectTasks').textContent=gpSelecting?'Cancel Template':'Create Template';
  if(!gpSelecting)return;
- bar.innerHTML='<div class="gp-flex">'+gpSelected.size+' tasks selected <button class="button main" id="gpSaveSelection" '+(gpSelected.size?'':'disabled')+'>Save as Template</button></div>';
+ bar.innerHTML='<div class="gp-flex"><span>Click tasks to select them · '+gpSelected.size+' selected</span><button class="button main" id="gpSaveSelection" '+(gpSelected.size?'':'disabled')+'>Save as Template</button></div>';
  $('#gpSaveSelection').onclick=gpSaveTemplate;
 }
 function gpRenderPage(){
