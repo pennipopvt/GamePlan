@@ -253,20 +253,12 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 
 /* Sidebar navigation: desktop toggle stays visible; hidden subtabs really hide. */
 #menuToggle{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;margin-right:8px;min-width:39px;min-height:39px;font-size:20px;line-height:1}
-#gpBoardNav[hidden],#gpBoardView[hidden],#gpExtra[hidden],#gpTemplateChoice[hidden]{display:none!important}
-.gp-collapsed #gpBoardNav{display:none!important}
 .gp-collapsed .gp-nav{white-space:nowrap}
 @media(max-width:680px){
  #menuToggle{display:inline-flex}
- #gpBoardNav[hidden]{display:none!important}
 }
 
 /* Board subnavigation stays nested under its parent tab. */
-#gpBoardNav{display:flex;flex-direction:column;gap:5px;margin:0 0 7px 17px;padding:3px 0 4px 11px;border-left:1px solid #c6d9cf}
-#gpBoardNav[hidden]{display:none!important}
-#gpBoardNav .side-label{font-size:9px;letter-spacing:1px;padding:8px 7px 2px}
-#gpBoardNav .side-link{font-size:12px;padding:9px 10px;gap:5px;border-radius:7px}
-#gpBoardNav .side-count{font-size:10px}
 .gp-sidebar-toggle{border:0;background:transparent;color:#517368;border-radius:9px;cursor:pointer}
 .gp-sidebar-toggle:hover{background:#dce9e0;color:#246c60}
 #menuToggle{display:none}
@@ -358,7 +350,6 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 #gpPrimary>.gp-nav .gp-icon svg{display:block;width:20px;height:20px;flex:0 0 20px}
 #gpPrimary>.gp-nav .gp-text{grid-column:2;grid-row:1;align-self:center}
 .gp-collapsed #gpPrimary>.gp-nav .gp-text{display:none}
-.gp-collapsed #gpBoardNav,.gp-collapsed .sidebar-foot{display:none!important}
 .gp-collapsed .gp-project-menu{left:calc(100% + 8px);right:auto;top:0;width:220px;max-width:calc(100vw - 85px)}
 @media(max-width:680px){
  .app.gp-collapsed{display:block}
@@ -376,11 +367,6 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 #gpProjectTitle{font-size:21px;line-height:1.2;padding:4px 7px;margin-left:-7px}
 .workspace>.top>.brand,#gpHeaderBrand,#gpHeaderDescription{display:none}
 #notice[hidden]{display:none!important}
-.gp-board-footer{margin-top:28px;padding:19px 21px;border:1px solid #dce7df;border-radius:12px;background:#f8faf8}
-.gp-board-footer h2{font:700 17px Georgia,serif;margin:0 0 6px;color:#2f5852}
-.gp-board-footer p{margin:0 0 14px;font-size:12px;color:#758a81}
-.gp-board-footer .top-actions{display:flex;justify-content:flex-start;align-items:center;gap:8px;flex-wrap:wrap}
-.gp-board-footer .top-actions .button{font-size:12px;padding:9px 12px}
 .gp-site-footer{margin-top:28px;padding:16px 0 2px;border-top:1px solid #dce6df;color:#7a9188;font-size:11px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
 .gp-site-footer p{margin:0}
 .gp-brand-mark{display:block;width:24px;height:24px;flex:none;object-fit:contain}
@@ -392,7 +378,6 @@ details[open]>summary .chevron{transform:rotate(90deg)}
  #menuToggle{display:inline-flex;flex:0 0 auto}
  .workspace>.top>.gp-header-project{min-width:0}
  #gpProjectTitle{font-size:19px}
- .gp-board-footer{padding:15px}
 }
 
 /* Subtle sidebar movement without shifting the fixed icon rail. */
@@ -426,7 +411,6 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 
 /* Classic six-dot drag grip. */
 .gp-task-drag-handle svg{display:block}
-.gp-board-footer #gpUndoAction,.gp-board-footer #gpRedoAction{font-weight:600}
 
 /* Work Breakdown actions stay in one right-aligned group. */
 .gp-breakdown-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap}
@@ -462,8 +446,6 @@ button,input,textarea,select{font-family:inherit}
 #gpPrimary>.gp-nav{font-weight:500;font-size:12px;color:#71857a;border-radius:7px}
 #gpPrimary>.gp-nav.active{background:#e9f3ec;color:#357b63;font-weight:600}
 #gpPrimary>.gp-nav:hover{background:#eef5ef}
-#gpBoardNav .side-nav button,#gpBoardNav .side-label{font-family:inherit;font-weight:400}
-#gpBoardNav .side-nav button.active{font-weight:600}
 .gp-header-project .gp-project-label{font-family:inherit;font-size:9px;font-weight:500;letter-spacing:1px;color:#97a69b}
 #gpProjectTitle{font-family:inherit;font-size:20px;font-weight:500;letter-spacing:-.55px;color:#334e46}
 #pageHeading{font-family:inherit!important;font-size:21px!important;font-weight:500!important;letter-spacing:-.55px;color:#364f45}
@@ -566,8 +548,6 @@ button,input,textarea,select{font-family:inherit}
 .gp-project-label{font-size:10px!important}
 #gpProjectTitle{font-size:22px}
 #gpPrimary>.gp-nav{font-size:14px}
-#gpBoardNav .side-nav button{font-size:12px}
-#gpBoardNav .side-label{font-size:10px}
 #milestoneList .milestone-summary .title-stack strong{font-size:16px}
 #milestoneList .feature-summary .title-stack strong{font-size:14px}
 #milestoneList .task-entry .task-title{font-size:14px}
@@ -588,18 +568,6 @@ button,input,textarea,select{font-family:inherit}
 #milestoneList .task-entry.status-done{border-left-color:#5ba68c}
 /* Vertical expansion uses measured height for stable cross-browser animation. */
 #milestoneList details.gp-details-animating{overflow:hidden;will-change:height}
-#gpBoardNav:not([hidden]){
- overflow:hidden;
- max-height:var(--gp-board-nav-height,1500px);opacity:1;
- transition:max-height .24s cubic-bezier(.22,.68,.25,1),opacity .18s ease;
-}
-#gpBoardNav.gp-subtabs-closed:not([hidden]){
- max-height:0;opacity:0;visibility:hidden;pointer-events:none;
-}
-@media(prefers-reduced-motion:reduce){
- #gpBoardNav:not([hidden]){transition:none}
-}
-
 /* Overview is the only section title; milestones are the standalone cards. */
 .gp-overview-head{align-items:flex-start;gap:14px 22px}
 .gp-overview-intro{min-width:0;flex:1}
@@ -746,7 +714,6 @@ body{background:#fbfcfc}
 #gpPrimary>.gp-nav{color:#667d87}
 #gpPrimary>.gp-nav.active{background:#e1edf2;color:#39778e}
 #gpPrimary>.gp-nav:hover{background:#eaf2f5}
-#gpBoardNav .side-nav .active{color:#39778e}
 .gp-header-actions .button{color:#538294}
 .gp-header-actions .button:hover{color:#2a718b}
 .gp-overview-heading #pmActions .button,.gp-overview-heading #gpSelectTasks{color:#397e95}
@@ -754,8 +721,6 @@ body{background:#fbfcfc}
 .button.main{background:#427f96;color:#fff;border-color:#427f96}
 .button.main:hover{background:#346e85}
 .button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline-color:#4896ae}
-.gp-board-footer{background:#f5f9fa;border-color:#dce8ed}
-.gp-board-footer h2{color:#426c79}
 .gp-header-project #gpProjectTrigger{color:#4c879d}
 .gp-header-project #gpProjectTrigger:hover{background:#e5f0f4;color:#2b728d}
 
@@ -766,19 +731,12 @@ body{background:#fbfcfa}
 #gpPrimary>.gp-nav{color:#5b706b}
 #gpPrimary>.gp-nav.active{background:#e5f0e9;color:#386e59}
 #gpPrimary>.gp-nav:hover{background:#eef4ef;color:#365e4e}
-#gpBoardNav{border-left-color:#d2e0d8}
-#gpBoardNav .side-link{color:#688079}
-#gpBoardNav .side-link.active{background:#e6f1e9;color:#366d57;box-shadow:none;font-weight:600}
-#gpBoardNav .side-link:hover{background:#eff5f0}
-#gpBoardNav .side-count{color:#6f8d7d}
 .gp-header-actions .button{color:#5e8276}
 .gp-header-actions .button:hover{color:#386e58}
 .gp-overview-heading #pmActions .button,.gp-overview-heading #gpSelectTasks{color:#477c67}
 .gp-overview-heading #pmActions .button:hover,.gp-overview-heading #gpSelectTasks:hover{color:#2f6250}
 .button.main{background:#508b70;border-color:#508b70;color:white}
 .button.main:hover{background:#3d755d}
-.gp-board-footer{background:#f7faf7;border-color:#e0e9e2}
-.gp-board-footer h2{color:#426b58}
 .gp-header-project #gpProjectTrigger{color:#5a8270}
 .gp-header-project #gpProjectTrigger:hover{background:#e9f3ed;color:#326d51}
 #milestoneList .milestone-section{border-color:#d9e5de}
@@ -921,7 +879,6 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
  color:#fff;background:#ffffff2b;border-radius:8px;font-weight:600;
  box-shadow:inset 3px 0 0 var(--gp-cyan)
 }
-#gpBoardNav{border-left-color:#ffffff45}
 #gpBoardNav .side-label,.sidebar .side-label{color:#d9b6dd}
 #gpBoardNav .side-link,.sidebar .side-link{color:#ead8e9}
 #gpBoardNav .side-link:hover,.sidebar .side-link:hover{background:#ffffff17;color:#fff}
@@ -989,8 +946,6 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
 #milestoneList .gp-task-drag-handle{color:#8b8794}
 #milestoneList .gp-task-drag-handle:hover{color:var(--gp-amethyst);background:#e9e0eb}
 /* Dialogs, analytics, team and template surfaces should belong to the same palette. */
-.gp-board-footer{background:#f6f2f8;border-color:#e7ddea}
-.gp-board-footer h2{color:var(--gp-amethyst)}
 .gp-site-footer{border-top-color:var(--gp-border);color:#817887}
 .gp-card,.gp-template-task,.gp-project-choice{border-color:var(--gp-border);background:#fff}
 .gp-project-choice:hover{background:#e7f7f5;border-color:#8cccca}
@@ -1032,7 +987,6 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
 #gpPrimary>.gp-nav.active,.gp-collapsed #gpPrimary>.gp-nav.active{
  background:#ffffff1d;color:#fff;box-shadow:inset 3px 0 0 #b5d9da
 }
-#gpBoardNav{border-left-color:#ffffff30}
 #gpBoardNav .side-label,.sidebar .side-label{color:#aab1c0}
 #gpBoardNav .side-link,.sidebar .side-link{color:#c7cfda}
 #gpBoardNav .side-link:hover,.sidebar .side-link:hover{background:#ffffff12;color:#fff}
@@ -1198,7 +1152,6 @@ a:hover,.link:hover{color:#80115c}
 .gp-filter-chips{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:2px 0 14px}
 .gp-filter-chip{display:inline-flex;gap:7px;align-items:center;border:1px solid #ecc1db;border-radius:7px;padding:6px 9px;background:#fff1fa;color:#80205d;font-size:12px}
 .gp-filter-chip:hover{background:#fbe1f1}
-.gp-filter-help{font-size:11px;color:#8b7e8a;margin:10px 0 0}
 .gp-tag-editor{margin-top:20px!important;padding:16px;border:1px solid #eee4ed;border-radius:10px;background:#fbf9fb}
 .gp-tag-editor>.gp-tag-heading{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:11px}
 .gp-tag-editor .gp-tag-heading strong{font-size:13px}
@@ -1831,7 +1784,6 @@ a:hover,.link:hover{color:#80115c}
 .gp-header-project #gpProjectTrigger[aria-expanded="true"]{background:var(--gp-accent-pale)}
 
 /* Include/exclude tag facets: distinct, readable states. */
-.gp-filter-tag-hint{margin:0 0 10px;font-size:12px;line-height:1.45;color:#817784}
 .gp-filter-choice .gp-filter-state{font-weight:750;font-size:15px;line-height:1;margin-left:3px}
 .gp-filter-choice.gp-filter-excluded,
 .gp-filter-choice.gp-filter-excluded[aria-pressed="true"]{
@@ -1863,7 +1815,7 @@ a:hover,.link:hover{color:#80115c}
  #gpBoardView #pageHeading,#gpSecondaryPageTitle{font-size:27px!important;letter-spacing:-.6px!important}
 }
 </style></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.05.46</span></div></div><div class="top-actions"><a class="link" href="shared.html?v=2026.11.04.17">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.05.47</span></div></div><div class="top-actions"><a class="link" href="shared.html?v=2026.11.04.17">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter" hidden aria-hidden="true"><option value="">All assignees</option></select><div class="gp-filter-wrap"><button type="button" class="button gp-filter-trigger" id="gpFilterTrigger" aria-expanded="false" aria-controls="gpFilterPanel"><span aria-hidden="true">⚲</span> Filters <span id="gpFilterCount" class="gp-filter-count" hidden>0</span></button><div class="gp-filter-panel" id="gpFilterPanel" hidden></div></div><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div id="gpFilterChips" class="gp-filter-chips" hidden></div>
@@ -1873,7 +1825,7 @@ a:hover,.link:hover{color:#80115c}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.05.46';
+const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.05.47';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=['Ethan','Jerry','Jenny'];
@@ -2394,4 +2346,4 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="gameplan.js?v=2026.11.05.46"></script></body></html>
+</script><script src="gameplan.js?v=2026.11.05.47"></script></body></html>
