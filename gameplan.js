@@ -48,7 +48,7 @@ const gpDragTaskRow=taskRow;
 taskRow=function(task){
  let html=gpDragTaskRow(task);
  if(!isPM())return html;
- const handle='<span class="gp-task-drag-handle" draggable="true" data-gp-drag-task="'+e(task.task_id)+'" title="Drag to another feature" aria-label="Drag '+e(task.title)+' to another feature" role="img"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="currentColor"><circle cx="8" cy="5" r="1.7"/><circle cx="16" cy="5" r="1.7"/><circle cx="8" cy="12" r="1.7"/><circle cx="16" cy="12" r="1.7"/><circle cx="8" cy="19" r="1.7"/><circle cx="16" cy="19" r="1.7"/></svg></span>';
+ const handle='<span class="gp-task-drag-handle" draggable="true" data-gp-drag-task="'+e(task.task_id)+'" title="Drag to another feature" aria-label="Drag '+e(task.title)+' to another feature" role="img"><svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><g fill="currentColor" stroke="none"><circle cx="9" cy="9" r="1.5"/><circle cx="15" cy="9" r="1.5"/><circle cx="9" cy="15" r="1.5"/><circle cx="15" cy="15" r="1.5"/></g></svg></span>';
  return html.replace(/(<div class="task-entry [^"]*">)/, '$1'+handle);
 };
 const gpOriginalRenderMilestones=renderMilestones;
@@ -487,4 +487,65 @@ $('#milestoneList').addEventListener('click',ev=>{
  if(object&&object.project_id===activeProject)deleteItem(kind,id,object.name||object.title);
 },true);
 
-gpAddShell();render();
+/* Session-local undo/redo for saved changes. Typing keeps native browser undo. */
+const gpUndoStack=[],gpRedoStack=[],gpHistoryLimit=40;
+const gpSavedPersist=persist;
+persist=function(){
+ const previous=localStorage.getItem(LOCAL_KEY);
+ const next=JSON.stringify(data);
+ gpSavedPersist();
+ if(previous!==null&&previous!==next){
+  gpUndoStack.push(previous);
+  if(gpUndoStack.length>gpHistoryLimit)gpUndoStack.shift();
+  gpRedoStack.length=0;
+ }
+ gpUpdateHistoryControls();
+};
+function gpUpdateHistoryControls(){
+ const back=$('#gpUndoAction'),forward=$('#gpRedoAction');
+ if(back){back.disabled=!gpUndoStack.length;back.title=gpUndoStack.length?'Undo last saved change (Ctrl+Z)':'No changes to undo'}
+ if(forward){forward.disabled=!gpRedoStack.length;forward.title=gpRedoStack.length?'Redo last undone change (Ctrl+Shift+Z)':'No changes to redo'}
+}
+function gpHistoryNavigate(direction){
+ const undo=direction==='undo',source=undo?gpUndoStack:gpRedoStack,destination=undo?gpRedoStack:gpUndoStack;
+ if(!source.length)return;
+ const previous=source.pop(),current=localStorage.getItem(LOCAL_KEY)||JSON.stringify(data);
+ try{
+  const restored=normalizeLocal(JSON.parse(previous));
+  localStorage.setItem(LOCAL_KEY,previous);
+  destination.push(current);
+  if(destination.length>gpHistoryLimit)destination.shift();
+  data=restored;
+  if(!data.projects.some(p=>p.project_id===activeProject)){
+   activeProject=data.projects[0]?.project_id||'';
+   saveProject();
+  }
+  closeModal();
+  render();
+ }catch(err){source.push(previous);gpAlert('Could not restore change: '+err.message)}
+ gpUpdateHistoryControls();
+}
+function gpSetupHistoryControls(){
+ const area=document.querySelector('.gp-board-footer .top-actions');
+ if(!area)return;
+ const undo=document.createElement('button'),redo=document.createElement('button');
+ undo.type='button';undo.id='gpUndoAction';undo.className='button';undo.textContent='↶ Undo';
+ redo.type='button';redo.id='gpRedoAction';redo.className='button';redo.textContent='↷ Redo';
+ area.prepend(undo,redo);
+ undo.onclick=()=>gpHistoryNavigate('undo');
+ redo.onclick=()=>gpHistoryNavigate('redo');
+ document.addEventListener('keydown',ev=>{
+  if(!(ev.ctrlKey||ev.metaKey)||ev.altKey||ev.key.toLowerCase()!=='z')return;
+  const target=ev.target;
+  if(target?.closest?.('input, textarea, [contenteditable="true"], [role="textbox"]'))return;
+  if(document.querySelector('#gpDialogOverlay')||!$('#back').classList.contains('hidden')&&getComputedStyle($('#back')).display!=='none')return;
+  const direction=ev.shiftKey?'redo':'undo';
+  if((direction==='undo'?gpUndoStack:gpRedoStack).length){
+   ev.preventDefault();gpHistoryNavigate(direction);
+  }
+ });
+ gpUpdateHistoryControls();
+}
+gpAddShell();
+gpSetupHistoryControls();
+render();
