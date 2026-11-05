@@ -552,7 +552,19 @@ rpc=async function(op,p={}){
  }
  if(current()&&roleFor(activeProject)==='viewer')
   throw Error('This project is view-only. Ask the owner for Editor access.');
+ if(current()&&['addMember','updateMember','removeMember'].includes(op))
+  throw Error('Team access is managed through authenticated invitations and the Team tab.');
  return originalLocalRpc(op,p);
+};
+// Existing project delete button was local-only. Never let it hide a live
+// shared project without deleting the server record and its memberships.
+const previousDeleteProject=gpDeleteProject;
+gpDeleteProject=async function(){
+ if(current()){
+  if(roleFor(activeProject)!=='owner')return gpAlert('Only the project owner can delete it.');
+  return gpAlert('Shared project deletion is temporarily disabled to protect your team data. Export a backup first.');
+ }
+ return previousDeleteProject();
 };
 const previousCloseModal=closeModal;
 closeModal=function(...args){const value=previousCloseModal(...args);schedule();return value};
@@ -869,9 +881,14 @@ window.addEventListener('offline',refreshStatus);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){void initialize().then(schedule)}});
 // Realtime is the fast path. A lightweight refresh every 12 seconds is a
 // fallback when a browser silently loses its websocket connection.
+let teamRefreshCounter=0;
 setInterval(()=>{
  if(document.hidden||!navigator.onLine)return;
- if(ready&&api&&user&&current()){void reconcile(String(activeProject));return}
+ if(ready&&api&&user&&current()){
+  void reconcile(String(activeProject));
+  if(++teamRefreshCounter%3===0)void reloadTeam(activeProject).catch(err=>console.warn('[GamePlan team refresh]',err));
+  return;
+ }
  void initialize().then(schedule);
 },12000);
 async function initialize(){
