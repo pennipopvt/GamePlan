@@ -170,7 +170,7 @@ refresh=function(){if(!api)return previousRefresh();return queue.then(()=>loadPr
 const previousRpc=rpc;
 rpc=async function(op,p={}){
  if(!api)return Promise.reject(Error('Cloud connection is unavailable'));
- if(role==='viewer')throw Error('You have view-only access to this project.');
+ if(op!=='createProject'&&role==='viewer')throw Error('You have view-only access to this project.');
  if(op==='removeMember'&&knownMembers.some(m=>String(m.user_id)===String(p.member_id))){
   if(role!=='owner')throw Error('Only project owners can remove a teammate’s cloud access.');
   if(data.tasks.some(t=>t.project_id===currentProjectId&&String(t.assignee_member_id)===String(p.member_id)))throw Error('Reassign the member’s tasks before removing access.');
@@ -236,7 +236,15 @@ function ensureCloudUI(){
 function showWelcome(error=''){
  const overlay=document.getElementById('gpCloudWelcome')||document.createElement('div');
  overlay.id='gpCloudWelcome';overlay.className='gp-cloud-setup';
- overlay.innerHTML='<h1>GamePlan Cloud</h1><p>'+e(error||'You are connected! Create your first shared project or import one from the Cloud Preview.')+'</p><p><a class="button" href="supabase/discord.html">Cloud Preview / import projects</a> <a class="button" href="index.html">Local board</a></p>';
+ overlay.innerHTML='<h1>GamePlan Cloud</h1><p>'+e(error||'You are connected! Create your first shared project or import one from the Cloud Preview.')+'</p><p><button class="button main" id="gpCloudCreateFirst" type="button">+ Create shared project</button> <a class="button" href="supabase/discord.html">Cloud Preview / import projects</a> <a class="button" href="index.html">Local board</a></p>';
+ const create=overlay.querySelector('#gpCloudCreateFirst');
+ create.disabled=!api||!me;
+ create.onclick=async()=>{
+  const name=await gpPrompt('New shared project name','');
+  if(!name?.trim())return;
+  try{const project=await api.createProject(name.trim());await loadProject(project.id)}
+  catch(err){gpAlert('Could not create project: '+err.message)}
+ };
  $cloud('.workspace').prepend(overlay);
  $cloud('#mainApp').hidden=true;
 }
