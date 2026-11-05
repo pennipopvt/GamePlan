@@ -1177,17 +1177,58 @@ a:hover,.link:hover{color:#80115c}
 #gpSidebarTop .sidebar-brand .gp-brand-plan{
  color:#ff3cc7;font-weight:750;
 }
+
+/* Deckbuilder-style multi-facet filters. */
+.gp-filter-wrap{position:relative;flex:none}
+.gp-filter-wrap .gp-filter-trigger{display:flex;align-items:center;gap:7px;padding:9px 13px;font-size:13px;white-space:nowrap}
+.gp-filter-wrap .gp-filter-trigger[aria-expanded="true"]{border-color:#e56bb8;background:#fce8f5;color:#8c185f}
+.gp-filter-count{display:inline-flex;align-items:center;justify-content:center;background:#ff3cc7;color:#35102b;min-width:19px;height:19px;border-radius:20px;padding:0 5px;font-size:11px;font-weight:700}
+.gp-filter-panel{position:absolute;z-index:90;right:0;top:calc(100% + 8px);width:min(385px,calc(100vw - 34px));max-height:min(69vh,580px);overflow-y:auto;border:1px solid #e9d8e5;background:#fff;border-radius:12px;padding:15px;box-shadow:0 16px 42px #361c3830}
+.gp-filter-panel[hidden],.gp-filter-chips[hidden],.gp-filter-count[hidden]{display:none!important}
+.gp-filter-panel-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.gp-filter-panel-header strong{font-size:15px;font-weight:600;color:#4c1a57}
+.gp-filter-clear{border:0;background:transparent;color:#9e276e;padding:4px 0;font-size:12px}
+.gp-filter-group{padding:12px 0;border-top:1px solid #f0eaf1}
+.gp-filter-group-heading{font-size:11px;font-weight:650;text-transform:uppercase;letter-spacing:.08em;color:#857486;margin-bottom:9px}
+.gp-filter-choices{display:flex;flex-wrap:wrap;gap:7px}
+.gp-filter-choice{display:inline-flex;align-items:center;gap:6px;border:1px solid #e4dfe7;border-radius:7px;padding:7px 9px;background:#f9f9fa;color:#55515a;font-size:12px;text-align:left;line-height:1.2}
+.gp-filter-choice:hover{background:#f9eaf4;border-color:#e9add2}
+.gp-filter-choice[aria-pressed="true"]{background:#f9d8ed;color:#7c155a;border-color:#ea84c2;box-shadow:inset 0 0 0 1px #ea84c2}
+.gp-filter-dot{width:9px;height:9px;flex:none;border-radius:50%;background:var(--gp-dot,#b4b2bc)}
+.gp-filter-chips{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:2px 0 14px}
+.gp-filter-chip{display:inline-flex;gap:7px;align-items:center;border:1px solid #ecc1db;border-radius:7px;padding:6px 9px;background:#fff1fa;color:#80205d;font-size:12px}
+.gp-filter-chip:hover{background:#fbe1f1}
+.gp-filter-help{font-size:11px;color:#8b7e8a;margin:10px 0 0}
+.gp-tag-editor{margin-top:20px!important;padding:16px;border:1px solid #eee4ed;border-radius:10px;background:#fbf9fb}
+.gp-tag-editor>.gp-tag-heading{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:11px}
+.gp-tag-editor .gp-tag-heading strong{font-size:13px}
+.gp-tag-editor .gp-tag-add-inline{background:transparent;border:0;color:#a62179;font-size:12px;padding:4px;white-space:nowrap}
+.gp-tag-editor .gp-tag-list{margin:0;gap:8px}
+.gp-tag-editor .gp-tag-chip{display:inline-flex;align-items:center;padding:7px 10px;border-radius:8px;border:1px solid #e2d8e5;background:#fff;cursor:pointer;gap:7px;font-size:12px;font-weight:600}
+.gp-tag-editor .gp-tag-chip input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.gp-tag-editor .gp-tag-chip:has(input:checked){background:color-mix(in srgb,var(--tc),white 83%);border-color:color-mix(in srgb,var(--tc),white 32%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--tc),white 45%)}
+.gp-tag-editor .gp-tag-chip:focus-within{outline:2px solid #e353b0;outline-offset:2px}
+.gp-tag-editor .gp-tag-chip .gp-tag{border:0;padding:0;background:transparent;color:#463447}
+.gp-tag-editor .gp-tag-chip .gp-tag-indicator{width:9px;height:9px;background:var(--tc);border-radius:50%;flex:none}
+.gp-tag-editor .gp-tag-chip .gp-tag-check{color:#8a1c64;visibility:hidden}
+.gp-tag-editor .gp-tag-chip:has(input:checked) .gp-tag-check{visibility:visible}
+.gp-tag-editor .gp-tag-quick{display:flex;align-items:center;gap:8px;margin-top:11px;flex-wrap:wrap}
+.gp-tag-editor .gp-tag-quick[hidden]{display:none}
+.gp-tag-editor .gp-tag-quick input{width:min(200px,100%);flex:1;min-width:140px}
+.gp-tag-editor .gp-tag-quick button{padding:8px 10px;font-size:12px}
+@media(max-width:680px){.gp-filter-wrap .gp-filter-trigger{padding:8px 10px}.gp-filter-panel{right:-6px}}
 </style></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.24</span></div></div><div class="top-actions"><a class="link" href="shared.html?v=2026.11.04.17">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.25</span></div></div><div class="top-actions"><a class="link" href="shared.html?v=2026.11.04.17">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
-<section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter"><option value="">All assignees</option></select><button class="button main" id="newTask" hidden>+ Task</button></div></div>
+<section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter" hidden aria-hidden="true"><option value="">All assignees</option></select><div class="gp-filter-wrap"><button type="button" class="button gp-filter-trigger" id="gpFilterTrigger" aria-expanded="false" aria-controls="gpFilterPanel"><span aria-hidden="true">⚲</span> Filters <span id="gpFilterCount" class="gp-filter-count" hidden>0</span></button><div class="gp-filter-panel" id="gpFilterPanel" hidden></div></div><button class="button main" id="newTask" hidden>+ Task</button></div></div>
+<div id="gpFilterChips" class="gp-filter-chips" hidden></div>
 <div class="grid"><div class="card stat"><span class="muted">Total tasks</span><b id="total">0</b></div><div class="card stat"><span class="muted">Completed</span><b id="completed">0</b></div><div class="card stat"><span class="muted">Time logged</span><b id="hours">0h</b></div></div>
 <div class="gp-work-breakdown"><div id="milestoneList"></div></div><details class="card" id="teamSection"><summary><h2 style="font:700 19px Georgia,serif">Project Team</h2><div class="section-actions"><button class="button main" id="inviteMember" hidden>+ Add member</button><span class="sub">▸ Team details</span></div></summary><div id="teamList" style="margin-top:14px"></div></details></section></main></div>
 <div class="modal-back" id="back"><div class="modal" role="dialog" aria-modal="true"><div class="head"><h2 id="modalTitle"></h2><button class="button" id="close" type="button" aria-label="Close dialog" title="Close dialog">×</button></div><div id="modalBody"></div></div></div>
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.04.24';
+const LOCAL_KEY='little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY='little-dock-local-project',APP_VERSION='2026.11.04.25';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=['Ethan','Jerry','Jenny'];
@@ -1414,7 +1455,7 @@ function taskRow(t){
  return `<div class="task-entry ${statusClass}"><div><button class="task-title ${t.status==='Done'?'task-done':''}" data-detail="${e(t.task_id)}">${e(t.title)}</button><div class="sub">${e(t.priority)} · ${formatHours(t.estimated_hours)} estimated · ${formatHours(logs)} logged</div></div><div class="meta-person sub">${e(member(t.assignee_member_id))}</div><select class="status-select ${statusClass}" data-status="${e(t.task_id)}" aria-label="Status for ${e(t.title)}">${ST.map(status=>`<option value="${e(status)}" ${t.status===status?'selected':''}>${e(status)}</option>`).join('')}</select><div class="actions"><button data-log="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Manage time: ${e(t.title)}" title="Manage time"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button><button class="icon-edit" data-edit="${e(t.task_id)}" type="button" aria-label="Edit task: ${e(t.title)}" title="Edit task"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></div>`;
 }
 function renderMilestones(){
- const filtered=visibleTasks(),project=projectTasks(),isFiltered=activeView==='open'||activeView==='done'||!!$('#assigneeFilter').value||!!$('#searchTasks').value;
+ const filtered=visibleTasks(),project=projectTasks(),isFiltered=activeView==='open'||activeView==='done'||!!$('#assigneeFilter').value||!!$('#searchTasks').value||(typeof gpHasFacetFilters==='function'&&gpHasFacetFilters());
  $('#total').textContent=filtered.length;
  $('#completed').textContent=filtered.filter(t=>t.status==='Done').length;
  $('#hours').textContent=formatHours(filtered.reduce((n,t)=>n+taskHours(t),0));
@@ -1706,4 +1747,4 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="gameplan.js?v=2026.11.04.24"></script></body></html>
+</script><script src="gameplan.js?v=2026.11.04.25"></script></body></html>
