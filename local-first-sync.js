@@ -358,6 +358,15 @@ async function joinShared(cloudId){
 function controls(){
  const area=$s('.gp-header-actions');if(!area)return;
  area.querySelector('.gp-open-cloud')?.remove();
+ // Backups/imports remain available, but are recovery tools rather than
+ // competing "boards" in the main header.
+ const more=document.createElement('details');more.className='gp-more-menu';
+ more.innerHTML='<summary class="button" aria-label="More project options">··· More</summary><div class="gp-more-popover"></div>';
+ const menu=more.querySelector('.gp-more-popover');
+ for(const id of ['export','import','importMilestone','fileInput','milestoneFileInput']){
+  const node=$s('#'+id);if(node)menu.append(node);
+ }
+ area.append(more);
  const box=document.createElement('div');box.className='gp-sync-tools';
  box.innerHTML='<span id="gpSyncStatus" role="status">Saved on this device</span>'+
   '<button class="button gp-sync-connect" id="gpSyncConnect">Connect Discord</button>'+
