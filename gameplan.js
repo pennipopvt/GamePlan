@@ -217,12 +217,6 @@ function gpAddShell(){
   const control=document.getElementById(id);
   if(control)headerActions.appendChild(control);
  }
- if(!new URLSearchParams(location.search).has('cloud')){
-  const cloudLink=document.createElement('a');
-  cloudLink.href='index.html?cloud=1';cloudLink.className='button gp-open-cloud';
-  cloudLink.textContent='☁ Shared board';
-  headerActions.append(cloudLink);
- }
  header.appendChild(headerActions);
  // Keep legacy controls available to existing handlers without showing a Board Tools panel.
  const legacyActions=$('.top-actions');
