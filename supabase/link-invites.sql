@@ -41,7 +41,7 @@ begin
  if p_expires_days is null or p_expires_days not between 1 and 30 then
   raise exception 'Invite expiry must be between 1 and 30 days';
  end if;
- -- 256 bits of randomness from two independent UUIDv4 values.
+ -- Two independent UUIDv4 values provide over 240 bits of random entropy.
  v_token := replace(gen_random_uuid()::text,'-','') || replace(gen_random_uuid()::text,'-','');
  insert into public.gp_link_invites
   (project_id,token_hash,role,created_by,expires_at)
