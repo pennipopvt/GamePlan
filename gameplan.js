@@ -48,12 +48,13 @@ taskRow=function(t){
  if(gpSelecting)html=html.replace(/(<div class="task-entry [^"]*)(")/,(_match,classes,quote)=>classes+' gp-template-selectable'+(gpSelected.has(String(t.task_id))?' gp-template-selected':'')+quote+' data-gp-template-task="'+e(t.task_id)+'" aria-selected="'+String(gpSelected.has(String(t.task_id)))+'"');
  return html;
 };
-/* Drag-and-drop task reassignment: only the feature ID changes, preserving logs and metadata. */
+/* Task ordering: drag onto a task to insert before/after, or onto a feature
+   header to move into that feature. The data.tasks array is the saved order. */
 const gpDragTaskRow=taskRow;
 taskRow=function(task){
  let html=gpDragTaskRow(task);
  if(!isPM())return html;
- const handle='<span class="gp-task-drag-handle" draggable="true" data-gp-drag-task="'+e(task.task_id)+'" title="Drag to another feature" aria-label="Drag '+e(task.title)+' to another feature" role="img"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="currentColor"><circle cx="8" cy="5" r="1.7"/><circle cx="16" cy="5" r="1.7"/><circle cx="8" cy="12" r="1.7"/><circle cx="16" cy="12" r="1.7"/><circle cx="8" cy="19" r="1.7"/><circle cx="16" cy="19" r="1.7"/></svg></span>';
+ const handle='<span class="gp-task-drag-handle" draggable="true" data-gp-drag-task="'+e(task.task_id)+'" title="Drag to reorder or move to another feature" aria-label="Drag '+e(task.title)+' to reorder or move" role="img"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="currentColor"><circle cx="8" cy="5" r="1.7"/><circle cx="16" cy="5" r="1.7"/><circle cx="8" cy="12" r="1.7"/><circle cx="16" cy="12" r="1.7"/><circle cx="8" cy="19" r="1.7"/><circle cx="16" cy="19" r="1.7"/></svg></span>';
  return html.replace(/(<div class="task-entry [^"]*">)/, '$1'+handle);
 };
 const gpOriginalRenderMilestones=renderMilestones;
@@ -63,7 +64,19 @@ function gpWireTaskDrag(){
  const root=$('#milestoneList');
  const clear=()=>{
   gpDraggingTaskId=null;
-  root.querySelectorAll('.gp-task-dragging,.gp-feature-drop-target').forEach(el=>el.classList.remove('gp-task-dragging','gp-feature-drop-target'));
+  root.querySelectorAll('.gp-task-dragging,.gp-feature-drop-target,.gp-task-drop-before,.gp-task-drop-after').forEach(el=>el.classList.remove('gp-task-dragging','gp-feature-drop-target','gp-task-drop-before','gp-task-drop-after'));
+ };
+ const destination=ev=>{
+  const row=ev.target.closest?.('.task-entry');
+  const section=ev.target.closest?.('.feature-section[data-feat]');
+  const targetFeature=section&&data.features.find(f=>String(f.feature_id)===String(section.dataset.feat));
+  const dragged=data.tasks.find(t=>String(t.task_id)===gpDraggingTaskId);
+  if(!dragged||!targetFeature||dragged.project_id!==activeProject||targetFeature.project_id!==activeProject)return null;
+  const targetTask=row&&data.tasks.find(t=>String(t.task_id)===String(row.querySelector('[data-gp-drag-task]')?.dataset.gpDragTask));
+  if(targetTask?.task_id===dragged.task_id)return null;
+  if(targetTask&&String(targetTask.feature_id)!==String(targetFeature.feature_id))return null;
+  const after=!!(targetTask&&ev.clientY>row.getBoundingClientRect().top+row.getBoundingClientRect().height/2);
+  return {row:targetTask?row:null,targetTask,targetFeature,after,section};
  };
  root.ondragstart=ev=>{
   const handle=ev.target.closest?.('[data-gp-drag-task]');
@@ -76,30 +89,40 @@ function gpWireTaskDrag(){
   handle.closest('.task-entry')?.classList.add('gp-task-dragging');
  };
  root.ondragover=ev=>{
-  const target=ev.target.closest?.('.feature-section[data-feat]');
-  const task=data.tasks.find(t=>String(t.task_id)===gpDraggingTaskId);
-  const feature=target&&data.features.find(f=>String(f.feature_id)===String(target.dataset.feat));
-  root.querySelectorAll('.gp-feature-drop-target').forEach(el=>{if(el!==target)el.classList.remove('gp-feature-drop-target')});
-  if(!task||!feature||task.project_id!==activeProject||feature.project_id!==activeProject||String(task.feature_id)===String(feature.feature_id))return;
-  ev.preventDefault();
-  ev.dataTransfer.dropEffect='move';
-  target.classList.add('gp-feature-drop-target');
+  const dest=destination(ev);
+  root.querySelectorAll('.gp-feature-drop-target,.gp-task-drop-before,.gp-task-drop-after').forEach(el=>el.classList.remove('gp-feature-drop-target','gp-task-drop-before','gp-task-drop-after'));
+  if(!dest)return;
+  ev.preventDefault();ev.dataTransfer.dropEffect='move';
+  if(dest.row)dest.row.classList.add(dest.after?'gp-task-drop-after':'gp-task-drop-before');
+  else dest.section.classList.add('gp-feature-drop-target');
  };
  root.ondragleave=ev=>{
-  const feature=ev.target.closest?.('.feature-section[data-feat]');
-  if(feature&&!feature.contains(ev.relatedTarget))feature.classList.remove('gp-feature-drop-target');
+  const target=ev.target.closest?.('.feature-section[data-feat]');
+  if(target&&!target.contains(ev.relatedTarget))target.classList.remove('gp-feature-drop-target');
  };
  root.ondrop=ev=>{
-  const target=ev.target.closest?.('.feature-section[data-feat]');
-  const task=data.tasks.find(t=>String(t.task_id)===gpDraggingTaskId);
-  const feature=target&&data.features.find(f=>String(f.feature_id)===String(target.dataset.feat));
-  if(!task||!feature||!isPM()||task.project_id!==activeProject||feature.project_id!==activeProject||String(task.feature_id)===String(feature.feature_id)){clear();return}
+  const dest=destination(ev);
+  if(!dest||!isPM()){clear();return}
   ev.preventDefault();ev.stopPropagation();
-  const oldFeatureId=task.feature_id;
-  task.feature_id=feature.feature_id;
+  const task=data.tasks.find(t=>String(t.task_id)===gpDraggingTaskId);
+  const before=[...data.tasks],oldFeature=task.feature_id,oldUpdated=task.updated_at;
+  // Preserve relative order of all unrelated tasks, including hidden/filtered ones.
+  const reordered=data.tasks.filter(t=>t!==task);
+  let position;
+  if(dest.targetTask){
+   position=reordered.indexOf(dest.targetTask)+(dest.after?1:0);
+  }else{
+   const indices=reordered.map((t,i)=>String(t.feature_id)===String(dest.targetFeature.feature_id)?i:-1).filter(i=>i>=0);
+   position=indices.length?indices[indices.length-1]+1:reordered.length;
+  }
+  if(position<0)position=reordered.length;
+  reordered.splice(position,0,task);
+  task.feature_id=dest.targetFeature.feature_id;
   task.updated_at=new Date().toISOString();
-  try{persist();render()}catch(err){task.feature_id=oldFeatureId;gpAlert('Could not move task: '+err.message);render()}
+  data.tasks=reordered;
   clear();
+  try{persist();render()}
+  catch(err){data.tasks=before;task.feature_id=oldFeature;task.updated_at=oldUpdated;gpAlert('Could not reorder task: '+err.message);render()}
  };
  root.ondragend=clear;
 }
