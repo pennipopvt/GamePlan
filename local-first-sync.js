@@ -65,7 +65,7 @@ function refreshStatus(){
  else if(!linked)status('Local · not shared');
  else if(busy)status('Syncing…');
  else status(pending?pending+' changes pending':'Cloud synced');
- $s('#gpSyncShare')?.toggleAttribute('hidden',!linked||!user);
+ const share=$s('#gpSyncShare');if(share){share.hidden=!user;share.textContent=linked?'Invite teammates':'Share project';}
  if($s('#gpSyncConnect'))$s('#gpSyncConnect').textContent=user?'Account':'Connect Discord';
 }
 function persistBaseline(pid,snap){
@@ -238,6 +238,10 @@ async function connect(){
   if(!navigator.onLine){refreshStatus();return}
   const active=await checkAccount();
   if(!active){
+   // Discord redirects through the already-authorized callback bridge.
+   // It returns immediately to the same main GamePlan board.
+   const desired=new URLSearchParams(location.search).get('shared');
+   if(desired)localStorage.setItem('gp-share-request',desired);
    await api.signInWithDiscord();return;
   }
   refreshStatus();await watch();schedule();
@@ -254,7 +258,6 @@ async function shareCurrent(){
  if(current())return shareInvite();
  let existing;
  try{existing=await api.listProjects()}catch(err){return gpAlert(err.message)}
- const candidates=existing.filter(p=>p.name===local.project_name);
  const options=existing.length
   ?'<label class="wide">Link to an existing shared project<select id="gpCloudExisting"><option value="">Create a new shared project</option>'+choice(existing)+'</select></label>'
   :'';
@@ -350,7 +353,7 @@ function controls(){
   $s('#gpSignOut').onclick=async()=>{await api.signOut();user=null;closeModal();refreshStatus()},
   $s('#gpAccountDone').onclick=closeModal;
  else void connect()};
- $s('#gpSyncShare').onclick=()=>void shareInvite();
+ $s('#gpSyncShare').onclick=()=>void shareCurrent();
  $s('#gpSyncNow').onclick=()=>{if(!user){void connect();return}void reconcile(String(activeProject))};
  // An existing local export is always available. Import remains a recovery
  // action, not a cloud sync mechanism.
@@ -392,7 +395,8 @@ async function initialize(){
   if(!online){refreshStatus();return}
   ready=true;
   await watch();
-  const shared=new URLSearchParams(location.search).get('shared');
+  const shared=new URLSearchParams(location.search).get('shared')||localStorage.getItem('gp-share-request');
+  if(shared)localStorage.removeItem('gp-share-request');
   if(shared&&!Object.values(links).includes(shared)){
    await joinShared(shared);history.replaceState(null,'',location.pathname);return;
   }
