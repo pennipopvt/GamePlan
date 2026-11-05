@@ -27,7 +27,7 @@ function gpConfirm(message,options={}){return gpDialog(message,options)}
 function gpPrompt(message,initialValue=''){return gpDialog(message,{title:message.split('\n')[0].replace(/:$/,''),confirmLabel:'Continue',input:true,initialValue})}
 
 const GP_COLORS=[{name:'Blue',hex:'#729fd6'},{name:'Pink',hex:'#db8bac'},{name:'Purple',hex:'#ac91d6'},{name:'Yellow',hex:'#d8b56b'},{name:'Green',hex:'#68a992'},{name:'Orange',hex:'#e18b71'},{name:'Gray',hex:'#98aab6'}];
-let gpPage='board',gpSelecting=false,gpBoardSubtabsOpen=true;
+let gpPage='board',gpSelecting=false;
 const gpSelected=new Set();
 const gpTags=()=>data.tags.filter(x=>x.project_id===activeProject);
 const gpTemplates=()=>data.templates.filter(x=>x.project_id===activeProject);
@@ -620,7 +620,7 @@ function gpSetupHierarchyAnimation(){
 
 /* Faceted deckbuilder filters: OR within category, AND across categories. */
 const gpFacets={person:new Set(),tag:new Set(),status:new Set(),priority:new Set(),milestone:new Set()};
-const gpExcludedTags=new Set();
+const gpExcludedFacets=Object.fromEntries(Object.keys(gpFacets).map(key=>[key,new Set()]));
 const gpFacetGroups=[
  {key:'person',title:'Assignees'},
  {key:'tag',title:'Tags'},
@@ -628,7 +628,6 @@ const gpFacetGroups=[
  {key:'priority',title:'Priority'},
  {key:'milestone',title:'Milestones'}
 ];
-const gpHasFacetFilters=()=>gpExcludedTags.size>0||gpFacetGroups.some(group=>gpFacets[group.key].size>0);
 function gpFacetOptions(key){
  const tasks=projectTasks();
  if(key==='person'){
@@ -640,32 +639,36 @@ function gpFacetOptions(key){
   ...gpTags().map(t=>({id:String(t.tag_id),name:t.name,color:t.color})),
   {id:'__untagged',name:'Untagged',color:'#a6adb8'}
  ];
- if(key==='status')return [{id:'__not_done',name:'Not done',color:'#a81578'},...ST.map((name,i)=>({id:name,name,color:['#a6adb8','#7775cf','#d94b58','#32956d'][i]}))];
+ if(key==='status')return ST.map((name,i)=>({id:name,name,color:['#a6adb8','#7775cf','#d94b58','#32956d'][i]}));
  if(key==='priority')return PRI.map(name=>({id:name,name}));
  if(key==='milestone')return data.milestones.filter(m=>m.project_id===activeProject).map(m=>({id:String(m.milestone_id),name:m.name}));
  return [];
 }
+/* Filters: OR for included options within a category, AND between categories.
+   Excluded options always hide matching tasks. */
+function gpTaskFacetValues(task,key){
+ const f=feature(task.feature_id);
+ if(key==='person')return [String(task.assignee_member_id||'__unassigned')];
+ if(key==='tag')return (task.tag_ids||[]).length?task.tag_ids.map(String):['__untagged'];
+ if(key==='status')return [String(task.status||'To do')];
+ if(key==='priority')return [String(task.priority||'Normal')];
+ if(key==='milestone')return [String(f?.milestone_id||'')];
+ return [];
+}
 const gpBaseVisibleTasks=visibleTasks;
 visibleTasks=function(){
- return gpBaseVisibleTasks().filter(t=>{
-  const ids=(t.tag_ids||[]).map(String);
-  if(gpExcludedTags.has('__untagged')&&!ids.length)return false;
-  if(ids.some(id=>gpExcludedTags.has(id)))return false;
-  return gpFacetGroups.every(group=>{
-   const chosen=gpFacets[group.key];if(!chosen.size)return true;
-   const featureOfTask=feature(t.feature_id);
-   if(group.key==='person')return chosen.has(String(t.assignee_member_id||'__unassigned'));
-   if(group.key==='tag')return ids.some(id=>chosen.has(id))||(!ids.length&&chosen.has('__untagged'));
-   if(group.key==='status')return chosen.has(t.status||'To do')||(chosen.has('__not_done')&&t.status!=='Done');
-   if(group.key==='priority')return chosen.has(t.priority||'Normal');
-   if(group.key==='milestone')return chosen.has(String(featureOfTask?.milestone_id||''));
-   return true;
-  });
- });
+ return gpBaseVisibleTasks().filter(task=>gpFacetGroups.every(group=>{
+  const values=gpTaskFacetValues(task,group.key);
+  const included=gpFacets[group.key],excluded=gpExcludedFacets[group.key];
+  if(values.some(id=>excluded.has(id)))return false;
+  return !included.size||values.some(id=>included.has(id));
+ }));
 };
 function gpResetFacets(){
- gpFacetGroups.forEach(group=>gpFacets[group.key].clear());
- gpExcludedTags.clear();
+ for(const group of gpFacetGroups){
+  gpFacets[group.key].clear();
+  gpExcludedFacets[group.key].clear();
+ }
 }
 function gpRenderFacetControls(){
  const panel=$('#gpFilterPanel'),button=$('#gpFilterTrigger'),chips=$('#gpFilterChips'),count=$('#gpFilterCount');
@@ -674,25 +677,23 @@ function gpRenderFacetControls(){
  for(const group of gpFacetGroups){
   for(const option of gpFacetOptions(group.key)){
    if(gpFacets[group.key].has(option.id))chosen.push({key:group.key,id:option.id,label:option.name,group:group.title});
-   if(group.key==='tag'&&gpExcludedTags.has(option.id))chosen.push({key:'excludeTag',id:option.id,label:option.name,group:'Exclude tag',excluded:true});
+   if(gpExcludedFacets[group.key].has(option.id))chosen.push({key:group.key,id:option.id,label:option.name,group:'Exclude '+group.title.toLowerCase(),excluded:true});
   }
  }
  const total=chosen.length;
  count.textContent=String(total);count.hidden=total===0;
  chips.hidden=total===0;
- chips.innerHTML=chosen.map(o=>'<button type="button" class="gp-filter-chip'+(o.excluded?' gp-filter-chip-excluded':'')+'" data-gp-remove-key="'+e(o.key)+'" data-gp-remove-id="'+e(o.id)+'" aria-label="Remove '+e(o.group+': '+o.label)+'">'+e(o.group)+': '+e(o.label)+' <span aria-hidden="true">×</span></button>').join('')+(total?'<button type="button" class="gp-filter-clear" id="gpClearAllChips">Clear all</button>':'');
+ chips.innerHTML=chosen.map(o=>'<button type="button" class="gp-filter-chip'+(o.excluded?' gp-filter-chip-excluded':'')+'" data-gp-remove-key="'+e(o.key)+'" data-gp-remove-id="'+e(o.id)+'" data-gp-remove-mode="'+(o.excluded?'exclude':'include')+'" aria-label="Remove '+e(o.group+': '+o.label)+'">'+e(o.group)+': '+e(o.label)+' <span aria-hidden="true">×</span></button>').join('')+(total?'<button type="button" class="gp-filter-clear" id="gpClearAllChips">Clear all</button>':'');
  panel.innerHTML='<div class="gp-filter-panel-header"><strong>Filter tasks</strong><button type="button" class="gp-filter-clear" id="gpClearFilters">Clear all</button></div>'+
   gpFacetGroups.map(group=>{
    const opts=gpFacetOptions(group.key);
-   return '<section class="gp-filter-group"><div class="gp-filter-group-heading">'+e(group.title)+'</div>'+
-    (group.key==='tag'?'<p class="gp-filter-tag-hint">Click once to include, twice to exclude, three times to clear.</p>':'')+
-    '<div class="gp-filter-choices">'+
+   return '<section class="gp-filter-group"><div class="gp-filter-group-heading">'+e(group.title)+'</div><div class="gp-filter-choices">'+
     (opts.length?opts.map(o=>{
-     const excluded=group.key==='tag'&&gpExcludedTags.has(o.id),included=gpFacets[group.key].has(o.id);
-     return '<button type="button" class="gp-filter-choice'+(excluded?' gp-filter-excluded':'')+'" data-gp-facet="'+e(group.key)+'" data-gp-id="'+e(o.id)+'" aria-pressed="'+String(included||excluded)+'" title="'+(excluded?'Excluding':included?'Including':'No filter')+': '+e(o.name)+'">'+(o.color?'<span class="gp-filter-dot" style="--gp-dot:'+e(o.color)+'"></span>':'')+e(o.name)+(excluded?'<span class="gp-filter-state" aria-label="Excluded">−</span>':included&&group.key==='tag'?'<span class="gp-filter-state" aria-label="Included">✓</span>':'')+'</button>';
-    }).join(''):'<span class="sub">None yet</span>')+
-    '</div></section>';
-  }).join('')+'<p class="gp-filter-help">Multiple choices within a category match any; combining categories narrows your results. Excluded tags are always hidden.</p><button type="button" class="gp-filter-clear" id="gpManageTags">Manage tags in Project Settings</button>';
+     const excluded=gpExcludedFacets[group.key].has(o.id),included=gpFacets[group.key].has(o.id);
+     const state=excluded?'Excluded':included?'Included':'Unselected';
+     return '<button type="button" class="gp-filter-choice'+(excluded?' gp-filter-excluded':'')+'" data-gp-facet="'+e(group.key)+'" data-gp-id="'+e(o.id)+'" aria-pressed="'+String(included||excluded)+'" aria-label="'+e(group.title+': '+o.name+', '+state)+'" title="'+e(state+': '+o.name)+'">'+(o.color?'<span class="gp-filter-dot" style="--gp-dot:'+e(o.color)+'"></span>':'')+e(o.name)+(excluded?'<span class="gp-filter-state" aria-hidden="true">−</span>':included?'<span class="gp-filter-state" aria-hidden="true">✓</span>':'')+'</button>';
+    }).join(''):'<span class="sub">None yet</span>')+'</div></section>';
+  }).join('')+'<button type="button" class="gp-filter-clear" id="gpManageTags">Manage tags in Project Settings</button>';
 }
 function gpSetupFacetEvents(){
  const root=$('#gpFilterPanel'),trigger=$('#gpFilterTrigger'),chips=$('#gpFilterChips');
@@ -708,12 +709,10 @@ function gpSetupFacetEvents(){
   if(choice){
    const key=choice.dataset.gpFacet,id=choice.dataset.gpId;
    if(!Object.hasOwn(gpFacets,key))return;
-   const set=gpFacets[key];
-   if(key==='tag'){
-    if(set.has(id)){set.delete(id);gpExcludedTags.add(id)}
-    else if(gpExcludedTags.has(id))gpExcludedTags.delete(id);
-    else set.add(id);
-   }else if(set.has(id))set.delete(id);else set.add(id);
+   const included=gpFacets[key],excluded=gpExcludedFacets[key];
+   if(included.has(id)){included.delete(id);excluded.add(id)}
+   else if(excluded.has(id))excluded.delete(id);
+   else included.add(id);
    render();return;
   }
   if(ev.target.closest('#gpClearFilters')){gpResetFacets();render();return}
@@ -722,8 +721,8 @@ function gpSetupFacetEvents(){
  chips.addEventListener('click',ev=>{
   const remove=ev.target.closest('[data-gp-remove-key]');
   if(remove){
-   if(remove.dataset.gpRemoveKey==='excludeTag')gpExcludedTags.delete(remove.dataset.gpRemoveId);
-   else gpFacets[remove.dataset.gpRemoveKey]?.delete(remove.dataset.gpRemoveId);
+   const key=remove.dataset.gpRemoveKey,id=remove.dataset.gpRemoveId;
+   (remove.dataset.gpRemoveMode==='exclude'?gpExcludedFacets[key]:gpFacets[key])?.delete(id);
    render();return;
   }
   if(ev.target.closest('#gpClearAllChips')){gpResetFacets();render()}
@@ -951,11 +950,6 @@ gpAnalytics=function(){
  root.innerHTML='<div class="gp-chart-controls">'+settings.map(([key,label,choices])=>'<label>'+e(label)+'<select data-gp-chart="'+key+'">'+options(choices,key)+'</select></label>').join('')+'</div>'+
  '<div class="gp-chart-card"><div class="gp-chart-heading"><div><h2>'+e(gpMetricLabels[gpChartSettings.metric])+' by '+e(gpGroupLabels[gpChartSettings.group])+'</h2><p class="sub">'+view.count+' matching tasks · '+view.entries.length+' groups</p></div><div class="gp-chart-total"><strong>'+gpNum(view.total)+'</strong><span>'+(['tasks','done'].includes(gpChartSettings.metric)?'tasks':'hours')+'</span></div></div>'+gpGraphView(view.entries)+'</div>'+
  '<details class="gp-original-analytics"><summary>Detailed time log breakdown</summary><div id="gpOriginalAnalyticsTable"></div></details>';
- root.querySelectorAll('[data-gp-chart]').forEach(el=>el.onchange=()=>{
-  gpChartSettings[el.dataset.gpChart]=el.value;
-  if(['month','week'].includes(gpChartSettings.group)&&gpChartSettings.metric!=='logged')gpChartSettings.metric='logged';
-  gpAnalytics();
- });
  const graphHTML=root.innerHTML;
  gpPreviousAnalytics();
  const oldTable=root.querySelector('.table-wrap')?.outerHTML||'<p class="sub">No time entries.</p>';
