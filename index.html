@@ -1969,15 +1969,7 @@ a:hover,.link:hover{color:#80115c}
 .gp-more-popover>.button:hover{color:#a81578!important;background:#fce5f5!important;text-decoration:none!important}
 .gp-more-popover input[hidden]{display:none!important}
 @media(max-width:680px){.gp-more-popover{right:auto;left:0}}
-</style><style id="gpCloudModeStyles">
-html.gp-cloud-loading .app{visibility:hidden}
-.gp-cloud-status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;color:#817784}
-.gp-cloud-status strong{color:#a81578}
-.gp-cloud-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.gp-cloud-error{background:#fff0f0;border:1px solid #efb5b5;padding:10px 14px;border-radius:9px;color:#9e242b}
-.gp-cloud-setup{max-width:650px;margin:10vh auto;background:white;padding:32px;border-radius:16px;border:1px solid #e5dce9;box-shadow:0 12px 44px #4c1a5720}
-.gp-cloud-setup h1{font-size:27px;color:#342638}
-</style><script>if(new URLSearchParams(location.search).has('cloud'))document.documentElement.classList.add('gp-cloud-loading');</script></head>
+</style></head>
 <body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.05.55</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter" hidden aria-hidden="true"><option value="">All assignees</option></select><div class="gp-filter-wrap"><button type="button" class="button gp-filter-trigger" id="gpFilterTrigger" aria-expanded="false" aria-controls="gpFilterPanel"><span aria-hidden="true">⚲</span> Filters <span id="gpFilterCount" class="gp-filter-count" hidden>0</span></button><div class="gp-filter-panel" id="gpFilterPanel" hidden></div></div><button class="button main" id="newTask" hidden>+ Task</button></div></div>
