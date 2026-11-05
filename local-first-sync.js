@@ -11,7 +11,7 @@ let LINKS='gp-sync-links-v1',BASE='gp-sync-baselines-v1',DELETED='gp-sync-delete
 const KINDS=['milestones','features','tasks','logs','tags','templates','team','custom_tag_colors'];
 const IDS={milestones:'milestone_id',features:'feature_id',tasks:'task_id',logs:'log_id',tags:'tag_id',templates:'template_id',team:'member_id'};
 let api=null,user=null,links=read(LINKS,{}),bases=read(BASE,{}),busy=false,loop=null,subscription=null,watched='',ready=false,blocked=false,inviteAttempted=false;
-let lastSyncError=null,lastSyncAt=0,remoteMissingCount=0,deletedIntents=read(DELETED,{});
+let lastSyncError=null,lastSyncAt=0,remoteMissingCount=0,deletedIntents=read(DELETED,{}),copyMessageTimer=null;
 let activatedUserId='',activating=null,cloudProjectList=[],teamByProject={},teamUpgradeNeeded=false;
 const unique=(kind,obj)=>kind==='team'?'member:'+obj.member_id:kind==='custom_tag_colors'?'color:'+obj.color:String(obj[IDS[kind]]||'');
 const key=(kind,id)=>kind+'\u0000'+id;
@@ -130,7 +130,7 @@ function refreshStatus(){
  else if(remoteMissingCount)status(remoteMissingCount+' items missing remotely · saved locally',true);
  else status(pending?pending+' changes pending':'Cloud synced');
  const share=$s('#gpSyncShare');if(share){share.hidden=!user;share.textContent=linked?'Invite teammates':'Share project';}
- if($s('#gpSyncConnect'))$s('#gpSyncConnect').textContent=user?'Account':sessionStorage.getItem(PENDING_INVITE)?'Join with Discord':'Connect Discord';
+ if($s('#gpSyncConnect'))$s('#gpSyncConnect').textContent=user?accountDisplayName():sessionStorage.getItem(PENDING_INVITE)?'Join with Discord':'Sign in';
 }
 function persistBaseline(pid,snap){
  bases[pid]=snap;store(BASE,bases);
@@ -678,7 +678,7 @@ async function shareInvite(){
   '<label>Link expires<select name="days"><option value="7">In 7 days</option><option value="1">In 1 day</option><option value="30">In 30 days</option></select></label>'+
   '</div><div class="controls"><button type="submit" class="button main">+ Generate invite link</button></div></form>'+
   '<div id="gpGeneratedInvite" class="gp-invite-result" hidden><label>Send this link<input id="gpInviteLink" readonly autocomplete="off"></label>'+
-  '<div class="controls"><button type="button" class="button main" id="gpCopyInvite">Copy invite link</button></div>'+
+  '<div class="controls"><button type="button" class="button main" id="gpCopyInvite">Copy invite link</button><span id="gpCopyFeedback" class="gp-inline-feedback" role="status" aria-live="polite"></span></div>'+
   '<p class="sub">This link is shown only now. A link can be used by up to 25 people before it expires or is revoked.</p></div>'+
   '<div id="gpLinkList" class="gp-invite-list"><p class="sub">Loading invite links…</p></div>'+
   '<details class="gp-invite-email"><summary>Invite by email instead (optional)</summary>'+
@@ -719,8 +719,20 @@ async function shareInvite(){
  };
  $s('#gpCopyInvite').onclick=async()=>{
   if(!generated)return;
-  try{await navigator.clipboard.writeText(generated);gpAlert('Invite link copied. Send it in Discord!')}
-  catch{input.focus();input.select();gpAlert('Copy the selected link to share it.')}
+  const button=$s('#gpCopyInvite'),feedback=$s('#gpCopyFeedback');
+  try{
+   await navigator.clipboard.writeText(generated);
+   button.textContent='✓ Copied';button.classList.add('gp-copied');
+   feedback.textContent='Link copied! Send it in Discord.';
+  }catch{
+   input.focus();input.select();
+   feedback.textContent='Select the link and press Ctrl+C to copy it.';
+  }
+  clearTimeout(copyMessageTimer);
+  copyMessageTimer=setTimeout(()=>{
+   if(button.isConnected){button.textContent='Copy invite link';button.classList.remove('gp-copied')}
+   if(feedback.isConnected)feedback.textContent='';
+  },2200);
  };
  historyRoot.onclick=async ev=>{
   const button=ev.target.closest('[data-revoke-invite]');if(!button)return;
@@ -789,10 +801,7 @@ function controls(){
   '<button class="button gp-sync-share" id="gpSyncShare" hidden>Share project</button>'+
   '<button class="button gp-sync-now" id="gpSyncNow">↻ Sync</button>';
  area.append(box);
- $s('#gpSyncConnect').onclick=()=>{if(user)modal('Cloud account','<p>Signed in as '+e(accountLabel())+'</p><div class="controls"><button type="button" class="button" id="gpSignOut">Sign out</button><button type="button" class="button main" id="gpAccountDone">Done</button></div>'),
-  $s('#gpSignOut').onclick=async()=>{await api.signOut();user=null;closeModal();refreshStatus()},
-  $s('#gpAccountDone').onclick=closeModal;
- else void connect()};
+ $s('#gpSyncConnect').onclick=()=>{if(user)void window.GamePlanAccounts?.accountDialog?.();else window.GamePlanAccounts?.showLogin?.({configured:!!(config()?.url&&config()?.key)})};
  $s('#gpSyncShare').onclick=()=>void shareCurrent();
  $s('#gpSyncStatus').onclick=()=>{
   const pid=String(activeProject||''),diff=links[pid]?changesSince(bases[pid]||{},projectRows(pid)):{};
