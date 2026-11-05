@@ -409,6 +409,31 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 .gp-collapsed #gpProjectSwitcher::before{margin-top:0;margin-bottom:12px}
 .gp-collapsed #gpProjectSwitcher::after{margin-top:12px;margin-bottom:0}
 @media(max-width:680px){#gpProjectSwitcher::before{display:none}#gpProjectSwitcher::after{margin-top:12px}}
+
+/* Project-switch section: force vertical stacking so dividers cannot cross the icon. */
+#gpSidebarTop{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:44px;min-width:0}
+#gpSidebarTop .sidebar-brand{flex:1;min-width:0;padding:0 0 0 10px;white-space:nowrap;line-height:44px}
+#gpSidebarTop #gpSidebarToggle{width:44px;min-width:44px;height:44px;min-height:44px;padding:0;display:flex;align-items:center;justify-content:center;flex:0 0 44px;margin:0}
+#gpSidebarTop #gpSidebarToggle>span:first-child{width:28px;height:44px;display:flex;align-items:center;justify-content:center}
+#gpSidebarTop #gpSidebarToggle .gp-toggle-text{display:none}
+#gpProjectSwitcher{display:block;position:relative;flex:none;min-width:0;box-sizing:border-box}
+#gpProjectSwitcher::before{display:none}
+#gpProjectSwitcher::after{content:"";display:block;position:static;width:calc(100% - 16px);height:1px;min-height:1px;margin:11px 8px 0;background:#c6d9cf}
+.gp-collapsed #gpSidebarTop{justify-content:center;min-height:44px}
+.gp-collapsed #gpSidebarTop .sidebar-brand{display:none}
+.gp-collapsed #gpSidebarTop #gpSidebarToggle{margin:0 auto}
+.gp-collapsed #gpProjectSwitcher{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:0!important;position:relative;width:100%;padding:0}
+.gp-collapsed #gpProjectSwitcher::before,.gp-collapsed #gpProjectSwitcher::after{content:"";display:block!important;position:static!important;flex:0 0 1px!important;align-self:center;width:36px;height:1px;min-height:1px;max-width:36px;background:#c6d9cf;margin-left:auto;margin-right:auto}
+.gp-collapsed #gpProjectSwitcher::before{margin-top:0;margin-bottom:12px}
+.gp-collapsed #gpProjectSwitcher::after{margin-top:12px;margin-bottom:0}
+.gp-collapsed #gpProjectSwitcher .gp-project-trigger{flex:0 0 44px;min-height:44px;margin:0 auto}
+.gp-collapsed #gpProjectSwitcher .gp-project-menu{position:absolute;top:0;left:calc(100% + 8px)}
+@media(max-width:680px){
+ #gpSidebarTop .sidebar-brand{line-height:44px}
+ #gpSidebarTop #gpSidebarToggle{display:none}
+ #gpProjectSwitcher{display:block}
+ #gpProjectSwitcher::before{display:none}
+}
 </style></head>
 <body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand">✳ Game<span>Plan</span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav><div class="sidebar-foot">Local only · your board is saved in this browser.</div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.04.4</span></div></div><div class="top-actions"><a class="link" href="shared.html">Online board</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice">Your changes are saved instantly in this browser. Export a backup occasionally.</div>
