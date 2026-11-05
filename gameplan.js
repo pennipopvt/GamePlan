@@ -620,6 +620,7 @@ function gpSetupHierarchyAnimation(){
 
 /* Faceted deckbuilder filters: OR within category, AND across categories. */
 const gpFacets={person:new Set(),tag:new Set(),status:new Set(),priority:new Set(),milestone:new Set()};
+const gpExcludedTags=new Set();
 const gpFacetGroups=[
  {key:'person',title:'Assignees'},
  {key:'tag',title:'Tags'},
@@ -627,7 +628,7 @@ const gpFacetGroups=[
  {key:'priority',title:'Priority'},
  {key:'milestone',title:'Milestones'}
 ];
-const gpHasFacetFilters=()=>gpFacetGroups.some(group=>gpFacets[group.key].size>0);
+const gpHasFacetFilters=()=>gpExcludedTags.size>0||gpFacetGroups.some(group=>gpFacets[group.key].size>0);
 function gpFacetOptions(key){
  const tasks=projectTasks();
  if(key==='person'){
@@ -639,51 +640,59 @@ function gpFacetOptions(key){
   ...gpTags().map(t=>({id:String(t.tag_id),name:t.name,color:t.color})),
   {id:'__untagged',name:'Untagged',color:'#a6adb8'}
  ];
- if(key==='status')return ST.map((name,i)=>({id:name,name,color:['#a6adb8','#7775cf','#d94b58','#32956d'][i]}));
+ if(key==='status')return [{id:'__not_done',name:'Not done',color:'#a81578'},...ST.map((name,i)=>({id:name,name,color:['#a6adb8','#7775cf','#d94b58','#32956d'][i]}))];
  if(key==='priority')return PRI.map(name=>({id:name,name}));
  if(key==='milestone')return data.milestones.filter(m=>m.project_id===activeProject).map(m=>({id:String(m.milestone_id),name:m.name}));
  return [];
 }
 const gpBaseVisibleTasks=visibleTasks;
 visibleTasks=function(){
- return gpBaseVisibleTasks().filter(t=>gpFacetGroups.every(group=>{
-  const chosen=gpFacets[group.key];if(!chosen.size)return true;
-  const featureOfTask=feature(t.feature_id);
-  if(group.key==='person')return chosen.has(String(t.assignee_member_id||'__unassigned'));
-  if(group.key==='tag')return (t.tag_ids||[]).some(id=>chosen.has(String(id)))||(!(t.tag_ids||[]).length&&chosen.has('__untagged'));
-  if(group.key==='status')return chosen.has(t.status||'To do');
-  if(group.key==='priority')return chosen.has(t.priority||'Normal');
-  if(group.key==='milestone')return chosen.has(String(featureOfTask?.milestone_id||''));
-  return true;
- }));
+ return gpBaseVisibleTasks().filter(t=>{
+  const ids=(t.tag_ids||[]).map(String);
+  if(gpExcludedTags.has('__untagged')&&!ids.length)return false;
+  if(ids.some(id=>gpExcludedTags.has(id)))return false;
+  return gpFacetGroups.every(group=>{
+   const chosen=gpFacets[group.key];if(!chosen.size)return true;
+   const featureOfTask=feature(t.feature_id);
+   if(group.key==='person')return chosen.has(String(t.assignee_member_id||'__unassigned'));
+   if(group.key==='tag')return ids.some(id=>chosen.has(id))||(!ids.length&&chosen.has('__untagged'));
+   if(group.key==='status')return chosen.has(t.status||'To do')||(chosen.has('__not_done')&&t.status!=='Done');
+   if(group.key==='priority')return chosen.has(t.priority||'Normal');
+   if(group.key==='milestone')return chosen.has(String(featureOfTask?.milestone_id||''));
+   return true;
+  });
+ });
 };
 function gpResetFacets(){
  gpFacetGroups.forEach(group=>gpFacets[group.key].clear());
+ gpExcludedTags.clear();
 }
 function gpRenderFacetControls(){
  const panel=$('#gpFilterPanel'),button=$('#gpFilterTrigger'),chips=$('#gpFilterChips'),count=$('#gpFilterCount');
  if(!panel||!button||!chips||!count)return;
- let total=0;
  const chosen=[];
  for(const group of gpFacetGroups){
-  const options=gpFacetOptions(group.key);
-  for(const option of options){
-   if(gpFacets[group.key].has(option.id)){
-    chosen.push({key:group.key,id:option.id,label:option.name,group:group.title});
-    total++;
-   }
+  for(const option of gpFacetOptions(group.key)){
+   if(gpFacets[group.key].has(option.id))chosen.push({key:group.key,id:option.id,label:option.name,group:group.title});
+   if(group.key==='tag'&&gpExcludedTags.has(option.id))chosen.push({key:'excludeTag',id:option.id,label:option.name,group:'Exclude tag',excluded:true});
   }
  }
+ const total=chosen.length;
  count.textContent=String(total);count.hidden=total===0;
  chips.hidden=total===0;
- chips.innerHTML=chosen.map(o=>'<button type="button" class="gp-filter-chip" data-gp-remove-key="'+e(o.key)+'" data-gp-remove-id="'+e(o.id)+'" aria-label="Remove '+e(o.group+': '+o.label)+'">'+e(o.group)+': '+e(o.label)+' <span aria-hidden="true">×</span></button>').join('')+(total?'<button type="button" class="gp-filter-clear" id="gpClearAllChips">Clear all</button>':'');
+ chips.innerHTML=chosen.map(o=>'<button type="button" class="gp-filter-chip'+(o.excluded?' gp-filter-chip-excluded':'')+'" data-gp-remove-key="'+e(o.key)+'" data-gp-remove-id="'+e(o.id)+'" aria-label="Remove '+e(o.group+': '+o.label)+'">'+e(o.group)+': '+e(o.label)+' <span aria-hidden="true">×</span></button>').join('')+(total?'<button type="button" class="gp-filter-clear" id="gpClearAllChips">Clear all</button>':'');
  panel.innerHTML='<div class="gp-filter-panel-header"><strong>Filter tasks</strong><button type="button" class="gp-filter-clear" id="gpClearFilters">Clear all</button></div>'+
   gpFacetGroups.map(group=>{
    const opts=gpFacetOptions(group.key);
-   return '<section class="gp-filter-group"><div class="gp-filter-group-heading">'+e(group.title)+'</div><div class="gp-filter-choices">'+
-    (opts.length?opts.map(o=>'<button type="button" class="gp-filter-choice" data-gp-facet="'+e(group.key)+'" data-gp-id="'+e(o.id)+'" aria-pressed="'+String(gpFacets[group.key].has(o.id))+'">'+(o.color?'<span class="gp-filter-dot" style="--gp-dot:'+e(o.color)+'"></span>':'')+e(o.name)+'</button>').join(''):'<span class="sub">None yet</span>')+
+   return '<section class="gp-filter-group"><div class="gp-filter-group-heading">'+e(group.title)+'</div>'+
+    (group.key==='tag'?'<p class="gp-filter-tag-hint">Click once to include, twice to exclude, three times to clear.</p>':'')+
+    '<div class="gp-filter-choices">'+
+    (opts.length?opts.map(o=>{
+     const excluded=group.key==='tag'&&gpExcludedTags.has(o.id),included=gpFacets[group.key].has(o.id);
+     return '<button type="button" class="gp-filter-choice'+(excluded?' gp-filter-excluded':'')+'" data-gp-facet="'+e(group.key)+'" data-gp-id="'+e(o.id)+'" aria-pressed="'+String(included||excluded)+'" title="'+(excluded?'Excluding':included?'Including':'No filter')+': '+e(o.name)+'">'+(o.color?'<span class="gp-filter-dot" style="--gp-dot:'+e(o.color)+'"></span>':'')+e(o.name)+(excluded?'<span class="gp-filter-state" aria-label="Excluded">−</span>':included&&group.key==='tag'?'<span class="gp-filter-state" aria-label="Included">✓</span>':'')+'</button>';
+    }).join(''):'<span class="sub">None yet</span>')+
     '</div></section>';
-  }).join('')+'<p class="gp-filter-help">Multiple choices within a category match any; combining categories narrows your results.</p><button type="button" class="gp-filter-clear" id="gpManageTags">Manage tags in Project Settings</button>';
+  }).join('')+'<p class="gp-filter-help">Multiple choices within a category match any; combining categories narrows your results. Excluded tags are always hidden.</p><button type="button" class="gp-filter-clear" id="gpManageTags">Manage tags in Project Settings</button>';
 }
 function gpSetupFacetEvents(){
  const root=$('#gpFilterPanel'),trigger=$('#gpFilterTrigger'),chips=$('#gpFilterChips');
@@ -700,7 +709,11 @@ function gpSetupFacetEvents(){
    const key=choice.dataset.gpFacet,id=choice.dataset.gpId;
    if(!Object.hasOwn(gpFacets,key))return;
    const set=gpFacets[key];
-   if(set.has(id))set.delete(id);else set.add(id);
+   if(key==='tag'){
+    if(set.has(id)){set.delete(id);gpExcludedTags.add(id)}
+    else if(gpExcludedTags.has(id))gpExcludedTags.delete(id);
+    else set.add(id);
+   }else if(set.has(id))set.delete(id);else set.add(id);
    render();return;
   }
   if(ev.target.closest('#gpClearFilters')){gpResetFacets();render();return}
@@ -709,7 +722,8 @@ function gpSetupFacetEvents(){
  chips.addEventListener('click',ev=>{
   const remove=ev.target.closest('[data-gp-remove-key]');
   if(remove){
-   gpFacets[remove.dataset.gpRemoveKey]?.delete(remove.dataset.gpRemoveId);
+   if(remove.dataset.gpRemoveKey==='excludeTag')gpExcludedTags.delete(remove.dataset.gpRemoveId);
+   else gpFacets[remove.dataset.gpRemoveKey]?.delete(remove.dataset.gpRemoveId);
    render();return;
   }
   if(ev.target.closest('#gpClearAllChips')){gpResetFacets();render()}
