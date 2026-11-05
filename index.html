@@ -2017,6 +2017,13 @@ function seedData(){
 }
 function migrateLegacy(legacy){
  const next=seedData();const id='fish-poc';
+ // A v1 legacy backup still needs its project and original Penni assignee
+ // even though newly created accounts no longer receive a sample project.
+ next.me={member_id:'penni',display_name:'Penni'};
+ next.projects.push({project_id:id,project_name:'Fishing Game — Proof of Concept',description:'',status:'Active',project_manager_member_id:'penni'});
+ next.members.push({...pm});next.roster.push({...pm});
+ next.team.push({project_id:id,member_id:'penni',project_role:'Owner',discipline:'',membership_status:'Active'});
+ next.memberships.push({project_id:id,member_id:'penni',project_role:'Owner',discipline:'',membership_status:'Active'});
  for(const m of legacy.milestones||[])next.milestones.push({milestone_id:String(m.id),project_id:id,name:m.name,description:m.description||'',status:m.status||'To do',target_date:m.target_date||''});
  for(const f of legacy.features||[])next.features.push({feature_id:String(f.id),project_id:id,milestone_id:String(f.milestoneId),name:f.name,description:f.description||'',status:f.status||'To do',estimated_hours:Number(f.estimate||0)});
  const known=new Set(next.members.map(m=>m.display_name));
