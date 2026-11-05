@@ -154,6 +154,10 @@ function mergeRemote(pid,remote,base,local){
     if(!member){
      const newMember={member_id:row.member_id,display_name:row.display_name||String(row.member_id),google_email:'',active:'Yes'};
      draft.members.push(newMember);draft.roster.push({...newMember});
+    }else if(row.display_name&&member.display_name!==row.display_name){
+     member.display_name=row.display_name;
+     const roster=draft.roster.find(m=>String(m.member_id)===String(row.member_id));
+     if(roster)roster.display_name=row.display_name;
     }
    }
    }else if(findIndex>=0){
