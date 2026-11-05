@@ -1889,6 +1889,62 @@ a:hover,.link:hover{color:#80115c}
 .gp-dialog-card input{display:block;width:100%;margin-top:15px}
 .gp-dialog-card .button.danger:hover{background:#ffebeb;color:#bd2839;border-color:#e3a4ac}
 @media(max-width:520px){.gp-dialog-card{padding:21px 18px}.gp-dialog-card h2{font-size:20px}}
+
+/* Unified action rail: consistent spacing and hover styling in local and cloud modes. */
+.workspace>.top{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}
+.gp-header-actions{max-width:none;display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.gp-header-actions .button:not(.gp-open-cloud){
+ display:inline-flex;align-items:center;justify-content:center;
+ min-height:32px;padding:6px 9px;border:1px solid transparent;border-radius:8px;
+ color:#827886;background:transparent;text-decoration:none;white-space:nowrap;
+ font-size:12px;font-weight:600;line-height:1.25;
+}
+.gp-header-actions .button:not(.gp-open-cloud):hover{
+ background:#fce5f5;border-color:#f3d0e6;color:#a81578;text-decoration:none;
+}
+.gp-header-actions .gp-open-cloud,
+.gp-cloud-controls .gp-cloud-primary{
+ display:inline-flex;align-items:center;justify-content:center;
+ min-height:34px;padding:7px 12px;
+ border-radius:9px;border:1px solid #e8aad3;
+ background:#fce5f5;color:#99146c;
+ text-decoration:none;font-size:12px;font-weight:650;white-space:nowrap;
+}
+.gp-header-actions .gp-open-cloud:hover,
+.gp-cloud-controls .gp-cloud-primary:hover{
+ background:#f8d5ed;color:#80105d;border-color:#df91c4;filter:none;
+}
+.gp-cloud-header-rail{margin-left:auto;min-width:0;display:flex;align-items:flex-end;flex-direction:column;gap:9px}
+.gp-cloud-header-rail>.gp-header-actions{width:100%;justify-content:flex-end}
+.gp-cloud-toolbar{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;max-width:100%}
+.gp-cloud-status{display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap;
+ background:#f7f3f7;border:1px solid #eae1ea;border-radius:9px;
+ padding:8px 11px;font-size:12px;color:#77707b;line-height:1.3}
+.gp-cloud-status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#4eae89;flex:none}
+.gp-cloud-status strong{font-size:12px;color:#8f1c6a;font-weight:700}
+.gp-cloud-role{border-left:1px solid #dbd1dc;padding-left:8px;text-transform:capitalize}
+.gp-cloud-account{max-width:175px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gp-cloud-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.gp-cloud-controls .button:not(.gp-cloud-primary){
+ display:inline-flex;align-items:center;justify-content:center;
+ min-height:34px;border:1px solid #e9dfe9;border-radius:9px;
+ padding:7px 11px;background:#fff;color:#766d7a;
+ font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;
+}
+.gp-cloud-controls .button:not(.gp-cloud-primary):hover{
+ background:#fce5f5;border-color:#efc5df;color:#a81578;filter:none;text-decoration:none;
+}
+.gp-cloud-status.gp-cloud-error{background:#fff0f0;border-color:#eeb5bd;color:#ad343d}
+@media(max-width:1050px){
+ .workspace>.top{flex-wrap:wrap;gap:12px}
+ .gp-cloud-header-rail{width:100%;align-items:flex-start;margin-left:0}
+ .gp-cloud-header-rail>.gp-header-actions,.gp-cloud-toolbar{justify-content:flex-start}
+}
+@media(max-width:680px){
+ .gp-header-actions{justify-content:flex-start}
+ .gp-cloud-status{max-width:100%}
+ .gp-cloud-account{max-width:130px}
+}
 </style><style id="gpCloudModeStyles">
 html.gp-cloud-loading .app{visibility:hidden}
 .gp-cloud-status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;color:#817784}
@@ -1898,7 +1954,7 @@ html.gp-cloud-loading .app{visibility:hidden}
 .gp-cloud-setup{max-width:650px;margin:10vh auto;background:white;padding:32px;border-radius:16px;border:1px solid #e5dce9;box-shadow:0 12px 44px #4c1a5720}
 .gp-cloud-setup h1{font-size:27px;color:#342638}
 </style><script>if(new URLSearchParams(location.search).has('cloud'))document.documentElement.classList.add('gp-cloud-loading');</script></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.05.52</span></div></div><div class="top-actions"><a class="link" href="index.html?cloud=1">Shared GamePlan</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.05.53</span></div></div><div class="top-actions"><a class="link" href="index.html?cloud=1">Shared GamePlan</a><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="assigneeFilter" hidden aria-hidden="true"><option value="">All assignees</option></select><div class="gp-filter-wrap"><button type="button" class="button gp-filter-trigger" id="gpFilterTrigger" aria-expanded="false" aria-controls="gpFilterPanel"><span aria-hidden="true">⚲</span> Filters <span id="gpFilterCount" class="gp-filter-count" hidden>0</span></button><div class="gp-filter-panel" id="gpFilterPanel" hidden></div></div><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div id="gpFilterChips" class="gp-filter-chips" hidden></div>
@@ -1908,7 +1964,7 @@ html.gp-cloud-loading .app{visibility:hidden}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-const GP_CLOUD_MODE=new URLSearchParams(location.search).has('cloud'),LOCAL_KEY=GP_CLOUD_MODE?'gameplan-cloud-mirror-v1':'little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY=GP_CLOUD_MODE?'gameplan-cloud-project-v1':'little-dock-local-project',APP_VERSION='2026.11.05.52';
+const GP_CLOUD_MODE=new URLSearchParams(location.search).has('cloud'),LOCAL_KEY=GP_CLOUD_MODE?'gameplan-cloud-mirror-v1':'little-dock-local-v2',LEGACY_KEY='little-dock-v1',PROJECT_KEY=GP_CLOUD_MODE?'gameplan-cloud-project-v1':'little-dock-local-project',APP_VERSION='2026.11.05.53';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=['Ethan','Jerry','Jenny'];
@@ -2441,4 +2497,4 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="gameplan.js?v=2026.11.05.52"></script><script src="cloud-mode.js?v=2026.11.05.52"></script></body></html>
+</script><script src="gameplan.js?v=2026.11.05.53"></script><script src="cloud-mode.js?v=2026.11.05.53"></script></body></html>
