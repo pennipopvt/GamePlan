@@ -156,6 +156,186 @@ async function checkAccount(){
  user=result.user;return true;
 }
 function accountLabel(){return user?.user_metadata?.name||user?.user_metadata?.preferred_username||user?.email||'Signed in'}
+
+function accountDisplayName(){
+ return user?.user_metadata?.preferred_username||user?.user_metadata?.global_name||
+ user?.user_metadata?.name||user?.user_metadata?.full_name||
+ user?.email?.split('@')[0]||'Account';
+}
+function accountMemberId(id=user?.id){return 'account:'+id}
+function roleFor(pid=activeProject){
+ if(!user||!activatedUserId)return 'none';
+ if(!links[String(pid)])return 'owner'; // a local draft belongs to its signed-in account
+ const cloudId=links[String(pid)];
+ if(cloudProjectList.find(x=>x.id===cloudId)?.owner_id===user.id)return 'owner';
+ return teamByProject[String(pid)]?.find(x=>x.member_user_id===user.id)?.member_role||'viewer';
+}
+function ensureAccountMember(memberId,name){
+ let person=data.members.find(m=>String(m.member_id)===String(memberId));
+ if(!person){
+  person={member_id:memberId,display_name:name,google_email:'',active:'Yes'};
+  data.members.push(person);data.roster.push({...person});
+ }else if(name){person.display_name=name;const roster=data.roster.find(m=>m.member_id===memberId);if(roster)roster.display_name=name}
+ return person;
+}
+function hasMeaningfulLegacyBoard(board){
+ if(!board||!Array.isArray(board.projects))return false;
+ if((board.tasks?.length||0)||(board.logs?.length||0)||(board.features?.length||0)||
+    (board.milestones?.length||0)||(board.tags?.length||0))return true;
+ return board.projects.some(p=>p.project_name!=='Fishing Game — Proof of Concept');
+}
+async function activateAccount(){
+ if(!user)return false;
+ if(activatedUserId===user.id)return true;
+ if(activating)return activating;
+ activating=(async()=>{
+  const id=user.id;
+  const accountKey='gp-account-board-v1:'+id;
+  const projectKey='gp-account-active-v1:'+id;
+  const linksKey='gp-account-links-v1:'+id;
+  const baseKey='gp-account-baselines-v1:'+id;
+  const deletedKey='gp-account-deletes-v1:'+id;
+  let saved=read(accountKey,null);
+  let choseLegacy=false;
+  if(!saved){
+   const legacy=read('little-dock-local-v2',null);
+   const meaningful=hasMeaningfulLegacyBoard(legacy);
+   let decision='empty';
+   if(meaningful){
+    decision=await window.GamePlanAccounts?.requestMigration?.({
+     projectCount:legacy.projects?.length||0,
+     taskCount:legacy.tasks?.length||0,
+     logCount:legacy.logs?.length||0
+    })||'empty';
+   }
+   choseLegacy=decision==='copy';
+   saved=choseLegacy?clone(legacy):seedData();
+   // Always retain the legacy key as an untouched recovery snapshot.
+   store(accountKey,saved);
+   if(choseLegacy){
+    const visible=await api.listProjects().catch(()=>[]);
+    const access=new Set(visible.map(p=>p.id));
+    const oldLinks=read('gp-sync-links-v1',{});
+    const migratedLinks=Object.fromEntries(Object.entries(oldLinks)
+     .filter(([localId,cloudId])=>saved.projects.some(p=>String(p.project_id)===localId)&&access.has(cloudId)));
+    store(linksKey,migratedLinks);
+    const oldBases=read('gp-sync-baselines-v1',{});
+    store(baseKey,Object.fromEntries(Object.entries(oldBases).filter(([pid])=>!!migratedLinks[pid])));
+    const oldDeletes=read('gp-sync-deleted-v1',{});
+    store(deletedKey,Object.fromEntries(Object.entries(oldDeletes).filter(([pid])=>!!migratedLinks[pid])));
+    const oldPid=localStorage.getItem('little-dock-local-project');
+    if(oldPid&&saved.projects.some(p=>String(p.project_id)===oldPid))localStorage.setItem(projectKey,oldPid);
+   }
+  }
+  LOCAL_KEY=accountKey;PROJECT_KEY=projectKey;
+  LINKS=linksKey;BASE=baseKey;DELETED=deletedKey;
+  links=read(LINKS,{});bases=read(BASE,{});deletedIntents=read(DELETED,{});
+  data=loadLocal();
+  cloudProjectList=await api.listProjects().catch(()=>[]);
+  const owned=Object.entries(links).some(([localId,cloudId])=>
+   cloudProjectList.some(p=>p.id===cloudId&&p.owner_id===id)&&
+   String(data.projects.find(p=>String(p.project_id)===localId)?.project_manager_member_id)===String(data.me?.member_id));
+  const legacyId=owned&&data.me?.member_id?data.me.member_id:accountMemberId(id);
+  const display=accountDisplayName();
+  data.me={member_id:legacyId,display_name:display};
+  data.email=user.email||'';
+  ensureAccountMember(legacyId,display);
+  const old=readProject();
+  activeProject=data.projects.some(p=>String(p.project_id)===String(old))?old:data.projects[0]?.project_id||'';
+  saveProject();
+  // Save ONLY inside the new per-user workspace. Original old board remains intact.
+  oldPersist();
+  activatedUserId=id;ready=true;lastSyncError=null;
+  if(data.projects.length){
+   $s('#mainApp').hidden=false;
+   window.GamePlanAccounts?.hideEmpty?.();
+   render();
+  }else window.GamePlanAccounts?.emptyWorkspace?.();
+  window.GamePlanAccounts?.onAuthenticated?.(user);
+  return true;
+ })().finally(()=>{activating=null});
+ return activating;
+}
+async function refreshProjectList(){
+ if(!api||!user)return;
+ cloudProjectList=await api.listProjects();
+ // Import projects that this authenticated account can read and does not
+ // already have locally. No existing project or local cache is replaced.
+ for(const project of cloudProjectList){
+  if(!Object.values(links).includes(project.id))await joinShared(project.id);
+ }
+ if(data.projects.length){
+  window.GamePlanAccounts?.hideEmpty?.();
+  $s('#mainApp').hidden=false;
+ }else window.GamePlanAccounts?.emptyWorkspace?.();
+}
+async function reloadTeam(pid=activeProject){
+ if(!user||!links[String(pid)]||!api)return [];
+ const cloudId=links[String(pid)];
+ let rows=[],upgrade=false;
+ try{rows=await api.projectTeam(cloudId)}
+ catch(err){
+  if(!/gp_project_team|PGRST202|42883|Could not find the function|schema cache/i.test(err.message||''))throw err;
+  upgrade=true;
+  const raw=await api.listMembers(cloudId);
+  rows=raw.map(m=>({
+   member_user_id:m.user_id,member_role:m.role,joined_at:m.joined_at,
+   account_name:m.user_id===user.id?accountDisplayName():'Teammate',
+   display_name:m.user_id===user.id?accountDisplayName():'Teammate',
+   legacy_member_id:null
+  }));
+ }
+ if(!upgrade&&rows.length&&cloudProjectList.find(p=>p.id===cloudId)?.owner_id===user.id){
+  // Own old PM assignments can safely be associated with the actual owner.
+  const owner=rows.find(x=>x.member_user_id===user.id);
+  const original=data.projects.find(x=>x.project_id===pid)?.project_manager_member_id;
+  if(owner&&!owner.legacy_member_id&&original&&data.members.some(m=>m.member_id===original)){
+   try{
+    await api.setTeamMember(cloudId,user.id,owner.display_name,original);
+    rows=await api.projectTeam(cloudId);
+   }catch(err){console.warn('[GamePlan owner legacy link]',err)}
+  }
+ }
+ teamByProject[String(pid)]=rows;
+ const shadows=data.team.filter(t=>t.project_id===pid&&t.__gp_account_shadow);
+ data.team=data.team.filter(t=>!(t.project_id===pid&&t.__gp_account_shadow));
+ for(const m of rows){
+  const preferred=m.legacy_member_id||
+   (m.member_role==='owner'?data.projects.find(p=>p.project_id===pid)?.project_manager_member_id:'')||
+   accountMemberId(m.member_user_id);
+  ensureAccountMember(preferred,m.display_name||m.account_name||'Teammate');
+  if(!data.team.some(t=>t.project_id===pid&&String(t.member_id)===String(preferred))){
+   data.team.push({project_id:pid,member_id:preferred,
+    linked_user_id:m.member_user_id,project_role:m.member_role==='owner'?'Owner':m.member_role==='editor'?'Editor':'Viewer',
+    membership_status:'Active',discipline:'',__gp_account_shadow:true});
+  }
+ }
+ // Team/account shadows only affect this browser's UI and aren't uploaded.
+ oldPersist();
+ window.GamePlanAccounts?.setTeam?.(rows,roleFor(pid),upgrade);
+ if(gpPage==='team')window.GamePlanAccounts?.renderTeamPage?.();
+ if(roleFor(pid)==='viewer')document.body.classList.add('gp-readonly');
+ else document.body.classList.remove('gp-readonly');
+ return rows;
+}
+async function createAuthenticatedProject(name){
+ if(!user)throw Error('Please sign in first.');
+ if(!navigator.onLine)throw Error('Connect to the internet to create a shared project.');
+ const created=await api.createProject(name);
+ const pid='cloud-'+created.id,memberId=data.me.member_id;
+ data.projects.push({project_id:pid,project_name:created.name,description:'',
+  status:'Active',project_manager_member_id:memberId});
+ data.team.push({project_id:pid,member_id:memberId,project_role:'Owner',
+  membership_status:'Active',discipline:'',linked_user_id:user.id,__gp_account_shadow:true});
+ cloudProjectList.push(created);saveLink(pid,created.id);persistBaseline(pid,{});
+ activeProject=pid;saveProject();oldPersist();
+ window.GamePlanAccounts?.hideEmpty?.();$s('#mainApp').hidden=false;
+ render();await watch();await reloadTeam(pid);
+ return created;
+}
+window.GamePlanAuth={canEdit:pid=>user&&activatedUserId===user.id&&['owner','editor'].includes(roleFor(pid)),
+ roleFor:pid=>roleFor(pid),user:()=>user};
+
 function makeLocalRow(record,pid){
  return {...clone(record.payload),project_id:pid};
 }
