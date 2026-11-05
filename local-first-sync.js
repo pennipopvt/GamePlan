@@ -144,7 +144,7 @@ function isEditing(){return !!($s('#back.show')||$s('#gpDialogOverlay'))}
 async function checkAccount(){
  const cfg=config();if(!cfg?.url||!cfg?.key)return false;
  if(!api){
-  const module=await import('./supabase/gameplan-cloud.js?v=2026.11.05.61');
+  const module=await import('./supabase/gameplan-cloud.js?v=2026.11.05.62');
   api=module.createGamePlanCloud({url:cfg.url,publishableKey:cfg.key});
  }
  if(!navigator.onLine){
