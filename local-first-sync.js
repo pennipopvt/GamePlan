@@ -283,9 +283,9 @@ async function shareCurrent(){
  const matching=existing.find(p=>p.name===local.project_name);
  const options=existing.length
   ?'<label class="wide">Cloud destination<select id="gpCloudExisting">'+
-    (matching?'<option value="'+e(matching.id)+'">Use existing “'+e(matching.name)+'” (recommended)</option>':'')+
+    (matching?'<option value="'+e(matching.id)+'">Use existing “'+e(matching.name)+'” (recommended)</option>':'<option value="">Create new shared project (recommended)</option>')+
     choice(existing.filter(p=>!matching||p.id!==matching.id))+
-    '<option value="">Create new shared project</option></select></label>'
+    (matching?'<option value="">Create new shared project</option>':'')+'</select></label>'
   :'';
  modal('Share this project','<p class="sub">Your browser copy stays intact. Connect it to a cloud project to enable team syncing.</p>'+
   '<p class="sub">Before linking an existing project, its cloud items will be backed up in your browser and your local items uploaded without deleting any cloud items.</p>'+
