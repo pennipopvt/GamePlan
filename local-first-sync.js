@@ -292,6 +292,9 @@ async function shareCurrent(){
    // Baseline includes any remote rows not overwritten. They are added during
    // the next non-destructive sync rather than treated as deletions.
    const combined={...remote,...projectRows(pid)};
+   // Keep unrelated items already in the shared project instead of treating
+   // them as locally deleted during the first sync.
+   mergeRemote(pid,combined,{},projectRows(pid));
    persistBaseline(pid,combined);saveLink(pid,cloud.id);
    closeModal();await watch();refreshStatus();gpAlert('Project connected. Your local tasks and time logs were uploaded. You can now invite teammates.');
   }catch(err){gpAlert('Could not connect project: '+err.message);btn.disabled=false}
