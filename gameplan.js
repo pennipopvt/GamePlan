@@ -189,8 +189,15 @@ function gpAddShell(){
  nav.insertBefore(boardNav,nav.children[1]);
  const main=$('#mainApp');const board=document.createElement('div');board.id='gpBoardView';while(main.firstChild)board.append(main.firstChild);main.append(board);
  const extra=document.createElement('section');extra.id='gpExtra';extra.className='card';main.append(extra);
+ const headerActions=document.createElement('div');headerActions.className='gp-header-actions';
+ headerActions.setAttribute('aria-label','Import and export');
+ for(const id of ['export','import','importMilestone','fileInput','milestoneFileInput']){
+  const control=document.getElementById(id);
+  if(control)headerActions.appendChild(control);
+ }
+ header.appendChild(headerActions);
  const boardFooter=document.createElement('section');boardFooter.className='gp-board-footer';
- boardFooter.innerHTML='<h2>Board Tools</h2><p>Export a backup, restore your board, or manage milestone imports.</p>';
+ boardFooter.innerHTML='<h2>Board Tools</h2><p>Undo changes, reload, or open the online board.</p>';
  boardFooter.appendChild($('.top-actions'));
  board.append(boardFooter);
  const siteFooter=document.createElement('footer');siteFooter.className='gp-site-footer';
