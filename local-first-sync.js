@@ -1039,19 +1039,20 @@ async function checkAppPermission(){
  }
  const appToken=sessionStorage.getItem(PENDING_APP);
  try{
-  // Existing project/email invitations remain valid ways into the app.
-  // Claims are idempotent; the subsequent normal join flow still runs.
+  // Claim older email-based project invites first, then check access.
+  // Existing accounts should never consume a use of an app-wide invite.
   await api.listProjects();
-  const projectToken=sessionStorage.getItem(PENDING_INVITE);
-  if(projectToken&&!(preAcceptedProjectId&&preAcceptedProjectToken===projectToken)){
-   preAcceptedProjectId=await api.acceptLinkInvite(projectToken);
-   preAcceptedProjectToken=projectToken;
+  let result=await api.appAccessStatus();
+  if(!result?.access){
+   const projectToken=sessionStorage.getItem(PENDING_INVITE);
+   if(projectToken&&!(preAcceptedProjectId&&preAcceptedProjectToken===projectToken)){
+    preAcceptedProjectId=await api.acceptLinkInvite(projectToken);
+    preAcceptedProjectToken=projectToken;
+   }
+   if(appToken)await api.acceptAppInvite(appToken);
+   if(projectToken||appToken)result=await api.appAccessStatus();
   }
-  if(appToken){
-   await api.acceptAppInvite(appToken);
-   sessionStorage.removeItem(PENDING_APP);
-  }
-  const result=await api.appAccessStatus();
+  if(appToken&&result?.access)sessionStorage.removeItem(PENDING_APP);
   appAccess={access:!!result?.access,admin:!!result?.admin,installed:true};
   if(!appAccess.access){
    ready=false;activatedUserId='';
