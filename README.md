@@ -5,7 +5,7 @@ A lightweight task-and-project board, published from this repository with GitHub
 ## Working rules for future development chats
 
 1. **Inspect the current `main` branch before editing.** Do not assume a previous chat's code or versions are current. Keep existing design language and make focused changes rather than redesigning unrelated screens.
-2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.07.78**.
+2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.07.79**.
 3. **Refresh the offline cache identifier** in `service-worker.js` when changing front-end assets, so older clients do not keep a stale shell. This is separate from the human-readable app version.
 4. **Publish by committing to `main`.** Check the GitHub Pages build/deployment state and confirm the public URL serves the new version. If `main` is protected, create a feature branch and PR, then merge when checks permit. Never claim a successful deployment from a successful commit alone.
 5. **If the page looks stale:** hard-refresh, verify the live HTML version and asset query strings, inspect Actions/Pages deployment status, and inspect the service worker/cache. Don't blindly repeat commits. See `.github/workflows/recover-pages.yml` for a *manual recovery workflow specific to a previously stale deployment*; don't run or alter it without confirming it still applies.
@@ -108,8 +108,9 @@ A lightweight task-and-project board, published from this repository with GitHub
 
 ## GamePlan-wide invites vs project-specific invites
 
-- **New:** App-wide access invites let someone use GamePlan and create their own cloud-backed projects without joining yours. App invite admins are bootstrapped from existing project owners; all auth users already in the Supabase database when the migration first runs retain access.
+- **New:** App-wide access invites let someone use GamePlan and create their own cloud-backed projects without joining yours. Existing Supabase Auth users are grandfathered into app access on the first migration, but **only the one explicitly designated GamePlan owner** can create or revoke app-wide invite links.
 - **Still available:** Project invite links add someone to one particular shared project, without granting access to unrelated projects.
 - To enforce new app signup approval and enable app-wide invitation links, run [`supabase/app-invites.sql`](supabase/app-invites.sql) once against your existing Supabase project. It leaves the board intact and adds an RLS project-creation restriction. The SQL migration must be run manually; committing GitHub code is not enough.
+- To authorize **only your account** to invite users to GamePlan, run [`supabase/owner-only-invites.sql`](supabase/owner-only-invites.sql) afterward, entering your own Auth user UUID in the Supabase SQL Editor (not GitHub). This safely removes other app-invite administrators from older setups, keeps project invitations unchanged, and enforces a one-admin limit.
 - For **automatic Supabase connection on new browsers**, fill the public URL and `sb_publishable_` value in [`supabase/public-config.js`](supabase/public-config.js). Never commit a secret/service-role key. Until then, both app and project invitation URLs auto-populate the public configuration for recipients, and existing browsers keep saved settings.
 - See [`supabase/README.md`](supabase/README.md#app-wide-invitations-and-default-supabase-connection-v2026110778) for the install and access model. Local legacy project uploads still require confirmation to avoid overwriting unsynced browser data; authenticated newly created projects already use Supabase automatically.
