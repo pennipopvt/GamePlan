@@ -508,10 +508,10 @@ function gpFeatureCreate(preferredMilestoneId='',initialTemplateId=''){
    }else{
     const template=selectedTemplate();if(!template)throw Error('Select a template first');
     const fid=uid();
-    data.features.push({feature_id:fid,project_id:activeProject,milestone_id:mid,name,description:'',status:'To do'});
+    data.features.push({feature_id:fid,project_id:activeProject,milestone_id:mid,name,description:'',status:'To do',...(gpDraftMilestone(mid)?{__gp_private:true}:{})});
     for(const original of template.tasks){
      const h=Number(original.estimated_hours)||0;
-     data.tasks.push({task_id:uid(),project_id:activeProject,feature_id:fid,title:original.title,description:original.description||'',tag_ids:[...(original.tag_ids||[])],priority:original.priority||'Normal',assignee_member_id:'',status:'To do',estimated_hours:h,created_by_member_id:'penni',updated_at:''});
+     data.tasks.push({task_id:uid(),project_id:activeProject,feature_id:fid,title:original.title,description:original.description||'',tag_ids:[...(original.tag_ids||[])],priority:original.priority||'Normal',assignee_member_id:'',status:'To do',estimated_hours:h,created_by_member_id:data.me.member_id,updated_at:'',...(gpDraftMilestone(mid)?{__gp_private:true}:{})});
     }
     persist();
    }
