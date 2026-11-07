@@ -2033,11 +2033,19 @@ a:hover,.link:hover{color:#80115c}
 @media(max-width:900px){#milestoneList .task-entry .meta-person{display:block}}
 .gp-running-clock{position:fixed;bottom:20px;right:20px;z-index:999;background:#fff;border:1px solid #e0d3e1;border-radius:14px;box-shadow:0 9px 34px #38223830;padding:12px 15px;display:flex;gap:14px;align-items:center;max-width:min(92vw,680px);flex-wrap:wrap}.gp-running-clock[hidden]{display:none}.gp-clock-label{font-size:13px;color:#655669;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gp-clock-elapsed{font-variant-numeric:tabular-nums;font-weight:700;font-size:17px;color:#452347}@media(max-width:650px){.gp-running-clock{left:12px;right:12px;bottom:12px;justify-content:space-between}}
 
-/* Small, consistent team colors on Board assignee names and Team member names. */
-.gp-assignee-label{display:inline-flex;align-items:center;gap:6px;min-width:0}
-.gp-assignee-color-dot{--gp-member-color:#98aab6;display:inline-block;flex:none;width:9px;height:9px;border-radius:50%;background:var(--gp-member-color);box-shadow:0 0 0 1px #0001}
+/* Consistent circular Discord avatars with the user's chart color as a border.
+   Initials remain visible when Discord profile pictures are not available. */
+.gp-assignee-label{display:inline-flex;align-items:center;gap:8px;min-width:0;white-space:nowrap}
+.gp-member-avatar{--gp-member-color:#98aab6;display:inline-grid;place-items:center;position:relative;flex:none;overflow:hidden;border:2px solid var(--gp-member-color);border-radius:50%;background:#f5e4f0;color:#734568;box-sizing:border-box;vertical-align:middle}
+.gp-member-avatar-board{width:24px;height:24px;font-size:10px}
+.gp-member-avatar-team{width:43px;height:43px;font-size:14px}
+.gp-member-avatar-initial{display:grid;place-items:center;width:100%;height:100%;font-weight:750;line-height:1}
+.gp-member-avatar-image{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;border-radius:50%;background:#f5e4f0}
 .gp-team-person-copy{min-width:0;flex:1}
-.gp-team-person-copy strong{display:flex;align-items:center;gap:7px;min-width:0;overflow-wrap:anywhere}
+.gp-team-person-copy strong{display:block;min-width:0;overflow-wrap:anywhere}
+.gp-team-local-row{gap:12px;align-items:center}
+.gp-team-local-row .button{flex:none}
+
 /* Chart colors are edited inside the Manage dialog rather than a Team page section. */
 .gp-manage-member-color{margin-top:2px;border:1px solid #eae2e9;border-radius:10px;padding:10px 13px;background:#fff}
 .gp-manage-member-color-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;list-style:none;color:#59475b;font-size:13px;font-weight:650}
@@ -2060,8 +2068,8 @@ a:hover,.link:hover{color:#80115c}
 .gp-toast-dismiss{flex:none;padding:0 3px;border:0;background:transparent;color:#7b7080;font-size:21px;line-height:1;cursor:pointer}
 .gp-toast-dismiss:hover{color:#35203d}
 @media(max-width:650px){.gp-toast{top:66px;right:12px;left:12px;width:auto;max-width:none}}
-</style><link rel="stylesheet" href="account-ui.css?v=2026.11.07.75"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.07.75</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+</style><link rel="stylesheet" href="account-ui.css?v=2026.11.07.76"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.07.76</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><button type="button" class="button gp-my-filter" id="gpMyTasks" aria-pressed="false" title="Show only your unfinished assigned tasks">My tasks <span id="gpMyCount" class="gp-my-count">0</span></button><select id="gpMilestoneFilter" aria-label="Filter board by milestone" title="Filter by milestone"><option value="">All milestones</option></select><select id="assigneeFilter" hidden aria-hidden="true"><option value="">All assignees</option></select><div class="gp-filter-wrap"><button type="button" class="button gp-filter-trigger" id="gpFilterTrigger" aria-expanded="false" aria-controls="gpFilterPanel"><span aria-hidden="true">⚲</span> Filters <span id="gpFilterCount" class="gp-filter-count" hidden>0</span></button><div class="gp-filter-panel" id="gpFilterPanel" hidden></div></div><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div id="gpFilterChips" class="gp-filter-chips" hidden></div>
@@ -2072,7 +2080,7 @@ a:hover,.link:hover{color:#80115c}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.07.75';
+let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.07.76';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=[];
@@ -2370,12 +2378,20 @@ function render(){
  actions.onclick=ev=>{const a=ev.target.closest('[data-action]');if(a)quickCreate(a.dataset.action)};
  renderMilestoneFilter();renderMilestones();renderTeam();gpRenderClock();
 }
+function gpAssigneeAvatar(memberId,name){
+ if(!memberId)return '';
+ const resolved=window.GamePlanAvatars?.markup?.(memberId,name,'board');
+ if(resolved)return resolved;
+ const initial=Array.from(String(name||'?'))[0]?.toUpperCase()||'?';
+ const color=window.GamePlanColors?.getColor?.(memberId)||'#98aab6';
+ return '<span class="gp-member-avatar gp-member-avatar-board" style="--gp-member-color:'+e(color)+'" title="'+e(name)+'"><span class="gp-member-avatar-initial">'+e(initial)+'</span></span>';
+}
 function taskRow(t){
  const logs=taskHours(t);
  const statusClass=({'To do':'status-todo','In progress':'status-progress','Blocked':'status-blocked','Done':'status-done'})[t.status]||'status-todo';
- const isMine=gpTaskIsMine(t),personColor=t.assignee_member_id?window.GamePlanColors?.getColor?.(t.assignee_member_id):null;
+ const isMine=gpTaskIsMine(t);
  const assigneeName=isMine?'<span class="gp-mine-tag" title="Assigned to you">You</span>':e(member(t.assignee_member_id));
- const assignedHTML='<span class="gp-assignee-label">'+(personColor?'<span class="gp-assignee-color-dot" style="--gp-member-color:'+e(personColor)+'"></span>':'')+assigneeName+'</span>';
+ const assignedHTML='<span class="gp-assignee-label">'+gpAssigneeAvatar(t.assignee_member_id,member(t.assignee_member_id))+assigneeName+'</span>';
  return `<div class="task-entry ${statusClass}"><div><button class="task-title ${t.status==='Done'?'task-done':''}" data-detail="${e(t.task_id)}">${e(t.title)}</button><div class="sub">${e(t.priority)} · ${formatHours(t.estimated_hours)} estimated · ${formatHours(logs)} logged · ${formatHours(taskRemainingHours(t))} remaining</div></div><div class="meta-person sub">${assignedHTML}</div><select class="status-select ${statusClass}" data-status="${e(t.task_id)}" aria-label="Status for ${e(t.title)}">${ST.map(status=>`<option value="${e(status)}" ${t.status===status?'selected':''}>${e(status)}</option>`).join('')}</select><div class="actions"><button data-clock-in="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Start working: ${e(t.title)}" title="Start working">▶</button><button data-log="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Manage time: ${e(t.title)}" title="Manage time"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button><button class="icon-edit" data-edit="${e(t.task_id)}" type="button" aria-label="Edit task: ${e(t.title)}" title="Edit task"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></div>`;
 }
 function renderMilestones(){
@@ -2489,7 +2505,7 @@ function details(id){
  ${detailTags.length?'<div class="gp-detail-tags" aria-label="Task tags">'+detailTags.map(tag=>'<span class="gp-detail-tag" style="--tc:'+e(tag.color||'#b18aa6')+'"><span class="gp-detail-tag-mark" aria-hidden="true"></span>'+e(tag.name)+'</span>').join('')+'</div>':''}
  <section class="gp-detail-section"><h3>Description</h3><div class="gp-detail-description">${e(t.description||'No description yet.')}</div></section>
  <div class="gp-detail-meta">
-  <div><span class="gp-detail-meta-label">Assigned to</span><strong class="gp-assignee-label">${t.assignee_member_id?'<span class="gp-assignee-color-dot" style="--gp-member-color:'+e(window.GamePlanColors?.getColor?.(t.assignee_member_id)||'#98aab6')+'"></span>':''}${e(member(t.assignee_member_id))}</strong></div>
+  <div><span class="gp-detail-meta-label">Assigned to</span><strong class="gp-assignee-label">${gpAssigneeAvatar(t.assignee_member_id,member(t.assignee_member_id))}${e(member(t.assignee_member_id))}</strong></div>
   <div><span class="gp-detail-meta-label">Status</span><strong class="gp-detail-status gp-detail-${statusTone}">${e(t.status)}</strong></div>
   <div><span class="gp-detail-meta-label">Remaining</span><strong>${formatHours(taskRemainingHours(t))}</strong></div>
  </div>
@@ -2805,4 +2821,4 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="gameplan.js?v=2026.11.07.75"></script><script src="local-first-sync.js?v=2026.11.07.75"></script><script src="account-ui.js?v=2026.11.07.75"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
+</script><script src="gameplan.js?v=2026.11.07.76"></script><script src="local-first-sync.js?v=2026.11.07.76"></script><script src="account-ui.js?v=2026.11.07.76"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>

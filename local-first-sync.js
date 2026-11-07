@@ -145,7 +145,7 @@ function isEditing(){return !!($s('#back.show')||$s('#gpDialogOverlay'))}
 async function checkAccount(){
  const cfg=config();if(!cfg?.url||!cfg?.key)return false;
  if(!api){
-  const module=await import('./supabase/gameplan-cloud.js?v=2026.11.05.62');
+  const module=await import('./supabase/gameplan-cloud.js?v=2026.11.07.76');
   api=module.createGamePlanCloud({url:cfg.url,publishableKey:cfg.key});
  }
  if(!navigator.onLine){
@@ -242,6 +242,8 @@ async function activateAccount(){
    :read(cloudCacheKey,[]);
   if(navigator.onLine&&cloudProjectList.length)store(cloudCacheKey,cloudProjectList);
   teamByProject=read('gp-account-teams-v1:'+id,{});
+  for(const [pid,rows] of Object.entries(teamByProject))
+   window.GamePlanAvatars?.setTeam?.(pid,rows,user);
   const owned=Object.entries(links).some(([localId,cloudId])=>
    cloudProjectList.some(p=>p.id===cloudId&&p.owner_id===id)&&
    String(data.projects.find(p=>String(p.project_id)===localId)?.project_manager_member_id)===String(data.me?.member_id));
@@ -358,8 +360,25 @@ async function reloadTeam(pid=activeProject){
    }catch(err){console.warn('[GamePlan owner legacy link]',err)}
   }
  }
+ // Public Discord avatar URLs are an optional, separately authorized RPC.
+ // Older Supabase workspaces still render colored initials without this upgrade.
  const prior=teamByProject[String(pid)]||[];
- const mappingChanged=JSON.stringify(prior.map(m=>[m.member_user_id,m.legacy_member_id,m.member_role,m.display_name]))!==JSON.stringify(rows.map(m=>[m.member_user_id,m.legacy_member_id,m.member_role,m.display_name]));
+ const previousURLs=new Map(prior.map(row=>[String(row.member_user_id),row.avatar_url||'']));
+ const avatarURLs=new Map();
+ try{
+  const avatars=await api.projectTeamAvatars(cloudId);
+  for(const avatar of avatars||[])if(avatar?.member_user_id&&avatar.avatar_url)
+   avatarURLs.set(String(avatar.member_user_id),String(avatar.avatar_url));
+ }catch(err){
+  if(!/gp_project_team_avatars|PGRST202|42883|Could not find the function|schema cache/i.test(err.message||''))
+   console.warn('[GamePlan optional avatars]',err);
+ }
+ rows=rows.map(row=>{
+  const own=String(row.member_user_id)===String(user.id)?user.user_metadata?.avatar_url||user.user_metadata?.picture||'':'';
+  return {...row,avatar_url:avatarURLs.get(String(row.member_user_id))||own||previousURLs.get(String(row.member_user_id))||null};
+ });
+ window.GamePlanAvatars?.setTeam?.(pid,rows,user);
+ const mappingChanged=JSON.stringify(prior.map(m=>[m.member_user_id,m.legacy_member_id,m.member_role,m.display_name,m.avatar_url]))!==JSON.stringify(rows.map(m=>[m.member_user_id,m.legacy_member_id,m.member_role,m.display_name,m.avatar_url]));
  teamByProject[String(pid)]=rows;
  store('gp-account-teams-v1:'+user.id,teamByProject);
  const shadows=data.team.filter(t=>t.project_id===pid&&t.__gp_account_shadow);
@@ -1062,6 +1081,7 @@ window.GamePlanSync={
  resetClient(){if(!user)api=null},
  async signOut(){
   if(api)await api.signOut();
+  window.GamePlanAvatars?.clear?.();
   user=null;ready=false;activatedUserId='';teamByProject={};cloudProjectList=[];
   subscription?.();subscription=null;watched='';
   $s('#mainApp').hidden=true;
