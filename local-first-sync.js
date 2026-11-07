@@ -684,14 +684,31 @@ gpSettings=function(...args){
  }
  return value;
 };
-const previousDeleteProject=gpDeleteProject;
-gpDeleteProject=async function(){
- if(current()){
-  if(roleFor(activeProject)!=='owner')return gpAlert('Only the project owner can delete it.');
-  return gpAlert('Shared project deletion is temporarily disabled to protect your team data. Export a backup first.');
- }
- return previousDeleteProject();
-};
+// Deletion is now handled by gpDeleteProject, which confirms and backs up the
+// local board, deletes the cloud project first, then clears its browser copy.
+// Never clear the local link merely because a network request was started.
+async function deleteSharedProject(pid){
+ if(!user||!api||!navigator.onLine)throw Error('Sign in and connect to the internet first.');
+ if(roleFor(pid)!=='owner')throw Error('Only the project owner can permanently delete it.');
+ const cloudId=links[String(pid)];
+ if(!cloudId)throw Error('This project has no cloud connection.');
+ const {data:deleted,error}=await api.client.from('gp_projects')
+  .delete().eq('id',cloudId).eq('owner_id',user.id).select('id');
+ if(error)throw error;
+ if(!Array.isArray(deleted)||deleted.length!==1||String(deleted[0]?.id)!==String(cloudId))
+  throw Error('Supabase did not confirm deleting the project. Your board was left unchanged.');
+ if(watched===cloudId){subscription?.();subscription=null;watched=''}
+ delete links[pid];store(LINKS,links);
+ delete bases[pid];store(BASE,bases);
+ delete deletedIntents[pid];store(DELETED,deletedIntents);
+ delete nameDirty[pid];store(NAME_DIRTY,nameDirty);
+ delete knownNames[pid];store(NAME_KNOWN,knownNames);
+ delete teamByProject[pid];
+ store('gp-account-teams-v1:'+user.id,teamByProject);
+ cloudProjectList=cloudProjectList.filter(p=>p.id!==cloudId);
+ store('gp-account-cloud-projects-v1:'+user.id,cloudProjectList);
+ return true;
+}
 const previousCloseModal=closeModal;
 closeModal=function(...args){const value=previousCloseModal(...args);schedule();return value};
 async function watch(){
@@ -1129,7 +1146,7 @@ async function initialize(){
 void initialize();
 // Optional API for the main page's project management UI.
 window.GamePlanSync={
- connect,shareCurrent,shareInvite,schedule,backup:downloadBackup,
+ connect,shareCurrent,shareInvite,schedule,backup:downloadBackup,deleteSharedProject,
  isLinked:pid=>!!links[String(pid)],status:refreshStatus,
  currentUser:()=>user,api:()=>api,roleFor,
  ownAssigneeIds(pid=activeProject){
