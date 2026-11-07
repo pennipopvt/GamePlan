@@ -220,9 +220,9 @@ function renderTeamPage(){
  const rowMarkup=teamRows.map(m=>{
   const name=memberName(m),isOwner=m.member_role==='owner';
   const colorId=window.GamePlanColors?.accountMemberId?.(m)||String(m.legacy_member_id||'account:'+m.member_user_id);
-  const color=window.GamePlanColors?.getColor?.(colorId)||'#98aab6';
-  return '<article class="gp-person-row"><div class="gp-person-avatar">'+html(initials(name))+'</div>'+
-   '<div class="gp-person-copy"><strong><span class="gp-assignee-color-dot" style="--gp-member-color:'+html(color)+'"></span>'+html(name)+'</strong><span class="sub">'+html(m.account_name&&m.account_name!==name?'Discord / account name: '+m.account_name:'Linked account')+'</span></div>'+
+  const avatar=window.GamePlanAvatars?.markup?.(colorId,name,'team')||'<span class="gp-member-avatar gp-member-avatar-team"><span class="gp-member-avatar-initial">'+html(initials(name).slice(0,1))+'</span></span>';
+  return '<article class="gp-person-row">'+avatar+
+   '<div class="gp-person-copy"><strong>'+html(name)+'</strong><span class="sub">'+html(m.account_name&&m.account_name!==name?'Discord / account name: '+m.account_name:'Linked account')+'</span></div>'+
    '<span class="gp-role-pill">'+html(isOwner?'Owner':m.member_role==='editor'?'Editor':'Viewer')+'</span>'+
    (owner?'<button type="button" class="button" data-gp-authmember="'+html(m.member_user_id)+'"'+(teamUpgradeNeeded?' disabled title="Complete the one-time Supabase team upgrade to manage members"':'')+'>'+'Manage</button>':'')+'</article>';
  }).join('');
