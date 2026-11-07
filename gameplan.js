@@ -929,7 +929,8 @@ function gpAnalyticsWeeklyData(scope){
  return {rows,line};
 }
 function gpAnalyticsHoursTick(value){
- return Math.round(value*10)/10+'h';
+ const minutes=Math.round(value*60),hours=Math.floor(minutes/60),remainder=minutes%60;
+ return remainder?(hours?hours+'h'+String(remainder).padStart(2,'0'):remainder+'m'):hours+'h';
 }
 function gpAnalyticsChart(scope,weekly){
  const rows=weekly.rows,people=scope.people;
@@ -977,7 +978,8 @@ function gpAnalyticsChart(scope,weekly){
   '<svg class="gp-weekly-chart" viewBox="0 0 '+width+' '+height+'" width="'+width+'" height="'+height+'" role="img" aria-label="Vertical grouped bars showing logged hours per week by team member'+(gpAnalyticsSettings.velocity?', with a three-week moving average team velocity line':'')+'">'+
    '<title>Weekly logged hours by person</title>'+labels+bars+line+weekLabels+'</svg></div>'+
    '<div class="gp-analytics-legend">'+legend+'</div>'+
-   '<p class="gp-analytics-chart-caption">'+formatHours(displayedTotal)+' logged across the displayed weeks · Time is credited to whoever logged it, not the task assignee. The velocity line averages total team hours over the current and previous two weeks.</p>';
+   '<p class="gp-analytics-chart-caption">'+formatHours(displayedTotal)+' logged across the displayed weeks · Time is credited to whoever logged it, not the task assignee.'+
+   (gpAnalyticsSettings.velocity?' The line shows average team hours for the current and previous two weeks.':'')+'</p>';
 }
 function gpAnalyticsFeatureList(scope){
  const all=scope.features;
