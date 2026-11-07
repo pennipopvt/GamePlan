@@ -160,3 +160,17 @@ body.gp-readonly #gpProjectTitle{pointer-events:none;opacity:.52}
  .gp-person-row>.gp-role-pill{margin-left:55px}
  .gp-person-row>.button{margin-left:auto}
 }
+
+
+/* GamePlan app-access invitations are distinct from project-sharing links. */
+.gp-account-invite{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:16px 0;padding:12px 0;border-top:1px solid #efe7ef;border-bottom:1px solid #efe7ef}
+.gp-account-invite .sub{font-size:12px;max-width:245px}
+.gp-app-invite-result{border:1px solid #ead5e5;border-radius:10px;padding:14px;margin:15px 0;background:#fff8fc}
+.gp-app-invite-result label{display:grid;gap:6px;font-size:12px;font-weight:600;color:#59485e}
+.gp-app-invite-result input{width:100%;min-width:0;font-family:ui-monospace,SFMono-Regular,monospace;font-size:11.5px}
+.gp-app-invite-result button{margin-top:10px}
+.gp-app-invite-result p{margin:8px 0 0}
+.gp-app-invite-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 1px;border-bottom:1px solid #eee5ee;font-size:12px;color:#726477}
+.gp-app-invite-row:last-child{border-bottom:0}
+.gp-app-invite-row button{flex:none}
+@media(max-width:500px){.gp-account-invite{align-items:flex-start;flex-direction:column}.gp-app-invite-row{align-items:flex-start;flex-wrap:wrap}}

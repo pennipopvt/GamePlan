@@ -6,13 +6,13 @@
 (function(){
 'use strict';
 const $s=q=>document.querySelector(q);
-const CFG='gameplan-cloud-config-v1',LAST='gp-sync-backup-import-v1',PENDING_INVITE='gp-pending-link-invite';
+const CFG='gameplan-cloud-config-v1',LAST='gp-sync-backup-import-v1',PENDING_INVITE='gp-pending-link-invite',PENDING_APP='gp-pending-app-access-invite';
 let LINKS='gp-sync-links-v1',BASE='gp-sync-baselines-v1',DELETED='gp-sync-deleted-v1',NAME_DIRTY='gp-sync-name-dirty-v1',NAME_KNOWN='gp-sync-name-known-v1';
 const KINDS=['milestones','features','tasks','logs','tags','templates','team','custom_tag_colors'];
 const IDS={milestones:'milestone_id',features:'feature_id',tasks:'task_id',logs:'log_id',tags:'tag_id',templates:'template_id',team:'member_id'};
 let api=null,user=null,links=read(LINKS,{}),bases=read(BASE,{}),busy=false,loop=null,subscription=null,watched='',ready=false,blocked=false,inviteAttempted=false;
 let lastSyncError=null,lastSyncAt=0,remoteMissingCount=0,deletedIntents=read(DELETED,{}),copyMessageTimer=null;
-let activatedUserId='',activating=null,cloudProjectList=[],teamByProject={},teamUpgradeNeeded=false;
+let activatedUserId='',activating=null,cloudProjectList=[],teamByProject={},teamUpgradeNeeded=false,appAccess={access:true,admin:false,installed:false},preAcceptedProjectId='',preAcceptedProjectToken='';
 let nameDirty=read(NAME_DIRTY,{}),knownNames=read(NAME_KNOWN,{}),nameConflictBusy=false;
 const unique=(kind,obj)=>kind==='team'?'member:'+obj.member_id:kind==='custom_tag_colors'?'color:'+obj.color:String(obj[IDS[kind]]||'');
 const key=(kind,id)=>kind+'\u0000'+id;
@@ -35,9 +35,25 @@ if(incomingFragment.has('invite')){
  const token=incomingFragment.get('invite')||'';
  if(/^[a-f0-9]{64}$/.test(token))sessionStorage.setItem(PENDING_INVITE,token);
  else sessionStorage.removeItem(PENDING_INVITE);
- history.replaceState(null,'',location.pathname+location.search);
 }
-function config(){return read(CFG,null)}
+if(incomingFragment.has('access')){
+ const token=incomingFragment.get('access')||'';
+ if(/^[a-f0-9]{64}$/.test(token))sessionStorage.setItem(PENDING_APP,token);
+ else sessionStorage.removeItem(PENDING_APP);
+}
+if(incomingFragment.has('invite')||incomingFragment.has('access'))
+ history.replaceState(null,'',location.pathname+location.search);
+function config(){
+ const saved=read(CFG,null);
+ if(saved?.url&&saved?.key)return saved;
+ const defaults=window.GamePlanPublicConfig||{};
+ const url=String(defaults.url||'').trim().replace(/\/$/,'');
+ const key=String(defaults.publishableKey||defaults.key||'').trim();
+ if(/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(url)&&/^sb_publishable_[\w-]+$/.test(key)){
+  const entry={url,key};store(CFG,entry);return entry;
+ }
+ return null;
+}
 // The project URL and sb_publishable_ key are public client configuration.
 // Include them in invitation links so teammates do not need setup screens.
 const incoming=new URLSearchParams(location.search);
@@ -122,7 +138,8 @@ function refreshStatus(){
  const pid=String(activeProject||''),linked=!!links[pid];
  const pending=linked?counts(pid):0;
  if(!navigator.onLine)status(linked?'Offline · '+pending+' pending':'Offline · local only');
- else if(sessionStorage.getItem(PENDING_INVITE)&&!user)status('Invite ready · sign in with Discord');
+ else if(sessionStorage.getItem(PENDING_APP)&&!user)status('GamePlan invite ready · sign in');
+ else if(sessionStorage.getItem(PENDING_INVITE)&&!user)status('Project invite ready · sign in');
  else if(blocked)status('Sync paused · review backup',true);
  else if(!api||!user)status('Saved on this device');
  else if(!linked)status('Local · not shared');
@@ -131,7 +148,7 @@ function refreshStatus(){
  else if(remoteMissingCount)status(remoteMissingCount+' items missing remotely · saved locally',true);
  else status(pending?pending+' changes pending':'Cloud synced');
  const share=$s('#gpSyncShare');if(share){share.hidden=!user;share.textContent=linked?'Invite teammates':'Share project';}
- if($s('#gpSyncConnect'))$s('#gpSyncConnect').textContent=user?accountDisplayName():sessionStorage.getItem(PENDING_INVITE)?'Join with Discord':'Sign in';
+ if($s('#gpSyncConnect'))$s('#gpSyncConnect').textContent=user?accountDisplayName():sessionStorage.getItem(PENDING_APP)||sessionStorage.getItem(PENDING_INVITE)?'Accept invitation':'Sign in';
 }
 function persistBaseline(pid,snap){
  bases[pid]=snap;store(BASE,bases);
@@ -145,7 +162,7 @@ function isEditing(){return !!($s('#back.show')||$s('#gpDialogOverlay'))}
 async function checkAccount(){
  const cfg=config();if(!cfg?.url||!cfg?.key)return false;
  if(!api){
-  const module=await import('./supabase/gameplan-cloud.js?v=2026.11.07.76');
+  const module=await import('./supabase/gameplan-cloud.js?v=2026.11.07.78');
   api=module.createGamePlanCloud({url:cfg.url,publishableKey:cfg.key});
  }
  if(!navigator.onLine){
@@ -1002,6 +1019,62 @@ setInterval(()=>{
  }
  void initialize().then(schedule);
 },12000);
+function isMissingAppInvitesMigration(err){
+ return /gp_(?:app_access_status|accept_app_invite|create_app_invite|list_app_invites|revoke_app_invite)|PGRST202|42883|Could not find the function|schema cache/i.test(String(err?.message||''));
+}
+async function checkAppPermission(){
+ if(!user)return false;
+ // Offline returning users retain their last known approval. New accounts
+ // must come online once to redeem an invitation and establish their access.
+ if(!navigator.onLine){
+  if(read('gp-app-approved-v1:'+user.id,false)){appAccess={access:true,admin:false,installed:true};return true}
+  // Existing per-user offline work predates optional app-invite support.
+  // Do not lock returning users out of local files while disconnected.
+  if(read('gp-account-board-v1:'+user.id,null)){
+   appAccess={access:true,admin:false,installed:false};return true;
+  }
+  ready=false;activatedUserId='';$s('#mainApp').hidden=true;
+  window.GamePlanAccounts?.showAccessRequired?.('Connect to the internet to verify your GamePlan invitation.');
+  return false;
+ }
+ const appToken=sessionStorage.getItem(PENDING_APP);
+ try{
+  // Claim older email-based project invites first, then check access.
+  // Existing accounts should never consume a use of an app-wide invite.
+  await api.listProjects();
+  let result=await api.appAccessStatus();
+  if(!result?.access){
+   const projectToken=sessionStorage.getItem(PENDING_INVITE);
+   if(projectToken&&!(preAcceptedProjectId&&preAcceptedProjectToken===projectToken)){
+    preAcceptedProjectId=await api.acceptLinkInvite(projectToken);
+    preAcceptedProjectToken=projectToken;
+   }
+   if(appToken)await api.acceptAppInvite(appToken);
+   if(projectToken||appToken)result=await api.appAccessStatus();
+  }
+  if(appToken&&result?.access)sessionStorage.removeItem(PENDING_APP);
+  appAccess={access:!!result?.access,admin:!!result?.admin,installed:true};
+  if(!appAccess.access){
+   ready=false;activatedUserId='';
+   $s('#mainApp').hidden=true;
+   window.GamePlanAccounts?.showAccessRequired?.('This account has not been invited to GamePlan yet. Ask for a GamePlan access link, then open it while signed into this account.');
+   return false;
+  }
+  store('gp-app-approved-v1:'+user.id,true);
+  return true;
+ }catch(err){
+  if(isMissingAppInvitesMigration(err)){
+   if(appToken){
+    ready=false;activatedUserId='';$s('#mainApp').hidden=true;
+    window.GamePlanAccounts?.showAccessRequired?.('GamePlan access invitations need the one-time Supabase app-invites.sql setup. Ask the owner to install it.');
+   }else appAccess={access:true,admin:false,installed:false};
+   return !appToken;
+  }
+  ready=false;activatedUserId='';$s('#mainApp').hidden=true;
+  window.GamePlanAccounts?.showAccessRequired?.('Could not verify GamePlan access: '+String(err?.message||err));
+  return false;
+ }
+}
 async function initialize(){
  try{
   const online=await checkAccount();
@@ -1011,6 +1084,7 @@ async function initialize(){
    if(!panel||panel.hidden)window.GamePlanAccounts?.showLogin?.({configured:!!(config()?.url&&config()?.key)});
    refreshStatus();return;
   }
+  if(!await checkAppPermission()){refreshStatus();return}
   await activateAccount();
   if(!navigator.onLine){
    window.GamePlanAccounts?.onAuthenticated?.(user);
@@ -1024,9 +1098,14 @@ async function initialize(){
   if(token&&!inviteAttempted){
    inviteAttempted=true;
    try{
-    const inviteCloudId=await api.acceptLinkInvite(token);
+    // The app-level access check may have redeemed this project invite once
+    // already. Never consume it a second time: the link could now be full.
+    const inviteCloudId=preAcceptedProjectToken===token&&preAcceptedProjectId
+     ?preAcceptedProjectId
+     :await api.acceptLinkInvite(token);
     await joinShared(inviteCloudId);
     sessionStorage.removeItem(PENDING_INVITE);
+    preAcceptedProjectId='';preAcceptedProjectToken='';
     gpAlert('You joined the shared project! Your changes will sync with your teammates.');
     refreshStatus();return;
    }catch(err){
@@ -1082,12 +1161,20 @@ window.GamePlanSync={
  async signOut(){
   if(api)await api.signOut();
   window.GamePlanAvatars?.clear?.();
-  user=null;ready=false;activatedUserId='';teamByProject={};cloudProjectList=[];
+  user=null;ready=false;activatedUserId='';teamByProject={};cloudProjectList=[];appAccess={access:true,admin:false,installed:false};preAcceptedProjectId='';preAcceptedProjectToken='';
   subscription?.();subscription=null;watched='';
   $s('#mainApp').hidden=true;
   window.GamePlanAccounts?.showLogin?.({configured:!!(config()?.url&&config()?.key)});
   refreshStatus();
  },
+ appAccess:()=>({...appAccess}),
+ publicConfig:()=>config(),
+ async createAppInvite(days,uses){
+  if(!api||!user||!appAccess.admin)throw Error('Only a GamePlan access administrator can invite people.');
+  return api.createAppInvite(days,uses);
+ },
+ async listAppInvites(){if(!api||!appAccess.admin)throw Error('Admin permission required');return api.listAppInvites()},
+ async revokeAppInvite(id){if(!api||!appAccess.admin)throw Error('Admin permission required');return api.revokeAppInvite(id)},
  async identities(){if(!api)throw Error('Not connected');return api.linkedIdentities()},
  async linkIdentity(provider){if(!api)throw Error('Not connected');return api.linkIdentity(provider)},
  async addEmail(email){if(!api)throw Error('Not connected');return api.addEmailIdentity(email)},

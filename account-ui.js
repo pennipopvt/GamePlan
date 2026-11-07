@@ -79,6 +79,17 @@ function showWorkspace(){
  document.documentElement.classList.remove('gp-auth-locked');
  document.documentElement.classList.add('gp-auth-ready');
 }
+function showAccessRequired(message){
+ document.documentElement.classList.add('gp-auth-locked');
+ document.documentElement.classList.remove('gp-auth-ready');
+ const root=loginRoot();root.hidden=false;
+ root.innerHTML='<div class="gp-auth-panel">'+brand+
+  '<h1>Invitation required</h1><p class="gp-auth-intro">GamePlan is available by invitation.</p>'+
+  '<p class="sub">'+html(message||'Ask someone with GamePlan access to send you an invitation link.')+'</p>'+
+  '<p class="sub">An invitation to GamePlan grants access to your own workspace, not someone else’s project. You can still join shared projects separately.</p>'+
+  '<div class="controls"><button type="button" class="button" id="gpAccessSignOut">Switch account</button></div></div>';
+ $a('#gpAccessSignOut').onclick=async()=>{await window.GamePlanSync.signOut()};
+}
 async function requestMigration({projectCount=0,taskCount=0,logCount=0}={}){
  return new Promise(resolve=>{
   const root=loginRoot();root.hidden=false;
@@ -162,6 +173,69 @@ function gpAccountLinkErrorMessage(error){
  }
  return 'Could not link account: '+message;
 }
+function gpAppInviteLink(token){
+ const cfg=window.GamePlanSync?.publicConfig?.();
+ if(!cfg?.url||!cfg?.key)throw Error('Set the public GamePlan Supabase configuration first.');
+ const url=new URL('index.html',new URL('.',location.href));
+ url.searchParams.set('backend',cfg.url);
+ url.searchParams.set('publishable',cfg.key);
+ url.hash='access='+String(token);
+ return url.href;
+}
+async function appInviteDialog(){
+ if(!window.GamePlanSync?.appAccess?.().admin)return gpAlert('Only GamePlan invitation administrators can create these links.');
+ let entries=[];
+ try{entries=await window.GamePlanSync.listAppInvites()}catch(err){gpAlert('Could not load GamePlan invitations: '+err.message);return}
+ modal('Invite someone to GamePlan',
+  '<p class="sub">This link lets someone make their own GamePlan projects. It does not give them access to any of yours.</p>'+
+  '<form id="gpAppInviteForm"><div class="fields"><label>Expires in<select name="days"><option value="7" selected>7 days</option><option value="1">1 day</option><option value="30">30 days</option></select></label>'+
+  '<label>Maximum uses<select name="uses"><option value="1">1 person</option><option value="10" selected>10 people</option><option value="25">25 people</option></select></label></div>'+
+  '<button class="button main" type="submit" id="gpCreateAppInvite">Generate access link</button></form>'+
+  '<div id="gpAppInviteResult" class="gp-app-invite-result" hidden><label>Copy this link now<input id="gpAppInviteURL" readonly></label>'+
+  '<button class="button" type="button" id="gpCopyAppInvite">Copy invite link</button>'+
+  '<p class="sub">The secret link is shown only once. Anyone holding it can redeem it until expiration or revocation.</p></div>'+
+  '<h3>Existing GamePlan invitations</h3><div id="gpAppInvitesList"></div>'+
+  '<div class="controls"><button class="button" type="button" id="gpAppInviteDone">Done</button></div>');
+ const renderList=()=>{
+  $a('#gpAppInvitesList').innerHTML=entries.length?entries.map(row=>{
+   const expired=Date.parse(row.expires_at)<=Date.now();
+   const used=Number(row.use_count||0)>=Number(row.max_uses||1);
+   const active=!row.revoked_at&&!expired&&!used;
+   const status=active?'Active':row.revoked_at?'Revoked':expired?'Expired':'Full';
+   const date=Number.isFinite(Date.parse(row.expires_at))?new Date(row.expires_at).toLocaleDateString():'Unknown date';
+   return '<div class="gp-app-invite-row"><span><strong>'+html(status)+'</strong> · '+html(date)+' · '+html(row.use_count)+'/'+html(row.max_uses)+' uses</span>'+
+    (active?'<button type="button" class="button" data-revoke-app="'+html(row.invite_id)+'">Revoke</button>':'')+'</div>';
+  }).join(''):'<p class="sub">No access invitations yet.</p>';
+ };
+ renderList();
+ $a('#gpAppInviteDone').onclick=closeModal;
+ $a('#gpAppInviteForm').onsubmit=async ev=>{
+  ev.preventDefault();
+  const button=$a('#gpCreateAppInvite'),form=new FormData(ev.currentTarget);
+  button.disabled=true;
+  try{
+   const invite=await window.GamePlanSync.createAppInvite(Number(form.get('days')),Number(form.get('uses')));
+   const url=gpAppInviteLink(invite.invite_token);
+   $a('#gpAppInviteURL').value=url;
+   $a('#gpAppInviteResult').hidden=false;
+   entries=await window.GamePlanSync.listAppInvites();
+   renderList();
+  }catch(err){gpAlert('Could not generate GamePlan invite: '+err.message)}
+  finally{button.disabled=false}
+ };
+ $a('#gpCopyAppInvite').onclick=async()=>{
+  try{await navigator.clipboard.writeText($a('#gpAppInviteURL').value);
+   $a('#gpCopyAppInvite').textContent='Copied!';
+  }catch(err){gpAlert('Could not copy the link. Select the URL and copy it instead.')}
+ };
+ $a('#gpAppInvitesList').onclick=async ev=>{
+  const button=ev.target.closest('button[data-revoke-app]');if(!button)return;
+  if(!await gpConfirm('Revoke this GamePlan access link? People already admitted will keep their accounts.',{confirmLabel:'Revoke link',danger:true}))return;
+  try{button.disabled=true;await window.GamePlanSync.revokeAppInvite(button.dataset.revokeApp);
+   entries=await window.GamePlanSync.listAppInvites();renderList();
+  }catch(err){button.disabled=false;gpAlert('Could not revoke invitation: '+err.message)}
+ };
+}
 async function accountDialog(){
  if(!currentUser)return;
  let ids=[];
@@ -179,9 +253,11 @@ async function accountDialog(){
   '<div class="gp-link-email"><label>Email address for sign-in<input type="email" id="gpAccountEmail" value="'+html(currentUser.email||'')+'" autocomplete="email"></label>'+
   '<button type="button" class="button" id="gpLinkEmail">Add / update email</button></div>'+
   '<p class="sub">To add Discord or Google to an existing GamePlan account, the Supabase workspace administrator must enable <strong>Allow manual linking</strong> under Authentication → Settings. Linking requires you to verify the other login and does not merge separate accounts. <a href="https://supabase.com/docs/guides/auth/auth-identity-linking" target="_blank" rel="noopener noreferrer">About account linking</a>.</p>'+
+  (window.GamePlanSync?.appAccess?.().admin?'<div class="gp-account-invite"><button type="button" class="button" id="gpInviteGamePlan">Invite someone to GamePlan</button><span class="sub">Grant app access without sharing a project</span></div>':'')+
   '<div class="controls"><button type="button" class="button" id="gpAccountSignOut">Sign out</button>'+
   '<button type="button" class="button main" id="gpAccountClose">Done</button></div>');
  $a('#gpAccountClose').onclick=closeModal;
+ $a('#gpInviteGamePlan')?.addEventListener('click',()=>void appInviteDialog());
  $a('#gpAccountSignOut').onclick=async()=>{
   if(!await gpConfirm('Sign out of GamePlan? Your saved browser data will be kept.',{confirmLabel:'Sign out'}))return;
   closeModal();await window.GamePlanSync.signOut();
@@ -291,7 +367,7 @@ document.addEventListener('click',event=>{
  button.__gpTapTimer=setTimeout(()=>button.classList.remove('gp-tapped'),280);
 },true);
 window.GamePlanAccounts={
- showLogin,showWorkspace,requestMigration,emptyWorkspace,hideEmpty,onAuthenticated,accountDialog,
+ showLogin,showWorkspace,showAccessRequired,requestMigration,emptyWorkspace,hideEmpty,onAuthenticated,accountDialog,
  setTeam,renderTeamPage,teamRole:currentTeamRole,createProjectDialog,loginMessage
 };
 // The Team tab is driven by Supabase's authenticated gp_members, not the old
