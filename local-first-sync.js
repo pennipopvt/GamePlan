@@ -455,6 +455,20 @@ function makeLocalRow(record,pid){
 }
 function mergeRemote(pid,remote,base,local,confirmedLegacyDeletes=new Set()){
  const pending=pendingChanges(pid,base,local),toApply=[];
+ // Once the owner unpublishes or deletes an item, a teammate's stale local
+ // edit must not silently resurrect that remote tombstone. Preserve a local
+ // recovery copy before honoring the cloud deletion.
+ const overridden={};
+ if(roleFor(pid)!=='owner'){
+  for(const [k,row] of Object.entries(remote)){
+   if(!row?.payload?.__gp_deleted||!Object.prototype.hasOwnProperty.call(pending,k)||!local[k])continue;
+   overridden[k]=local[k];delete pending[k];
+  }
+ }
+ if(Object.keys(overridden).length){
+  try{store('gp-stale-edit-recovery-'+Date.now(),{project_id:pid,items:overridden})}
+  catch(err){console.warn('[GamePlan stale edit recovery]',err)}
+ }
  for(const k of new Set([...Object.keys(base),...Object.keys(remote)])){
   if(Object.prototype.hasOwnProperty.call(pending,k))continue;
   if(equal(canonical(base[k]),canonical(remote[k])))continue;
