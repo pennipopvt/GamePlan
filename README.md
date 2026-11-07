@@ -5,7 +5,7 @@ A lightweight task-and-project board, published from this repository with GitHub
 ## Working rules for future development chats
 
 1. **Inspect the current `main` branch before editing.** Do not assume a previous chat's code or versions are current. Keep existing design language and make focused changes rather than redesigning unrelated screens.
-2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.07.71**.
+2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.07.72**.
 3. **Refresh the offline cache identifier** in `service-worker.js` when changing front-end assets, so older clients do not keep a stale shell. This is separate from the human-readable app version.
 4. **Publish by committing to `main`.** Check the GitHub Pages build/deployment state and confirm the public URL serves the new version. If `main` is protected, create a feature branch and PR, then merge when checks permit. Never claim a successful deployment from a successful commit alone.
 5. **If the page looks stale:** hard-refresh, verify the live HTML version and asset query strings, inspect Actions/Pages deployment status, and inspect the service worker/cache. Don't blindly repeat commits. See `.github/workflows/recover-pages.yml` for a *manual recovery workflow specific to a previously stale deployment*; don't run or alter it without confirming it still applies.
@@ -60,3 +60,11 @@ A lightweight task-and-project board, published from this repository with GitHub
 - Use **Customize** beside *Overview stats* to check or uncheck each statistic. The selection persists per project and signed-in local identity on the current device, without changing cloud board/task data.
 - Every statistic reflects the currently visible, filtered tasks, including the **All milestones** selector, My tasks, search, and faceted filters. Tasks remaining counts unfinished tasks, and Time remaining sums the existing calculated task remaining hours (completed tasks contribute zero).
 - The settings menu remains accessible even if all statistics are unchecked.
+
+## Analytics: weekly work and feature time
+
+- Analytics opens with a **vertical grouped bar chart**: one bar per team member, grouped by Monday-start calendar week. Hours are credited to each time log's `member_id` rather than the task assignee.
+- An optional **Team velocity** line overlays a trailing three-week moving average of **total team hours logged per week**, on the same hours axis. It can be toggled off without changing logged data.
+- Simplified settings appear **below** the graph: Milestone (all or individual), Weeks (4, 8, 12, all logged weeks), and Velocity overlay. Milestone selection filters both the chart and feature list.
+- A feature-time breakdown **below the chart settings** groups features by milestone and lists logged, estimated, remaining, and completed task counts. Remaining time uses the existing calculated task remaining hours; Done tasks contribute zero.
+- Week buckets use each log's work date and Monday as the start of the week. Invalid or undated time entries are omitted from weekly bars, but remain counted in feature-level logged totals and are noted separately. No underlying task or time-log data is modified by this page.
