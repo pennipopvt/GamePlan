@@ -1,7 +1,7 @@
 /* GamePlan offline shell. Browser localStorage holds all working project data.
    Network-first updates ensure GitHub deploys appear; cached shell keeps the app
    usable on repeat visits without a network connection. */
-const CACHE='gameplan-offline-v21';
+const CACHE='gameplan-offline-v22';
 const ASSETS=[
  './','./index.html','./supabase/public-config.js','./gameplan.js','./local-first-sync.js','./account-ui.js','./account-ui.css',
  './gameplan-mark.svg','./supabase/gameplan-cloud.js'
