@@ -2236,8 +2236,8 @@ a:hover,.link:hover{color:#80115c}
 #milestoneList .gp-publish-draft:hover{background:#f6d5e9}
 .gp-draft-warning{padding:10px 12px;border:1px solid #edc5e0;border-radius:9px;background:#fff3fa;color:#85366b;font-size:13px;line-height:1.5}
 
-</style><link rel="stylesheet" href="account-ui.css?v=2026.11.07.82"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.07.82</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+</style><link rel="stylesheet" href="account-ui.css?v=2026.11.07.83"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.07.83</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><button type="button" class="button gp-my-filter" id="gpMyTasks" aria-pressed="false" title="Show only your unfinished assigned tasks">My tasks <span id="gpMyCount" class="gp-my-count">0</span></button><select id="gpMilestoneFilter" aria-label="Filter board by milestone" title="Filter by milestone"><option value="">All milestones</option></select><select id="assigneeFilter" hidden aria-hidden="true"><option value="">All assignees</option></select><div class="gp-filter-wrap"><button type="button" class="button gp-filter-trigger" id="gpFilterTrigger" aria-expanded="false" aria-controls="gpFilterPanel"><span aria-hidden="true">⚲</span> Filters <span id="gpFilterCount" class="gp-filter-count" hidden>0</span></button><div class="gp-filter-panel" id="gpFilterPanel" hidden></div></div><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div id="gpFilterChips" class="gp-filter-chips" hidden></div>
@@ -2248,7 +2248,7 @@ a:hover,.link:hover{color:#80115c}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.07.82';
+let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.07.83';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=[];
@@ -2429,6 +2429,7 @@ function rpc(op,p={}){
    if(!Number.isInteger(n)||n<1||n>9999)throw Error('Milestone number must be a whole number from 1 to 9999.');
    return n;
   };
+  const ensureDraftOwner=()=>{if(!gpDraftOwner())throw Error('Only the project owner can change private draft visibility.')};
   const parent=(arr,key,id)=>{const item=get(arr,key,id);if(!item||item.project_id!==projectId)throw Error('Invalid parent');return item};
   const task=get(data.tasks,'task_id',p.task_id);
   if(op==='createProject'){
@@ -2439,6 +2440,17 @@ function rpc(op,p={}){
    data.milestones.push({milestone_id:uid(),project_id:projectId,name:required(p.name,'Milestone name'),description:p.description||'',status:'To do',target_date:'',display_number:milestoneNumber(p.display_number),created_at:new Date().toISOString(),...(p.private_draft?{__gp_private:true}:{})});
   }else if(op==='editMilestone'){
    const m=parent(data.milestones,'milestone_id',p.milestone_id);Object.assign(m,{name:required(p.name,'Milestone name'),description:p.description||'',status:p.status,target_date:p.target_date||'',display_number:milestoneNumber(p.display_number)});
+   if(p.private_draft!==undefined){
+    ensureDraftOwner();
+    if(p.private_draft===true)m.__gp_private=true;
+    else if(m.__gp_private){
+     delete m.__gp_private;
+     for(const f of data.features.filter(f=>f.project_id===projectId&&String(f.milestone_id)===String(m.milestone_id))){
+      delete f.__gp_private;
+      for(const t of data.tasks.filter(t=>t.project_id===projectId&&String(t.feature_id)===String(f.feature_id)))delete t.__gp_private;
+     }
+    }
+   }
   }else if(op==='deleteMilestone'){
    const m=parent(data.milestones,'milestone_id',p.milestone_id);
    // Delete only descendants of this milestone in the active project.
@@ -2453,7 +2465,13 @@ function rpc(op,p={}){
    data.features.push({feature_id:uid(),project_id:projectId,milestone_id:m.milestone_id,name:required(p.name,'Feature name'),description:p.description||'',status:'To do',estimated_hours:0,...(gpDraftMilestone(m.milestone_id)?{__gp_private:true}:{})});
   }else if(op==='editFeature'){
    const f=parent(data.features,'feature_id',p.feature_id),m=parent(data.milestones,'milestone_id',p.milestone_id);
-   if(gpDraftMilestone(m.milestone_id)&&!f.__gp_private)f.__gp_private=true;
+   if(p.private_draft!==undefined)ensureDraftOwner();
+   const makePrivate=gpDraftMilestone(m.milestone_id)||p.private_draft===true;
+   if(makePrivate)f.__gp_private=true;
+   else if(p.private_draft===false){
+    delete f.__gp_private;
+    for(const t of data.tasks.filter(t=>t.project_id===projectId&&String(t.feature_id)===String(f.feature_id)))delete t.__gp_private;
+   }
    Object.assign(f,{name:required(p.name,'Feature name'),description:p.description||'',milestone_id:m.milestone_id});
   }else if(op==='deleteFeature'){
    const f=parent(data.features,'feature_id',p.feature_id);
@@ -2475,7 +2493,10 @@ function rpc(op,p={}){
    data.tasks.push({task_id:uid(),project_id:projectId,feature_id:f.feature_id,title:required(p.title,'Task title'),description:p.description||'',assignee_member_id:p.assignee_member_id||'',status:p.status||'To do',priority:p.priority||'Normal',estimated_hours:hours(p.estimated_hours),created_by_member_id:data.me.member_id,updated_at:new Date().toISOString(),...(p.private_draft||gpDraftFeature(f)?{__gp_private:true}:{})});
   }else if(op==='editTask'){
    if(!task)throw Error('Task not found');
-   parent(data.features,'feature_id',p.feature_id);
+   const destination=parent(data.features,'feature_id',p.feature_id);
+   if(p.private_draft!==undefined)ensureDraftOwner();
+   if(gpDraftFeature(destination)||p.private_draft===true)task.__gp_private=true;
+   else if(p.private_draft===false)delete task.__gp_private;
    Object.assign(task,{feature_id:p.feature_id,title:required(p.title,'Task title'),description:p.description||'',assignee_member_id:p.assignee_member_id||'',status:p.status,priority:p.priority,estimated_hours:hours(p.estimated_hours),updated_at:new Date().toISOString()});
   }else if(op==='setStatus'){
    if(!task)throw Error('Task not found');task.status=p.status;task.updated_at=new Date().toISOString();
@@ -2665,7 +2686,7 @@ function editMilestone(id){
   if(!isPM())return;
   const m=find(data.milestones,id,'milestone_id');if(!m)return;
   const ordered=projectMilestonesNewestFirst(),autoNumber=ordered.length-ordered.findIndex(x=>String(x.milestone_id)===String(id));
-  modal('Edit milestone',`<form id="actionForm"><div class="fields">${field('name','Milestone name',m.name,'text',true)}<label class="wide">Description<textarea name="description">${e(m.description||'')}</textarea></label>${select('status','Status',ST.map(x=>({value:x,label:x})),m.status)}${field('target_date','Target date',m.target_date||'','date')}<label>Milestone number (optional)<input name="display_number" type="number" min="1" max="9999" step="1" inputmode="numeric" placeholder="Auto · ${autoNumber}" value="${e(m.display_number??'')}"></label><div class="wide sub">Leave the number blank to label milestones automatically by age (oldest is 01, newest is highest). This does not rename or reorder them.</div></div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="button" class="button danger" id="deleteMilestone">Delete entire milestone</button><button type="submit" class="button main">Save milestone</button></div></form>`);
+  modal('Edit milestone',`<form id="actionForm"><div class="fields">${field('name','Milestone name',m.name,'text',true)}<label class="wide">Description<textarea name="description">${e(m.description||'')}</textarea></label>${select('status','Status',ST.map(x=>({value:x,label:x})),m.status)}${field('target_date','Target date',m.target_date||'','date')}<label>Milestone number (optional)<input name="display_number" type="number" min="1" max="9999" step="1" inputmode="numeric" placeholder="Auto · ${autoNumber}" value="${e(m.display_number??'')}"></label><div class="wide sub">Leave the number blank to label milestones automatically by age (oldest is 01, newest is highest). This does not rename or reorder them.</div>${gpDraftOwner()?'<label class="wide gp-draft-choice"><input type="checkbox" name="private_draft" value="true" '+(m.__gp_private?'checked':'')+'> Private draft (only visible to you on this browser)</label><div class="wide sub">Unpublished milestones and everything inside them stay out of team sync. Changing a published milestone to private removes it from the shared cloud board; teammates may still have older cached copies.</div>':''}</div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="button" class="button danger" id="deleteMilestone">Delete entire milestone</button><button type="submit" class="button main">Save milestone</button></div></form>`);
   $('#cancel').onclick=closeModal;
   $('#deleteMilestone').onclick=()=>deleteItem('milestone',id,m.name);
   $('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit('editMilestone',{milestone_id:id,...Object.fromEntries(new FormData(ev.currentTarget).entries())})};
@@ -2674,7 +2695,7 @@ function editFeature(id){
   if(!isPM())return;
   const f=find(data.features,id,'feature_id');if(!f)return;
   const milestones=data.milestones.filter(x=>x.project_id===activeProject);
-  modal('Edit feature',`<form id="actionForm"><div class="fields">${field('name','Feature name',f.name,'text',true)}<label class="wide">Description<textarea name="description">${e(f.description||'')}</textarea></label>${select('milestone_id','Milestone',milestones.map(x=>({value:x.milestone_id,label:x.name})),f.milestone_id)}<div class="wide sub">Feature status: <strong>${featureStatus(f.feature_id)}</strong> (calculated automatically from tasks).</div><div class="wide sub">Total time logged on this feature: <strong>${formatHours(featureHours(f.feature_id))}</strong>. This is calculated from its tasks.</div></div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="button" class="button danger" id="deleteFeature">Delete feature</button><button type="submit" class="button main">Save feature</button></div></form>`);
+  modal('Edit feature',`<form id="actionForm"><div class="fields">${field('name','Feature name',f.name,'text',true)}<label class="wide">Description<textarea name="description">${e(f.description||'')}</textarea></label>${select('milestone_id','Milestone',milestones.map(x=>({value:x.milestone_id,label:x.name})),f.milestone_id)}<div class="wide sub">Feature status: <strong>${featureStatus(f.feature_id)}</strong> (calculated automatically from tasks).</div><div class="wide sub">Total time logged on this feature: <strong>${formatHours(featureHours(f.feature_id))}</strong>. This is calculated from its tasks.</div>${gpDraftOwner()?'<label class="wide gp-draft-choice"><input type="checkbox" name="private_draft" value="true" '+(gpDraftFeature(f)?'checked':'')+' '+(gpDraftMilestone(f.milestone_id)?'disabled':'')+'> Private draft</label><div class="wide sub">'+(gpDraftMilestone(f.milestone_id)?'This feature is private because its milestone is unpublished. Publish the milestone first to change it.':'Unpublished features and their tasks stay on this browser. Previously published features are removed from the team board when made private.')+'</div>':''}</div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="button" class="button danger" id="deleteFeature">Delete feature</button><button type="submit" class="button main">Save feature</button></div></form>`);
   $('#cancel').onclick=closeModal;
   $('#deleteFeature').onclick=()=>deleteItem('feature',id,f.name);
   $('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit('editFeature',{feature_id:id,...Object.fromEntries(new FormData(ev.currentTarget).entries())})};
@@ -2773,7 +2794,7 @@ function taskForm(t,preferredFeatureId=''){
  <label>Estimated hours<input name="estimate_hours" type="number" min="0" step="1" value="${Math.floor(minutes/60)}" required></label>
  <label>Estimated minutes<input name="estimate_minutes" type="number" min="0" max="59" step="1" value="${minutes%60}" required></label>
  <div class="wide sub">Remaining time is calculated from the estimate minus logged time for unfinished tasks${t?': '+formatHours(taskRemainingHours(t)):''}.</div>
- ${!t&&gpDraftOwner()?'<label class="wide gp-draft-choice"><input type="checkbox" name="private_draft" value="true"> Save as private draft (only on this device until published)</label>':''}
+ ${gpDraftOwner()?'<label class="wide gp-draft-choice"><input type="checkbox" name="private_draft" value="true" '+(t&&gpDraftTask(t)?'checked':'')+' '+(t&&gpDraftFeature(f)?'disabled':'')+'> Private draft</label>'+(t?'<div class="wide sub">'+(gpDraftFeature(f)?'This task inherits privacy from its unpublished feature or milestone.':'Turning an already shared task private removes it from the shared board, but cannot erase previously downloaded copies.')+'</div>':''):''}
  </div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button>${t?'<button class="button danger" type="button" id="deleteTask">Delete task</button>':''}<button class="button main" type="submit">Save task</button></div></form>`);
  $('#cancel').onclick=closeModal;
  if(t)$('#deleteTask').onclick=()=>deleteItem('task',t.task_id,t.title);
@@ -2806,7 +2827,37 @@ function logHours(id){
  };
 }
 function quickCreate(kind,preferredMilestoneId=''){const milestones=data.milestones.filter(x=>x.project_id===activeProject);let body='',op='';if(kind==='milestone'){op='createMilestone';body=field('name','Milestone name','','text',true)+'<label class="wide">Description<textarea name="description"></textarea></label><label>Milestone number (optional)<input name="display_number" type="number" min="1" max="9999" step="1" inputmode="numeric" placeholder="Automatic"></label><div class="wide sub">Leave blank for automatic chronological numbering.</div>'+(gpDraftOwner()?'<label class="wide gp-draft-choice"><input type="checkbox" name="private_draft" value="true"> Save as private draft (only on this device until published)</label>':'')}else if(kind==='feature'){op='createFeature';body=field('name','Feature name','','text',true)+select('milestone_id','Milestone',opts(milestones,'milestone_id'),preferredMilestoneId||milestones[0]?.milestone_id)}else if(kind==='member'){op='addMember';body=field('display_name','Member name','','text',true)+field('google_email','Email (optional)','','email',true)+field('discipline','Discipline / role description')}else if(kind==='project'){op='createProject';body=field('name','Project name','','text',true)+'<label class="wide">Description<textarea name="description"></textarea></label>'}modal('Create '+kind,`<form id="actionForm"><div class="fields">${body}</div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button class="button main">Create</button></div></form>`);$('#cancel').onclick=closeModal;$('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit(op,{project_id:activeProject,...Object.fromEntries(new FormData(ev.currentTarget).entries())})}}
-async function submit(op,payload){const btn=$('#actionForm button[type="submit"],#actionForm button:not([type])');if(btn)btn.disabled=true;try{await rpc(op,payload);closeModal();await refresh()}catch(err){gpAlert(err.message);if(btn)btn.disabled=false}}
+async function submit(op,payload){
+ const btn=$('#actionForm button[type="submit"],#actionForm button:not([type])');
+ if(btn)btn.disabled=true;
+ try{
+  const editKind={editMilestone:'milestone',editFeature:'feature',editTask:'task'}[op];
+  const check=$('#actionForm [name="private_draft"]');
+  if(editKind&&check&&!check.disabled&&gpDraftOwner())
+   payload.private_draft=!!check.checked;
+  if(editKind&&gpDraftOwner()){
+   const item=editKind==='milestone'?data.milestones.find(x=>String(x.milestone_id)===String(payload.milestone_id)):
+    editKind==='feature'?data.features.find(x=>String(x.feature_id)===String(payload.feature_id)):
+    data.tasks.find(x=>String(x.task_id)===String(payload.task_id));
+   const wasPublic=item&&!(editKind==='milestone'?item.__gp_private:editKind==='feature'?gpDraftFeature(item):gpDraftTask(item));
+   const becomingPrivate=payload.private_draft===true||
+    (editKind==='feature'&&gpDraftMilestone(payload.milestone_id))||
+    (editKind==='task'&&gpDraftFeature(data.features.find(f=>String(f.feature_id)===String(payload.feature_id))));
+   if(wasPublic&&becomingPrivate){
+    if(!String(payload.name??payload.title??'').trim())throw Error('A name or title is required.');
+    if(editKind==='milestone'&&payload.display_number&&(!Number.isInteger(Number(payload.display_number))||Number(payload.display_number)<1||Number(payload.display_number)>9999))
+     throw Error('Milestone number must be a whole number from 1 to 9999.');
+    if(!await gpConfirm('Make this published '+editKind+' private?\n\nIt will be removed from the shared cloud board'+(editKind==='milestone'?' along with all its features and tasks':editKind==='feature'?' along with its tasks':'')+'. Existing copies on teammates’ devices may remain.\n\nPrivate drafts are stored only in this browser until published again.',{title:'Make private draft?',danger:true,confirmLabel:'Make private'})){
+     if(btn)btn.disabled=false;return;
+    }
+    // The shared state must be removed BEFORE saving a private local flag.
+    if(window.GamePlanSync?.isLinked?.(activeProject))
+     await window.GamePlanSync.unpublishExisting(editKind,String(item[editKind+'_id']));
+   }
+  }
+  await rpc(op,payload);closeModal();await refresh();
+ }catch(err){gpAlert(err.message);if(btn)btn.disabled=false}
+}
 async function deleteItem(kind,id,name){
  if(!isPM())return;
  if(kind==='milestone'){
@@ -3043,5 +3094,5 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="supabase/public-config.js?v=2026.11.07.82"></script>
-<script src="gameplan.js?v=2026.11.07.82"></script><script src="local-first-sync.js?v=2026.11.07.82"></script><script src="account-ui.js?v=2026.11.07.82"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
+</script><script src="supabase/public-config.js?v=2026.11.07.83"></script>
+<script src="gameplan.js?v=2026.11.07.83"></script><script src="local-first-sync.js?v=2026.11.07.83"></script><script src="account-ui.js?v=2026.11.07.83"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>

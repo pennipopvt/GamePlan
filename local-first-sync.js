@@ -455,6 +455,20 @@ function makeLocalRow(record,pid){
 }
 function mergeRemote(pid,remote,base,local,confirmedLegacyDeletes=new Set()){
  const pending=pendingChanges(pid,base,local),toApply=[];
+ // Once the owner unpublishes or deletes an item, a teammate's stale local
+ // edit must not silently resurrect that remote tombstone. Preserve a local
+ // recovery copy before honoring the cloud deletion.
+ const overridden={};
+ if(roleFor(pid)!=='owner'){
+  for(const [k,row] of Object.entries(remote)){
+   if(!row?.payload?.__gp_deleted||!Object.prototype.hasOwnProperty.call(pending,k)||!local[k])continue;
+   overridden[k]=local[k];delete pending[k];
+  }
+ }
+ if(Object.keys(overridden).length){
+  try{store('gp-stale-edit-recovery-'+Date.now(),{project_id:pid,items:overridden})}
+  catch(err){console.warn('[GamePlan stale edit recovery]',err)}
+ }
  for(const k of new Set([...Object.keys(base),...Object.keys(remote)])){
   if(Object.prototype.hasOwnProperty.call(pending,k))continue;
   if(equal(canonical(base[k]),canonical(remote[k])))continue;
@@ -698,6 +712,53 @@ gpSettings=function(...args){
 // Deletion is now handled by gpDeleteProject, which confirms and backs up the
 // local board, deletes the cloud project first, then clears its browser copy.
 // Never clear the local link merely because a network request was started.
+// Turn an already-public item into a private draft. One atomic server batch
+// tombstones its public subtree BEFORE the local edit is committed, so the
+// team never merely sees an owner-only CSS hide. Teammates may still have
+// previously downloaded browser copies; server RLS cannot erase those.
+async function unpublishExisting(kind,id,pid=String(activeProject)){
+ if(!user||!api||roleFor(pid)!=='owner')
+  throw Error('Only the project owner can make published work private.');
+ if(!navigator.onLine)throw Error('Go online before making previously published work private.');
+ if(blocked||busy)throw Error('Cloud sync is busy or paused. Sync your project and try again.');
+ const cloudId=links[pid];if(!cloudId)throw Error('This project is not connected to Supabase.');
+ if(!['milestone','feature','task'].includes(kind))throw Error('Unknown draft type.');
+ busy=true;refreshStatus();
+ try{
+  const {data:auth,error:authError}=await api.client.auth.getUser();
+  if(authError||!auth?.user||auth.user.id!==user.id)throw Error('Sign in again before changing shared visibility.');
+  const remote=await remoteSnapshot(cloudId,pid);
+  const get=(type)=>Object.values(remote).filter(r=>r.kind===type&&!r.payload?.__gp_deleted);
+  const milestones=get('milestones'),features=get('features'),tasks=get('tasks'),logs=get('logs');
+  const milestoneIds=new Set(),featureIds=new Set(),taskIds=new Set();
+  if(kind==='milestone')milestoneIds.add(String(id));
+  if(kind==='feature')featureIds.add(String(id));
+  if(kind==='task')taskIds.add(String(id));
+  for(const row of features)if(milestoneIds.has(String(row.payload.milestone_id)))featureIds.add(String(row.item_id));
+  for(const row of tasks)if(featureIds.has(String(row.payload.feature_id)))taskIds.add(String(row.item_id));
+  const rows=[
+   ...milestones.filter(x=>milestoneIds.has(String(x.item_id))),
+   ...features.filter(x=>featureIds.has(String(x.item_id))),
+   ...tasks.filter(x=>taskIds.has(String(x.item_id))),
+   ...logs.filter(x=>taskIds.has(String(x.payload.task_id)))
+  ];
+  if(!rows.length)return true; // A draft that has never been published.
+  const batch=rows.map(record=>{
+   const mark=deletedMarker(record,pid);
+   return {project_id:cloudId,kind:mark.kind,item_id:mark.item_id,
+    payload:{...mark.payload,project_id:cloudId},sort_order:-1,
+    updated_at:new Date().toISOString(),updated_by:user.id};
+  });
+  // A single PostgREST upsert request keeps parent/child tombstones atomic.
+  const {data:saved,error}=await api.client.from('gp_items')
+   .upsert(batch,{onConflict:'project_id,kind,item_id'}).select('kind,item_id');
+  if(error)throw error;
+  if(!Array.isArray(saved)||saved.length!==batch.length
+   ||batch.some(x=>!saved.some(y=>y.kind===x.kind&&String(y.item_id)===String(x.item_id))))
+   throw Error('Supabase did not confirm hiding every shared record. Do not assume the item is private.');
+  return true;
+ }finally{busy=false;refreshStatus()}
+}
 async function deleteSharedProject(pid){
  if(!user||!api||!navigator.onLine)throw Error('Sign in and connect to the internet first.');
  if(roleFor(pid)!=='owner')throw Error('Only the project owner can permanently delete it.');
@@ -1157,7 +1218,7 @@ async function initialize(){
 void initialize();
 // Optional API for the main page's project management UI.
 window.GamePlanSync={
- connect,shareCurrent,shareInvite,schedule,backup:downloadBackup,deleteSharedProject,
+ connect,shareCurrent,shareInvite,schedule,backup:downloadBackup,deleteSharedProject,unpublishExisting,
  isLinked:pid=>!!links[String(pid)],status:refreshStatus,
  currentUser:()=>user,api:()=>api,roleFor,
  ownAssigneeIds(pid=activeProject){
