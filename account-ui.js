@@ -221,8 +221,9 @@ function renderTeamPage(){
  const colorRows=teamRows.map(m=>{
   const name=memberName(m),id=window.GamePlanColors?.accountMemberId?.(m)||String(m.legacy_member_id||'account:'+m.member_user_id);
   const color=window.GamePlanColors?.getColor?.(id)||'#98aab6';
-  return '<label class="gp-team-chart-color-row"><span class="gp-team-chart-color-name">'+html(name)+'</span>'+
-   '<input type="color" data-gp-team-color="'+html(id)+'" value="'+html(color)+'" aria-label="Chart color for '+html(name)+'"'+(canChangeColors?'':' disabled')+'></label>';
+  return '<div class="gp-team-chart-color-row"><span class="gp-team-chart-color-name">'+html(name)+'</span>'+
+   '<button type="button" class="gp-team-color-trigger" data-gp-team-color="'+html(id)+'" data-gp-color-name="'+html(name)+'" aria-label="Change chart color for '+html(name)+'"'+(canChangeColors?'':' disabled')+'>'+
+   '<span class="gp-team-color-swatch" style="background:'+html(color)+'"></span> Change color</button></div>';
  }).join('');
  const colorsSection='<section class="gp-team-colors-settings"><h3>Chart colors</h3><p class="sub">These colors are used for team members in Analytics and sync with the project.</p>'+
   '<div class="gp-team-colors-grid">'+colorRows+'</div></section>';
@@ -243,9 +244,8 @@ function renderTeamPage(){
  colorsSection;
  $a('#gpInviteTeam')?.addEventListener('click',()=>void window.GamePlanSync.shareCurrent());
  area.querySelectorAll('[data-gp-authmember]').forEach(b=>b.onclick=()=>void editTeamMember(b.dataset.gpAuthmember));
- area.querySelectorAll('[data-gp-team-color]').forEach(input=>input.onchange=()=>{
-  try{window.GamePlanColors?.setColor?.(input.dataset.gpTeamColor,input.value)}
-  catch(err){gpAlert('Could not save chart color: '+err.message)}
+ area.querySelectorAll('button[data-gp-team-color]').forEach(button=>button.onclick=()=>{
+  window.GamePlanColors?.openPicker?.(button.dataset.gpTeamColor,button.dataset.gpColorName);
  });
 }
 async function editTeamMember(id){
