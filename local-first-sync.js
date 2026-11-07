@@ -1020,7 +1020,7 @@ setInterval(()=>{
  void initialize().then(schedule);
 },12000);
 function isMissingAppInvitesMigration(err){
- return /gp_app_access_status|PGRST202|42883|Could not find the function|schema cache/i.test(String(err?.message||''));
+ return /gp_(?:app_access_status|accept_app_invite|create_app_invite|list_app_invites|revoke_app_invite)|PGRST202|42883|Could not find the function|schema cache/i.test(String(err?.message||''));
 }
 async function checkAppPermission(){
  if(!user)return false;
@@ -1028,6 +1028,12 @@ async function checkAppPermission(){
  // must come online once to redeem an invitation and establish their access.
  if(!navigator.onLine){
   if(read('gp-app-approved-v1:'+user.id,false)){appAccess={access:true,admin:false,installed:true};return true}
+  // Existing per-user offline work predates optional app-invite support.
+  // Do not lock returning users out of local files while disconnected.
+  if(read('gp-account-board-v1:'+user.id,null)){
+   appAccess={access:true,admin:false,installed:false};return true;
+  }
+  ready=false;activatedUserId='';$s('#mainApp').hidden=true;
   window.GamePlanAccounts?.showAccessRequired?.('Connect to the internet to verify your GamePlan invitation.');
   return false;
  }
@@ -1054,8 +1060,10 @@ async function checkAppPermission(){
   return true;
  }catch(err){
   if(isMissingAppInvitesMigration(err)){
-   if(appToken)window.GamePlanAccounts?.showAccessRequired?.('GamePlan access invitations need the one-time Supabase app-invites.sql setup. Ask the owner to install it.');
-   else appAccess={access:true,admin:false,installed:false};
+   if(appToken){
+    ready=false;activatedUserId='';$s('#mainApp').hidden=true;
+    window.GamePlanAccounts?.showAccessRequired?.('GamePlan access invitations need the one-time Supabase app-invites.sql setup. Ask the owner to install it.');
+   }else appAccess={access:true,admin:false,installed:false};
    return !appToken;
   }
   ready=false;activatedUserId='';$s('#mainApp').hidden=true;
