@@ -523,18 +523,35 @@ function gpUseTemplate(id){gpFeatureCreate('',id)}
 
 async function gpDeleteProject(){
  const p=find(data.projects,activeProject,'project_id');if(!p)return;
- if(data.projects.length<=1){gpAlert('Create another project before deleting your last project.');return}
- const id=p.project_id;
+ const id=p.project_id,shared=!!window.GamePlanSync?.isLinked?.(id);
+ if(shared&&window.GamePlanSync.roleFor(id)!=='owner'){
+  gpAlert('Only the project owner can permanently delete a shared project.');return;
+ }
+ if(shared&&!navigator.onLine){
+  gpAlert('Connect to the internet to delete this shared project safely.');return;
+ }
  const ms=data.milestones.filter(x=>x.project_id===id),fs=data.features.filter(x=>x.project_id===id),tasks=data.tasks.filter(x=>x.project_id===id);
  const taskIds=new Set(tasks.map(x=>String(x.task_id)));
  const logs=data.logs.filter(x=>taskIds.has(String(x.task_id)));
- const summary='Delete project “'+p.project_name+'”?\\n\\nThis will permanently delete:\\n• '+ms.length+' milestones\\n• '+fs.length+' features\\n• '+tasks.length+' tasks\\n• '+logs.length+' time entries\\n• '+gpTags().length+' tags\\n• '+gpTemplates().length+' templates\\n\\nOther projects will not be changed. This cannot be undone.';
+ const summary='Delete project “'+p.project_name+'”?\n\nThis will permanently delete:\n• '+ms.length+' milestones\n• '+fs.length+' features\n• '+tasks.length+' tasks\n• '+logs.length+' time entries\n• '+gpTags().length+' tags\n• '+gpTemplates().length+' templates\n\n'+(shared?'Everyone will lose access to this project. The cloud copy and its invitations will be deleted. ':'')+'Other projects will not be changed. This cannot be undone.';
  if(!await gpConfirm(summary,{title:'Delete entire project?',danger:true,confirmLabel:'Continue'}))return;
- const typed=await gpPrompt('Type the project name to confirm deletion', '');
+ const typed=await gpPrompt('Type the project name to confirm deletion','');
  if(typed!==p.project_name){if(typed!==null)gpAlert('Project name did not match. Nothing was deleted.');return}
- // Make one atomic local backup update; shared member identities remain available to other projects.
- const old=data;
- const next={...data,
+ // A recovery snapshot is created BEFORE the remote delete; any failure
+ // leaves the live cloud project and current browser board unchanged.
+ const backup={project:p,milestones:ms,features:fs,tasks,logs,
+  team:data.team.filter(x=>x.project_id===id),
+  tags:data.tags.filter(x=>x.project_id===id),templates:data.templates.filter(x=>x.project_id===id),
+  custom_tag_colors:(data.custom_tag_colors||[]).filter(x=>x.project_id===id),
+  saved_at:new Date().toISOString()};
+ try{localStorage.setItem('gp-pre-project-delete-'+id+'-'+Date.now(),JSON.stringify(backup))}
+ catch(err){gpAlert('Could not save a recovery backup. The project was NOT deleted: '+err.message);return}
+ if(shared){
+  try{await window.GamePlanSync.deleteSharedProject(id)}
+  catch(err){gpAlert('Cloud project was not deleted: '+err.message);return}
+ }
+ const previous=data,previousProject=activeProject;
+ data={...data,
   projects:data.projects.filter(x=>x.project_id!==id),
   milestones:data.milestones.filter(x=>x.project_id!==id),
   features:data.features.filter(x=>x.project_id!==id),
@@ -546,13 +563,20 @@ async function gpDeleteProject(){
   templates:data.templates.filter(x=>x.project_id!==id),
   custom_tag_colors:(data.custom_tag_colors||[]).filter(x=>x.project_id!==id)
  };
- data=next;
- try{persist()}catch(err){data=old;gpAlert('Unable to save project deletion: '+err.message);return}
- activeProject=next.projects[0].project_id;gpMilestoneSelection='';gpSelected.clear();gpSelecting=false;
+ try{persist()}catch(err){
+  data=previous;activeProject=previousProject;
+  gpAlert('Cloud deletion succeeded, but the local board could not be updated. Recovery backup saved. '+err.message);
+  return;
+ }
+ activeProject=data.projects[0]?.project_id||'';
+ gpMilestoneSelection='';gpSelected.clear();gpSelecting=false;
  $('#assigneeFilter').value='';$('#searchTasks').value='';
- saveProject();gpNavigate('board');
- gpAlert('Project deleted.');
+ saveProject();
+ if(data.projects.length)gpNavigate('board');
+ else{window.GamePlanAccounts?.emptyWorkspace?.();$('#mainApp').hidden=true;}
+ gpAlert('Project deleted. Recovery backup saved on this browser.');
 }
+
 function gpSwitchProject(id){
  if(!data.projects.some(p=>String(p.project_id)===String(id)))return;
  activeProject=id;gpMilestoneSelection='';gpMyOnly=false;gpSelected.clear();gpSelecting=false;saveProject();
