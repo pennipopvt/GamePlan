@@ -2617,6 +2617,7 @@ async function importOneMilestone(source){
   return existing?.member_id||'';
  };
  const sourceTagsById=new Map(tags.filter(t=>t&&typeof t==='object'&&(t.tag_id||t.id)).map(t=>[String(t.tag_id||t.id),t]));
+ const sourceTagsByName=new Map(tags.filter(t=>t&&typeof t==='object'&&t.name).map(t=>[String(t.name).toLowerCase(),t]));
  const resolveTags=t=>{
   const inputs=[];
   for(const id of (Array.isArray(t.tag_ids)?t.tag_ids:[])){
@@ -2626,7 +2627,7 @@ async function importOneMilestone(source){
    inputs.push(fromSource||local);
   }
   for(const value of [...(Array.isArray(t.tags)?t.tags:[]),...(Array.isArray(t.tag_names)?t.tag_names:[])])
-   inputs.push(typeof value==='string'?{name:value}:value);
+   inputs.push(typeof value==='string'?(sourceTagsByName.get(value.toLowerCase())||{name:value}):value);
   const result=[];
   for(const tag of inputs){
    const tagName=String(tag?.name||'').trim();
