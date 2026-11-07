@@ -27,14 +27,14 @@ export function createGamePlanCloud({url,publishableKey}){
   async signInWithProvider(provider){
    if(!['discord','google'].includes(provider))throw Error('Unsupported login provider.');
    const {data,error}=await client.auth.signInWithOAuth({
-    provider,options:{redirectTo:location.origin+'/ProjectPlanner/supabase/discord.html'}
+    provider,options:{redirectTo:new URL('supabase/discord.html',new URL('.',location.href)).href}
    });check(error);return data;
   },
   async signInWithEmail(email){
    const address=String(email||'').trim();
    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address))throw Error('Enter a valid email address.');
    const {data,error}=await client.auth.signInWithOtp({
-    email:address,options:{emailRedirectTo:location.origin+'/ProjectPlanner/supabase/discord.html'}
+    email:address,options:{emailRedirectTo:new URL('supabase/discord.html',new URL('.',location.href)).href}
    });check(error);return data;
   },
   async linkedIdentities(){
@@ -45,7 +45,7 @@ export function createGamePlanCloud({url,publishableKey}){
    await currentUser();
    if(!['discord','google'].includes(provider))throw Error('Unsupported provider.');
    const {data,error}=await client.auth.linkIdentity({
-    provider,options:{redirectTo:location.origin+'/ProjectPlanner/supabase/discord.html'}
+    provider,options:{redirectTo:new URL('supabase/discord.html',new URL('.',location.href)).href}
    });check(error);return data;
   },
   async addEmailIdentity(email){
