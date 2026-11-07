@@ -28,10 +28,10 @@ begin
  select m.user_id,
   case
    when coalesce(u.raw_user_meta_data->>'avatar_url','')
-     ~* '^https://(cdn\\.discordapp\\.com|media\\.discordapp\\.net)/'
+     ~* '^https://(cdn\.discordapp\.com|media\.discordapp\.net)/'
     then nullif(u.raw_user_meta_data->>'avatar_url','')
    when coalesce(u.raw_user_meta_data->>'picture','')
-     ~* '^https://(cdn\\.discordapp\\.com|media\\.discordapp\\.net)/'
+     ~* '^https://(cdn\.discordapp\.com|media\.discordapp\.net)/'
     then nullif(u.raw_user_meta_data->>'picture','')
    else null
   end::text
