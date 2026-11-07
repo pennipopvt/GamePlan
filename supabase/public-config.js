@@ -5,6 +5,6 @@
  * because their URLs include these public values automatically.
  */
 window.GamePlanPublicConfig=Object.freeze({
-  url: "",
-  publishableKey: ""
+  url: "https://kksuduvpqplifhfcimjx.supabase.co",
+  publishableKey: "sb_publishable_Rc2NlelPPDp3cbMH7V4_Ew_FWi-SXfB"
 });
