@@ -224,7 +224,7 @@ function renderTeamPage(){
   return '<article class="gp-person-row"><div class="gp-person-avatar">'+html(initials(name))+'</div>'+
    '<div class="gp-person-copy"><strong><span class="gp-assignee-color-dot" style="--gp-member-color:'+html(color)+'"></span>'+html(name)+'</strong><span class="sub">'+html(m.account_name&&m.account_name!==name?'Discord / account name: '+m.account_name:'Linked account')+'</span></div>'+
    '<span class="gp-role-pill">'+html(isOwner?'Owner':m.member_role==='editor'?'Editor':'Viewer')+'</span>'+
-   (owner?'<button type="button" class="button" data-gp-authmember="'+html(m.member_user_id)+'"'+(teamUpgradeNeeded?' disabled title="Complete the one-time Supabase team upgrade to manage members"':'')+'>'+(isOwner?'Rename':'Manage')+'</button>':'')+'</article>';
+   (owner?'<button type="button" class="button" data-gp-authmember="'+html(m.member_user_id)+'"'+(teamUpgradeNeeded?' disabled title="Complete the one-time Supabase team upgrade to manage members"':'')+'>'+'Manage</button>':'')+'</article>';
  }).join('');
  area.innerHTML='<div class="gp-team-real-head"><p class="sub">Team members are real signed-in accounts. Permissions are enforced in Supabase, not just by the interface.</p>'+
  (owner?'<button type="button" class="button main" id="gpInviteTeam">+ Invite people</button>':'')+'</div>'+
