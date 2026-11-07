@@ -95,10 +95,6 @@ button.gp-auth-email-button:hover{background:#f4d2e9;border-color:#dd9dc8}
 .gp-person-row .button{min-height:32px}
 .gp-team-upgrade{padding:12px;border:1px solid #eed8e8;background:#fef6fb;color:#866781;
  border-radius:10px;font-size:12px;line-height:1.6}
-.gp-legacy-members{margin-top:20px;border-top:1px solid #eee7ed;padding-top:16px;color:#807582;font-size:12px}
-.gp-legacy-members summary{cursor:pointer;font-weight:650}
-.gp-legacy-chip{display:inline-flex;margin:5px 6px 0 0;padding:5px 8px;border-radius:6px;
- color:#866f85;background:#f6f1f5;font-size:12px}
 .gp-account-head{display:flex;align-items:center;gap:13px;margin:8px 0 22px}
 .gp-account-head strong{font-size:16px}
 .gp-account-head p{margin:5px 0 0}
