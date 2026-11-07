@@ -5,7 +5,7 @@ A lightweight task-and-project board, published from this repository with GitHub
 ## Working rules for future development chats
 
 1. **Inspect the current `main` branch before editing.** Do not assume a previous chat's code or versions are current. Keep existing design language and make focused changes rather than redesigning unrelated screens.
-2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.07.72**.
+2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.07.73**.
 3. **Refresh the offline cache identifier** in `service-worker.js` when changing front-end assets, so older clients do not keep a stale shell. This is separate from the human-readable app version.
 4. **Publish by committing to `main`.** Check the GitHub Pages build/deployment state and confirm the public URL serves the new version. If `main` is protected, create a feature branch and PR, then merge when checks permit. Never claim a successful deployment from a successful commit alone.
 5. **If the page looks stale:** hard-refresh, verify the live HTML version and asset query strings, inspect Actions/Pages deployment status, and inspect the service worker/cache. Don't blindly repeat commits. See `.github/workflows/recover-pages.yml` for a *manual recovery workflow specific to a previously stale deployment*; don't run or alter it without confirming it still applies.
@@ -68,3 +68,11 @@ A lightweight task-and-project board, published from this repository with GitHub
 - Simplified settings appear **below** the graph: Milestone (all or individual), Weeks (4, 8, 12, all logged weeks), and Velocity overlay. Milestone selection filters both the chart and feature list.
 - A feature-time breakdown **below the chart settings** groups features by milestone and lists logged, estimated, remaining, and completed task counts. Remaining time uses the existing calculated task remaining hours; Done tasks contribute zero.
 - Week buckets use each log's work date and Monday as the start of the week. Invalid or undated time entries are omitted from weekly bars, but remain counted in feature-level logged totals and are noted separately. No underlying task or time-log data is modified by this page.
+
+## Analytics: daily intervals, primary tags and member colors
+
+- Analytics supports **Daily** or **Weekly** intervals, with vertical adjacent bars grouped by either **Team members** or **Task tags**. The selected milestone filters both charts and feature breakdowns. Daily ranges are 7/14/30/all logged days; weekly ranges are 4/8/12/all logged weeks.
+- Bars by tag use the project tag's actual color. For tasks with multiple tags, their logged hours are attributed to the **first (primary) task tag only**, preventing one time entry from appearing multiple times in a total; untagged work has a neutral gray. Changing tag colors in Project Settings updates the chart.
+- Bars by member use the team member's consistent **chart color**, editable in **Team > Chart colors** (or directly in the local Team list). The chosen `chart_color` field is stored on the existing project `team` record and uses the current cloud sync's `team` kind, rather than a browser-only preference. Unset colors get a stable deterministic fallback. Editing team colors requires project edit permissions; the authenticated team permission model is unchanged.
+- Velocity remains an optional line: a trailing **7-day moving average** for daily intervals or **3-week moving average** for weekly intervals, of total team logged hours per period.
+- Feature time remains grouped by milestone, with a **Sort milestones** selector for newest-first or oldest-first. Logged, estimated, remaining, and completed task counts are unchanged.
