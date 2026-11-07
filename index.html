@@ -2538,7 +2538,9 @@ function downloadBackup(){
 }
 $('#export').onclick=downloadBackup;
 
-/* Milestone imports are additive. No existing projects, task logs or features are replaced. */
+/* Milestone imports are additive and never replace existing work.
+   Compact files can nest tasks within features, use estimated_minutes,
+   assignee display names and named tags. Full backups are still supported. */
 async function milestoneFromImport(source){
  if(Array.isArray(source.projects)&&Array.isArray(source.milestones)){
   const list=source.milestones;
@@ -2554,39 +2556,55 @@ async function milestoneFromImport(source){
   const features=(source.features||[]).filter(f=>String(f.milestone_id)===String(chosen.milestone_id));
   const fids=new Set(features.map(f=>String(f.feature_id)));
   const tasks=(source.tasks||[]).filter(t=>fids.has(String(t.feature_id)));
-  const logs=(source.logs||[]).filter(l=>tasks.some(t=>String(t.task_id)===String(l.task_id)));
-  return {milestone:chosen,features,tasks,logs,members:source.members||[]};
+  const taskIds=new Set(tasks.map(t=>String(t.task_id)));
+  const logs=(source.logs||[]).filter(l=>taskIds.has(String(l.task_id)));
+  return {milestone:chosen,features,tasks,logs,members:source.members||[],tags:source.tags||[]};
  }
  if(source.milestone&&typeof source.milestone==='object'){
-  const features=source.features||source.milestone.features||[];
-  const tasks=source.tasks||features.flatMap(f=>(f.tasks||[]).map(t=>({...t,feature_id:t.feature_id||f.feature_id||f.id||f.name})));
-  return {milestone:source.milestone,features,tasks,logs:source.logs||[],members:source.members||[]};
+  const sourceFeatures=source.features||source.milestone.features||[];
+  if(!Array.isArray(sourceFeatures))throw Error('Features must be an array');
+  const features=sourceFeatures.map((f,i)=>({...f,feature_id:String(f.feature_id||f.id||'feature-'+(i+1))}));
+  const tasks=Array.isArray(source.tasks)
+   ?source.tasks.map((t,i)=>{
+     const ref=String(t.feature_id||t.featureId||t.feature||'');
+     const parent=features.find(f=>String(f.feature_id)===ref||String(f.name)===ref);
+     return {...t,feature_id:parent?.feature_id||ref,task_id:String(t.task_id||t.id||'task-'+(i+1))};
+    })
+   :features.flatMap((f,i)=>(f.tasks||[]).map((t,j)=>({...t,feature_id:f.feature_id,task_id:String(t.task_id||t.id||'task-'+(i+1)+'-'+(j+1))})));
+  return {milestone:source.milestone,features,tasks,logs:source.logs||[],members:source.members||[],tags:source.tags||[]};
  }
  throw Error('Expected a milestone file or a full GamePlan backup');
 }
 async function importOneMilestone(source){
  const parsed=await milestoneFromImport(source);
  if(!parsed)return false;
- const {milestone,features,tasks,logs,members}=parsed;
- if(!Array.isArray(features)||!Array.isArray(tasks)||!Array.isArray(logs))throw Error('Malformed milestone contents');
+ const {milestone,features,tasks,logs,members,tags}=parsed;
+ if(!Array.isArray(features)||!Array.isArray(tasks)||!Array.isArray(logs)||!Array.isArray(tags))throw Error('Malformed milestone contents');
  const name=String(milestone.name||milestone.title||'').trim();
  if(!name)throw Error('Milestone needs a name');
  const fkey=f=>String(f.feature_id||f.id||f.name||'');
  const tkey=t=>String(t.task_id||t.id||t.title||t.name||'');
  if(features.some(f=>!fkey(f)||!String(f.name||'').trim()))throw Error('Every feature needs a name and identifier');
  if(tasks.some(t=>!tkey(t)||!String(t.title||t.name||'').trim()))throw Error('Every task needs a title and identifier');
- const featureKeys=features.map(fkey);
+ const featureKeys=features.map(fkey),taskKeys=tasks.map(tkey);
  if(new Set(featureKeys).size!==featureKeys.length)throw Error('Feature identifiers must be unique');
- const taskKeys=tasks.map(tkey);
  if(new Set(taskKeys).size!==taskKeys.length)throw Error('Task identifiers must be unique');
  if(tasks.some(t=>!featureKeys.includes(String(t.feature_id||t.featureId||''))))throw Error('A task refers to a missing feature');
  const loggedIds=new Set(taskKeys);
  if(logs.some(l=>!loggedIds.has(String(l.task_id))))throw Error('A time log refers to a missing task');
- const message=`Add milestone “${name}” with ${features.length} features and ${tasks.length} tasks to the current project? Existing board data will be kept.`;
+ const estimateOf=t=>{
+  const minutes=t.estimated_minutes??t.estimate_minutes;
+  const value=minutes!==undefined&&minutes!==null?Number(minutes)/60:Number(t.estimated_hours??t.estimate??0);
+  if(!Number.isFinite(value)||value<0)throw Error('Invalid estimated time for '+String(t.title||t.name));
+  return Math.round(value*60)/60;
+ };
+ const estimatedTotal=tasks.reduce((sum,t)=>sum+estimateOf(t),0);
+ const message=`Add milestone “${name}” with ${features.length} features and ${tasks.length} tasks (${formatHours(estimatedTotal)} estimated) to the current project? Tags, assignees and time logs will be imported. Existing board data will be kept.`;
  if(!await gpConfirm(message,{confirmLabel:'Import milestone'}))return false;
  const next=structuredClone(data),newMilestoneId=uid();
+ next.tags=Array.isArray(next.tags)?next.tags:[];
  const memberById=id=>members.find(m=>String(m.member_id||m.id)===String(id))?.display_name;
- const memberByName=name=>next.members.find(m=>m.display_name.toLowerCase()===String(name).toLowerCase());
+ const memberByName=name=>next.members.find(m=>String(m.display_name).toLowerCase()===String(name).toLowerCase());
  const resolveMember=t=>{
   const name=t.assignee||t.assignee_name||t.assignee_display_name||memberById(t.assignee_member_id);
   let existing=name?memberByName(name):next.members.find(m=>String(m.member_id)===String(t.assignee_member_id));
@@ -2598,6 +2616,31 @@ async function importOneMilestone(source){
    next.team.push({project_id:activeProject,member_id:existing.member_id,project_role:'Member',discipline:'',membership_status:'Active'});
   return existing?.member_id||'';
  };
+ const sourceTagsById=new Map(tags.filter(t=>t&&typeof t==='object'&&(t.tag_id||t.id)).map(t=>[String(t.tag_id||t.id),t]));
+ const resolveTags=t=>{
+  const inputs=[];
+  for(const id of (Array.isArray(t.tag_ids)?t.tag_ids:[])){
+   const fromSource=sourceTagsById.get(String(id));
+   const local=next.tags.find(tag=>tag.project_id===activeProject&&String(tag.tag_id)===String(id));
+   if(!fromSource&&!local)throw Error('No tag definition found for imported tag ID '+String(id));
+   inputs.push(fromSource||local);
+  }
+  for(const value of [...(Array.isArray(t.tags)?t.tags:[]),...(Array.isArray(t.tag_names)?t.tag_names:[])])
+   inputs.push(typeof value==='string'?{name:value}:value);
+  const result=[];
+  for(const tag of inputs){
+   const tagName=String(tag?.name||'').trim();
+   if(!tagName)throw Error('Imported task has a tag without a name');
+   let existing=next.tags.find(x=>x.project_id===activeProject&&String(x.name).toLowerCase()===tagName.toLowerCase());
+   if(!existing){
+    const color=String(tag.color||'#98aab6');
+    existing={tag_id:uid(),project_id:activeProject,name:tagName,color:/^#[a-f0-9]{6}$/i.test(color)?color:'#98aab6'};
+    next.tags.push(existing);
+   }
+   if(!result.includes(existing.tag_id))result.push(existing.tag_id);
+  }
+  return result;
+ };
  next.milestones.push({milestone_id:newMilestoneId,project_id:activeProject,name,description:milestone.description||'',status:milestone.status||'To do',target_date:milestone.target_date||''});
  const mappedFeatures=new Map(),mappedTasks=new Map();
  for(const f of features){
@@ -2606,15 +2649,20 @@ async function importOneMilestone(source){
  }
  for(const t of tasks){
   const id=uid();mappedTasks.set(tkey(t),id);
-  next.tasks.push({task_id:id,project_id:activeProject,feature_id:mappedFeatures.get(String(t.feature_id||t.featureId)),title:String(t.title||t.name),description:t.description||'',assignee_member_id:resolveMember(t),status:t.status||'To do',priority:t.priority||'Normal',estimated_hours:Number(t.estimated_hours??t.estimate??1)||0,remaining_hours:Number(t.remaining_hours??t.estimated_hours??t.estimate??1)||0,created_by_member_id:'penni',updated_at:new Date().toISOString()});
+  next.tasks.push({
+   task_id:id,project_id:activeProject,feature_id:mappedFeatures.get(String(t.feature_id||t.featureId)),
+   title:String(t.title||t.name),description:t.description||'',assignee_member_id:resolveMember(t),
+   tag_ids:resolveTags(t),status:ST.includes(t.status)?t.status:'To do',
+   priority:PRI.includes(t.priority)?t.priority:'Normal',estimated_hours:estimateOf(t),
+   created_by_member_id:data.me.member_id||'penni',updated_at:new Date().toISOString()
+  });
  }
  for(const l of logs){
-  const importedTask=tasks.find(t=>tkey(t)===String(l.task_id));
   const importedTaskId=mappedTasks.get(String(l.task_id));
   const newTask=next.tasks.find(t=>t.task_id===importedTaskId);
-  next.logs.push({log_id:uid(),task_id:importedTaskId,member_id:newTask?.assignee_member_id||'penni',hours:Number(l.hours)||0,work_date:l.work_date||l.date||'',note:l.note||'',created_at:l.created_at||''});
+  next.logs.push({log_id:uid(),task_id:importedTaskId,member_id:newTask?.assignee_member_id||data.me.member_id||'penni',hours:Number(l.hours)||0,work_date:l.work_date||l.date||'',note:l.note||'',created_at:l.created_at||''});
  }
- // Keep current board untouched if persistence fails.
+ // Keep current board untouched if validation or persistence fails.
  const oldData=data;data=next;
  try{persist()}catch(err){data=oldData;throw err}
  activeView='m:'+newMilestoneId;saveProject();render();return true;
