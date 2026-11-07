@@ -364,12 +364,6 @@ async function gpDeleteTag(id){
  data.templates.forEach(t=>t.tasks.forEach(item=>item.tag_ids=(item.tag_ids||[]).filter(x=>x!==id)));
  persist();render();
 }
-function gpAnalytics(){
- const tasks=projectTasks(),lookup=new Map(tasks.map(t=>[String(t.task_id),t])),groups=new Map();let total=0;
- for(const log of data.logs){const t=lookup.get(String(log.task_id));if(!t)continue;const tag=gpTags().find(g=>g.tag_id===(t.tag_ids||[])[0]);const key=String(log.member_id)+'|'+(tag?.name||'Untagged');groups.set(key,(groups.get(key)||0)+Number(log.hours||0));total+=Number(log.hours||0)}
- const rows=[...groups].map(([key,h])=>({name:member(key.split('|')[0]),tag:key.split('|').slice(1).join('|'),hours:h})).sort((a,b)=>b.hours-a.hours);
- $('#gpExtra').innerHTML='<h2>'+formatHours(total)+' total</h2><div class="table-wrap"><table><thead><tr><th>Team member</th><th>Tag</th><th>Logged time</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+e(r.name)+'</td><td>'+e(r.tag)+'</td><td>'+formatHours(r.hours)+'</td></tr>').join('')+'</tbody></table></div>';
-}
 async function gpSaveTemplate(){
  const selected=projectTasks().filter(t=>gpSelected.has(String(t.task_id)));if(!selected.length)return;
  const unfinished=selected.filter(t=>t.status!=='Done');
