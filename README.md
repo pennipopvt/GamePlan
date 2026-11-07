@@ -5,7 +5,7 @@ A lightweight task-and-project board, published from this repository with GitHub
 ## Working rules for future development chats
 
 1. **Inspect the current `main` branch before editing.** Do not assume a previous chat's code or versions are current. Keep existing design language and make focused changes rather than redesigning unrelated screens.
-2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.07.80**.
+2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.07.81**.
 3. **Refresh the offline cache identifier** in `service-worker.js` when changing front-end assets, so older clients do not keep a stale shell. This is separate from the human-readable app version.
 4. **Publish by committing to `main`.** Check the GitHub Pages build/deployment state and confirm the public URL serves the new version. If `main` is protected, create a feature branch and PR, then merge when checks permit. Never claim a successful deployment from a successful commit alone.
 5. **If the page looks stale:** hard-refresh, verify the live HTML version and asset query strings, inspect Actions/Pages deployment status, and inspect the service worker/cache. Don't blindly repeat commits. See `.github/workflows/recover-pages.yml` for a *manual recovery workflow specific to a previously stale deployment*; don't run or alter it without confirming it still applies.
@@ -118,3 +118,10 @@ A lightweight task-and-project board, published from this repository with GitHub
 ## Editorial milestone header preview (v2026.11.07.80)
 
 The Board’s milestone headers use the approved **Editorial / Design A** preview: a small numbered milestone eyebrow, larger 25px milestone title (21px on small screens), description on its own line, target date on top, and a separate task-progress row with hours at the end. Milestone cards have a subtle lavender 1px edge instead of a thick dark outline. Existing collapse/expand behavior, feature/task hierarchy, edit and add buttons, status colors, time totals and project data are unchanged. This is a reversible visual experiment; compare in the real Board and adjust after feedback.
+
+## Milestone visual refinements (v2026.11.07.81)
+
+- Keep the large **Editorial** milestone title while adding a **5px magenta left rail** inspired by Accent Rail.
+- Allow long milestone descriptions and the progress footer to extend across the card, instead of truncating the description to 70 characters' worth of width. The logged/remaining time line aligns at the right edge, like the target date, with responsive wrapping for narrower screens.
+- Automatic milestone labels count **oldest to newest** (01, 02, 03, …), while the Board continues to display the **newest milestone first**. Filtering down to a milestone doesn't change its number. Older projects use the existing target-date and stored-position fallback when creation timestamps are absent.
+- In **Create milestone** or **Edit milestone**, the optional **Milestone number** field accepts integers 1–9999. Clearing it restores automatic numbering. This cosmetic `display_number` is saved on the milestone itself and syncs with the same payload; the milestone's name, order, feature/task records, logged hours and permissions stay unchanged.
