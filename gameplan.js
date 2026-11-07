@@ -199,14 +199,7 @@ function gpAddShell(){
  $('#gpProjectTitle').addEventListener('change',gpRenameProjectInline);
  $('#gpProjectTitle').addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();ev.currentTarget.blur()}if(ev.key==='Escape'){ev.currentTarget.value=find(data.projects,activeProject,'project_id')?.project_name||'';ev.currentTarget.blur()}});
 
- const boardNav=document.createElement('div');boardNav.id='gpBoardNav';
- const label=sidebar.querySelector('.side-label');const milestone=sidebar.querySelector('#milestoneNav');
- label.before(boardNav);boardNav.append(label,sidebar.querySelector('#viewNav'),milestone.previousElementSibling,milestone);
- nav.insertBefore(boardNav,nav.children[1]);
- // Preserve legacy view containers used by the board renderer, but remove sidebar subtabs.
- boardNav.hidden=true;
- boardNav.style.display='none';
- const main=$('#mainApp');const board=document.createElement('div');board.id='gpBoardView';while(main.firstChild)board.append(main.firstChild);main.append(board);
+const main=$('#mainApp');const board=document.createElement('div');board.id='gpBoardView';while(main.firstChild)board.append(main.firstChild);main.append(board);
  const pageHeader=document.createElement('header');pageHeader.id='gpSecondaryPageHeader';pageHeader.className='gp-secondary-page-header';
  pageHeader.innerHTML='<h1 id="gpSecondaryPageTitle"></h1>';
  pageHeader.hidden=true;main.append(pageHeader);
@@ -269,12 +262,7 @@ function gpRenderPage(){
  const secondaryHeader=$('#gpSecondaryPageHeader');
  secondaryHeader.hidden=gpPage==='board';
  if(gpPage!=='board')$('#gpSecondaryPageTitle').textContent=({analytics:'Analytics',templates:'Feature Templates',team:'Project Team',settings:'Project Settings'})[gpPage]||'';
- const boardSubtabs=$('#gpBoardNav');
- boardSubtabs.hidden=true;
- boardSubtabs.style.display='none';
- const boardTab=$('#gpPrimary [data-page="board"]');
- if(boardTab)boardTab.removeAttribute('aria-expanded');
- document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===gpPage));
+document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===gpPage));
  gpSelectionBar();
  if(gpPage==='settings')gpSettings();
  if(gpPage==='analytics')gpAnalytics();
@@ -440,7 +428,7 @@ function gpFeatureCreate(preferredMilestoneId='',initialTemplateId=''){
     }
     persist();
    }
-   closeModal();activeView='m:'+mid;gpNavigate('board');
+   closeModal();gpNavigate('board');
   }catch(err){gpAlert('Could not create feature: '+err.message);button.disabled=false}
  };
 }
@@ -473,14 +461,14 @@ async function gpDeleteProject(){
  };
  data=next;
  try{persist()}catch(err){data=old;gpAlert('Unable to save project deletion: '+err.message);return}
- activeProject=next.projects[0].project_id;activeView='all';gpSelected.clear();gpSelecting=false;
+ activeProject=next.projects[0].project_id;gpMilestoneSelection='';gpSelected.clear();gpSelecting=false;
  $('#assigneeFilter').value='';$('#searchTasks').value='';
  saveProject();gpNavigate('board');
  gpAlert('Project deleted.');
 }
 function gpSwitchProject(id){
  if(!data.projects.some(p=>String(p.project_id)===String(id)))return;
- activeProject=id;activeView='all';gpMyOnly=false;gpSelected.clear();gpSelecting=false;saveProject();
+ activeProject=id;gpMilestoneSelection='';gpMyOnly=false;gpSelected.clear();gpSelecting=false;saveProject();
  $('#assigneeFilter').value='';$('#searchTasks').value='';
  render();
 }
@@ -642,14 +630,13 @@ function gpSetupHierarchyAnimation(){
 }
 
 /* Faceted deckbuilder filters: OR within category, AND across categories. */
-const gpFacets={person:new Set(),tag:new Set(),status:new Set(),priority:new Set(),milestone:new Set()};
+const gpFacets={person:new Set(),tag:new Set(),status:new Set(),priority:new Set()};
 const gpExcludedFacets=Object.fromEntries(Object.keys(gpFacets).map(key=>[key,new Set()]));
 const gpFacetGroups=[
  {key:'person',title:'Assignees'},
  {key:'tag',title:'Tags'},
  {key:'status',title:'Status'},
- {key:'priority',title:'Priority'},
- {key:'milestone',title:'Milestones'}
+ {key:'priority',title:'Priority'}
 ];
 const gpHasFacetFilters=()=>gpFacetGroups.some(group=>gpFacets[group.key].size||gpExcludedFacets[group.key].size);
 function gpFacetOptions(key){
@@ -665,7 +652,6 @@ function gpFacetOptions(key){
  ];
  if(key==='status')return ST.map((name,i)=>({id:name,name,color:['#a6adb8','#7775cf','#d94b58','#32956d'][i]}));
  if(key==='priority')return PRI.map(name=>({id:name,name}));
- if(key==='milestone')return data.milestones.filter(m=>m.project_id===activeProject).map(m=>({id:String(m.milestone_id),name:m.name}));
  return [];
 }
 /* Filters: OR for included options within a category, AND between categories.
@@ -676,7 +662,6 @@ function gpTaskFacetValues(task,key){
  if(key==='tag')return (task.tag_ids||[]).length?task.tag_ids.map(String):['__untagged'];
  if(key==='status')return [String(task.status||'To do')];
  if(key==='priority')return [String(task.priority||'Normal')];
- if(key==='milestone')return [String(f?.milestone_id||'')];
  return [];
 }
 const gpBaseVisibleTasks=visibleTasks;
