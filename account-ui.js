@@ -217,6 +217,15 @@ function renderTeamPage(){
  const unlinked=(data.team||[]).filter(x=>x.project_id===activeProject&&!reserved.has(x.member_id)&&
   !teamRows.some(m=>x.member_id==='account:'+m.member_user_id)&&
   !teamRows.some(m=>m.member_role==='owner'&&x.member_id===data.projects.find(p=>p.project_id===activeProject)?.project_manager_member_id));
+ const canChangeColors=!!window.GamePlanAuth?.canEdit?.(activeProject);
+ const colorRows=teamRows.map(m=>{
+  const name=memberName(m),id=window.GamePlanColors?.accountMemberId?.(m)||String(m.legacy_member_id||'account:'+m.member_user_id);
+  const color=window.GamePlanColors?.getColor?.(id)||'#98aab6';
+  return '<label class="gp-team-chart-color-row"><span class="gp-team-chart-color-name">'+html(name)+'</span>'+
+   '<input type="color" data-gp-team-color="'+html(id)+'" value="'+html(color)+'" aria-label="Chart color for '+html(name)+'"'+(canChangeColors?'':' disabled')+'></label>';
+ }).join('');
+ const colorsSection='<section class="gp-team-colors-settings"><h3>Chart colors</h3><p class="sub">These colors are used for team members in Analytics and sync with the project.</p>'+
+  '<div class="gp-team-colors-grid">'+colorRows+'</div></section>';
  const rowMarkup=teamRows.map(m=>{
   const name=memberName(m),isOwner=m.member_role==='owner';
   return '<article class="gp-person-row"><div class="gp-person-avatar">'+html(initials(name))+'</div>'+
@@ -230,9 +239,14 @@ function renderTeamPage(){
  '<div class="gp-team-people">'+(rowMarkup||'<p class="sub">No accounts loaded yet. Try Sync.</p>')+'</div>'+
  (owner&&unlinked.length?'<details class="gp-legacy-members"><summary>'+unlinked.length+' older assignee(s) not linked to an account</summary>'+
  '<p class="sub">These historical records are preserved to keep their tasks and hours. Match them to a signed-in teammate using Manage.</p>'+
- '<div>'+unlinked.map(x=>'<span class="gp-legacy-chip">'+html(data.members.find(m=>m.member_id===x.member_id)?.display_name||x.member_id)+'</span>').join('')+'</div></details>':'');
+ '<div>'+unlinked.map(x=>'<span class="gp-legacy-chip">'+html(data.members.find(m=>m.member_id===x.member_id)?.display_name||x.member_id)+'</span>').join('')+'</div></details>':'')+
+ colorsSection;
  $a('#gpInviteTeam')?.addEventListener('click',()=>void window.GamePlanSync.shareCurrent());
  area.querySelectorAll('[data-gp-authmember]').forEach(b=>b.onclick=()=>void editTeamMember(b.dataset.gpAuthmember));
+ area.querySelectorAll('[data-gp-team-color]').forEach(input=>input.onchange=()=>{
+  try{window.GamePlanColors?.setColor?.(input.dataset.gpTeamColor,input.value)}
+  catch(err){gpAlert('Could not save chart color: '+err.message)}
+ });
 }
 async function editTeamMember(id){
  const member=teamRows.find(m=>m.member_user_id===id);

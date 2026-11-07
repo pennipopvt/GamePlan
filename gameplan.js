@@ -499,12 +499,20 @@ function gpOpenProjectDialog(){
 function gpTeamPage(){
  const memberships=(data.team||[]).filter(m=>m.project_id===activeProject);
  const roster=data.roster||data.members;
+ const canColor=!!window.GamePlanAuth?.canEdit?.(activeProject);
  $('#gpExtra').innerHTML='<div class="gp-flex"><div class="gp-page-card-spacer"></div><button id="gpAddMember" class="button main">+ Add member</button></div><div id="gpTeamRows" class="gp-list">'+memberships.map(m=>{
   const person=roster.find(p=>String(p.member_id)===String(m.member_id))||data.members.find(p=>String(p.member_id)===String(m.member_id));
-  return '<div class="gp-card gp-flex"><div><strong>'+e(person?.display_name||'Unknown')+'</strong><div class="sub">'+e(m.project_role||'Member')+(m.discipline?' · '+e(m.discipline):'')+'</div></div><button type="button" class="button" data-gp-member="'+e(m.member_id)+'">Edit</button></div>';
+  const name=person?.display_name||'Unknown',color=window.GamePlanColors?.getColor(m.member_id)||'#98aab6';
+  return '<div class="gp-card gp-flex"><div><strong>'+e(name)+'</strong><div class="sub">'+e(m.project_role||'Member')+(m.discipline?' · '+e(m.discipline):'')+'</div></div>'+
+  '<label class="gp-team-chart-color">Chart color <input type="color" data-gp-team-color="'+e(m.member_id)+'" aria-label="Chart color for '+e(name)+'" value="'+e(color)+'"'+(canColor?'':' disabled')+'></label>'+
+  '<button type="button" class="button" data-gp-member="'+e(m.member_id)+'">Edit</button></div>';
  }).join('')+'</div>';
  $('#gpAddMember').onclick=()=>quickCreate('member');
  $('#gpTeamRows').onclick=ev=>{const btn=ev.target.closest('[data-gp-member]');if(btn)editMember(btn.dataset.gpMember)};
+ $('#gpTeamRows').onchange=ev=>{
+  const input=ev.target.closest('[data-gp-team-color]');
+  if(input)window.GamePlanColors?.setColor(input.dataset.gpTeamColor,input.value);
+ };
 }
 const gpTrashSVG='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v7M14 10v7"/></svg>';
 function gpDecorateDeletes(){
@@ -862,20 +870,62 @@ document.addEventListener('keydown',ev=>{
  if(open){open.classList.remove('gp-tags-open');const btn=open.querySelector('.gp-tag-peek');btn?.setAttribute('aria-expanded','false');btn?.focus()}
 });
 
-/* Analytics: weekly team hours and a readable feature time breakdown.
-   Each vertical bar represents hours logged by the actual person, not the
-   task's current assignee. The velocity line is a trailing three-week average
-   of total team hours for the selected milestone. */
-const gpAnalyticsSettings={project:'',milestone:'all',weeks:'8',velocity:true};
+/* Analytics: grouped vertical bars by person or primary task tag, daily or weekly.
+   A log counts once: multi-tag tasks use their first tag, so hours never double-count.
+   Person colors live on the synced project team record. */
+const gpAnalyticsSettings={project:'',milestone:'all',interval:'week',range:'8',group:'person',velocity:true,featureSort:'newest'};
 const gpAnalyticsPalette=['#c63f96','#7364bb','#319b87','#e0a151','#4f87b7','#bf5e62','#8b75a3','#46786e','#d481bc','#79919c'];
-function gpAnalyticsWeekStart(raw){
+const gpSafeColor=value=>/^#[0-9a-f]{6}$/i.test(String(value||''))?String(value).toLowerCase():null;
+function gpMemberColor(id){
+ const m=data.team.find(t=>String(t.project_id)===String(activeProject)&&String(t.member_id)===String(id));
+ if(gpSafeColor(m?.chart_color))return gpSafeColor(m.chart_color);
+ // Stable palette assignment for teammates without an explicitly selected color.
+ // A deterministic fallback does not shift when new members join. Assign a
+ // custom color in Team settings to guarantee distinct chosen colors.
+ let hash=0;for(const c of String(id))hash=(Math.imul(hash,31)+c.charCodeAt(0))>>>0;
+ return gpAnalyticsPalette[hash%gpAnalyticsPalette.length];
+}
+function gpSetMemberColor(memberId,color){
+ const value=gpSafeColor(color),id=String(memberId);
+ if(!value)throw Error('Choose a valid team color');
+ if(!window.GamePlanAuth?.canEdit?.(activeProject)){gpAlert('Only project editors can change team colors.');return false}
+ let row=data.team.find(t=>String(t.project_id)===String(activeProject)&&String(t.member_id)===id);
+ if(!row){
+  row={project_id:activeProject,member_id:id,project_role:'Member',membership_status:'Active',discipline:''};
+  data.team.push(row);
+ }
+ // Convert a transient authenticated-team shadow into an ordinary synchronized
+ // team row. Cloud item identity is the existing member_id.
+ if(row.__gp_account_shadow)delete row.__gp_account_shadow;
+ if(!data.members.some(m=>String(m.member_id)===id)){
+  const name=member(id)||id;
+  const person={member_id:id,display_name:name,google_email:'',active:'Yes'};
+  data.members.push(person);
+  if(Array.isArray(data.roster))data.roster.push({...person});
+ }
+ row.chart_color=value;
+ persist();
+ render();
+ return true;
+}
+function gpAccountMemberId(row){
+ return String(row.legacy_member_id||(row.member_role==='owner'?data.projects.find(p=>p.project_id===activeProject)?.project_manager_member_id:null)||'account:'+row.member_user_id);
+}
+window.GamePlanColors={getColor:gpMemberColor,setColor:gpSetMemberColor,accountMemberId:gpAccountMemberId};
+function gpAnalyticsDate(raw){
  const match=String(raw||'').match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T)/);
  if(!match)return '';
- const year=Number(match[1]),month=Number(match[2]),day=Number(match[3]);
- const date=new Date(Date.UTC(year,month-1,day));
- if(date.getUTCFullYear()!==year||date.getUTCMonth()!==month-1||date.getUTCDate()!==day)return '';
+ const y=Number(match[1]),m=Number(match[2]),d=Number(match[3]),date=new Date(Date.UTC(y,m-1,d));
+ return date.getUTCFullYear()===y&&date.getUTCMonth()===m-1&&date.getUTCDate()===d?date.toISOString().slice(0,10):'';
+}
+function gpAnalyticsWeekStart(raw){
+ const iso=gpAnalyticsDate(raw);if(!iso)return '';
+ const date=new Date(iso+'T00:00:00Z');
  date.setUTCDate(date.getUTCDate()-(date.getUTCDay()+6)%7);
  return date.toISOString().slice(0,10);
+}
+function gpAnalyticsPeriod(date){
+ return gpAnalyticsSettings.interval==='day'?gpAnalyticsDate(date):gpAnalyticsWeekStart(date);
 }
 function gpAnalyticsScope(){
  const features=data.features.filter(f=>f.project_id===activeProject&&(gpAnalyticsSettings.milestone==='all'||String(f.milestone_id)===gpAnalyticsSettings.milestone));
@@ -883,149 +933,151 @@ function gpAnalyticsScope(){
  const tasks=projectTasks().filter(t=>ids.has(String(t.feature_id)));
  const taskMap=new Map(tasks.map(t=>[String(t.task_id),t]));
  const members=new Map(projectMembers().map(p=>[String(p.member_id),String(p.display_name)]));
- const logRows=[],undated=[];
+ const tags=gpTags();
+ const allTags=new Map(tags.map(t=>[String(t.tag_id),{id:String(t.tag_id),name:t.name,color:gpSafeColor(t.color)||'#98aab6'}]));
+ const logs=[],undated=[];
  for(const log of data.logs){
-  if(!taskMap.has(String(log.task_id)))continue;
-  const amount=Number(log.hours);
-  if(!Number.isFinite(amount)||amount<=0)continue;
+  const task=taskMap.get(String(log.task_id));if(!task)continue;
+  const hours=Number(log.hours);
+  if(!Number.isFinite(hours)||hours<=0)continue;
   const memberId=String(log.member_id||'unknown');
   if(!members.has(memberId))members.set(memberId,memberId==='unknown'?'Unknown':member(memberId));
-  const row={week:gpAnalyticsWeekStart(log.work_date||log.date||log.created_at),memberId,hours:amount};
-  if(row.week)logRows.push(row);else undated.push(row);
+  const firstTag=String((task.tag_ids||[])[0]||'__untagged');
+  const tagId=allTags.has(firstTag)?firstTag:'__untagged';
+  const date=gpAnalyticsDate(log.work_date||log.date||log.created_at);
+  const row={date,period:gpAnalyticsPeriod(date),hours,memberId,tagId};
+  if(date)logs.push(row);else undated.push(row);
  }
- const datedMemberIds=new Set(logRows.map(row=>row.memberId));
- // Display active team members, including zero-hour weeks. Historic loggers
- // without current project membership still appear if they logged work.
- const people=[...members].filter(([id])=>projectMembers().some(p=>String(p.member_id)===id)||datedMemberIds.has(id)).map(([id,name])=>({id,name}));
- return {features,tasks,logRows,undated,people};
+ const loggedMemberIds=new Set(logs.map(row=>row.memberId));
+ const people=[...members].filter(([id])=>projectMembers().some(p=>String(p.member_id)===id)||loggedMemberIds.has(id)).map(([id,name])=>({id,name,color:gpMemberColor(id)}));
+ const tagIds=new Set(logs.map(log=>log.tagId));
+ const series=gpAnalyticsSettings.group==='tag'
+  ?[...allTags.values(),{id:'__untagged',name:'Untagged',color:'#98aab6'}].filter(tag=>tagIds.has(tag.id))
+  :people;
+ return {features,tasks,logs,undated,series,people};
 }
-function gpAnalyticsWeeks(rows){
- const today=new Date();
- const todayLocal=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');
- const current=gpAnalyticsWeekStart(todayLocal);
- const loggedWeeks=rows.map(row=>row.week).sort();
- const range=gpAnalyticsSettings.weeks;
- const end=range==='all'&&loggedWeeks.length&&loggedWeeks[loggedWeeks.length-1]>current?loggedWeeks[loggedWeeks.length-1]:current;
- const endMs=Date.parse(end+'T00:00:00Z'),step=7*24*60*60*1000;
- const earliest=range==='all'&&loggedWeeks.length?loggedWeeks[0]:new Date(endMs-(Number(range)-1)*step).toISOString().slice(0,10);
+function gpAnalyticsPeriods(rows){
+ const today=new Date(),todayLocal=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');
+ const current=gpAnalyticsPeriod(todayLocal);
+ const logged=rows.map(row=>row.period).filter(Boolean).sort();
+ const step=gpAnalyticsSettings.interval==='day'?86400000:604800000;
+ const limit=gpAnalyticsSettings.range;
+ const end=limit==='all'&&logged.length&&logged[logged.length-1]>current?logged[logged.length-1]:current;
+ const endMs=Date.parse(end+'T00:00:00Z');
+ const earliest=limit==='all'&&logged.length?logged[0]:new Date(endMs-(Number(limit)-1)*step).toISOString().slice(0,10);
  const count=Math.max(1,Math.floor((endMs-Date.parse(earliest+'T00:00:00Z'))/step)+1);
  return Array.from({length:count},(_,i)=>new Date(Date.parse(earliest+'T00:00:00Z')+i*step).toISOString().slice(0,10));
 }
-function gpAnalyticsWeeklyData(scope){
- const weeks=gpAnalyticsWeeks(scope.logRows);
- const weekMap=new Map(weeks.map(week=>[week,new Map()]));
- const activeIds=new Set(scope.people.map(p=>p.id));
- for(const row of scope.logRows){
-  const bucket=weekMap.get(row.week);
-  if(!bucket||!activeIds.has(row.memberId))continue;
-  bucket.set(row.memberId,(bucket.get(row.memberId)||0)+row.hours);
+function gpAnalyticsGroupedData(scope){
+ const periods=gpAnalyticsPeriods(scope.logs),periodMap=new Map(periods.map(period=>[period,new Map()]));
+ const active=new Set(scope.series.map(s=>s.id));
+ for(const log of scope.logs){
+  const bucket=periodMap.get(log.period),id=gpAnalyticsSettings.group==='tag'?log.tagId:log.memberId;
+  if(!bucket||!active.has(id))continue;
+  bucket.set(id,(bucket.get(id)||0)+log.hours);
  }
- const rows=weeks.map((week,index)=>{
-  const values=scope.people.map(p=>weekMap.get(week).get(p.id)||0);
-  const total=values.reduce((sum,v)=>sum+v,0);
-  return {week,index,values,total};
+ const rows=periods.map((period,index)=>{
+  const values=scope.series.map(s=>periodMap.get(period).get(s.id)||0);
+  return {period,index,values,total:values.reduce((sum,n)=>sum+n,0)};
  });
- const line=rows.map((row,i)=>rows.slice(Math.max(0,i-2),i+1).reduce((sum,r)=>sum+r.total,0)/(Math.min(3,i+1)));
- return {rows,line};
+ const window=gpAnalyticsSettings.interval==='day'?7:3;
+ const line=rows.map((row,i)=>rows.slice(Math.max(0,i-window+1),i+1).reduce((sum,r)=>sum+r.total,0)/Math.min(window,i+1));
+ return {rows,line,window};
 }
 function gpAnalyticsHoursTick(value){
  const minutes=Math.round(value*60),hours=Math.floor(minutes/60),remainder=minutes%60;
  return remainder?(hours?hours+'h'+String(remainder).padStart(2,'0'):remainder+'m'):hours+'h';
 }
-function gpAnalyticsChart(scope,weekly){
- const rows=weekly.rows,people=scope.people;
- const hasData=rows.some(row=>row.total>0);
- if(!hasData)return '<div class="gp-analytics-no-data"><strong>No logged time in this range yet.</strong><p>Choose a different milestone or week range, or start logging work on tasks.</p></div>';
- const width=Math.max(740,rows.length*Math.max(95,people.length*19+30)+85);
+function gpAnalyticsChart(scope,grouped){
+ const rows=grouped.rows,series=scope.series;
+ if(!rows.some(row=>row.total>0))return '<div class="gp-analytics-no-data"><strong>No logged time in this range yet.</strong><p>Choose a different milestone or time range, or log time on a task.</p></div>';
+ const isDaily=gpAnalyticsSettings.interval==='day';
+ const width=Math.max(740,rows.length*Math.max(isDaily?60:95,series.length*19+28)+85);
  const height=330,left=55,right=25,top=22,bottom=57,plotHeight=height-top-bottom,plotWidth=width-left-right,step=plotWidth/rows.length;
- const peak=Math.max(1,...rows.flatMap(row=>row.values),...(gpAnalyticsSettings.velocity?weekly.line:[]));
- const ceiling=Math.max(1,Math.ceil(peak/2)*2),toY=val=>top+plotHeight-(val/ceiling)*plotHeight;
- const labels=Array.from({length:5},(_,i)=>{
-  const val=ceiling*i/4,y=toY(val);
-  return '<line x1="'+left+'" y1="'+y+'" x2="'+(width-right)+'" y2="'+y+'" stroke="#eee8ee" stroke-width="1"/>'+
-   '<text x="'+(left-10)+'" y="'+(y+4)+'" text-anchor="end" font-size="11" fill="#8f8391">'+e(gpAnalyticsHoursTick(val))+'</text>';
+ const peak=Math.max(1,...rows.flatMap(row=>row.values),...(gpAnalyticsSettings.velocity?grouped.line:[]));
+ const ceiling=Math.max(1,Math.ceil(peak/2)*2),toY=value=>top+plotHeight-(value/ceiling)*plotHeight;
+ const grid=Array.from({length:5},(_,i)=>{
+  const value=ceiling*i/4,y=toY(value);
+  return '<line x1="'+left+'" y1="'+y+'" x2="'+(width-right)+'" y2="'+y+'" stroke="#eee8ee"/>'+
+   '<text x="'+(left-10)+'" y="'+(y+4)+'" text-anchor="end" font-size="11" fill="#8f8391">'+e(gpAnalyticsHoursTick(value))+'</text>';
  }).join('');
  const bars=rows.map((row,i)=>{
-  const groupWidth=Math.min(step*.82,people.length*23+14),gap=people.length>5?2:4;
-  const barWidth=Math.max(4,Math.min(23,(groupWidth-Math.max(0,people.length-1)*gap)/Math.max(1,people.length)));
-  const usedWidth=people.length*barWidth+Math.max(0,people.length-1)*gap;
-  const x0=left+i*step+step/2-usedWidth/2;
+  const gap=series.length>5?2:4;
+  const groupWidth=Math.min(step*.84,series.length*23+14);
+  const barWidth=Math.max(3,Math.min(23,(groupWidth-Math.max(0,series.length-1)*gap)/Math.max(1,series.length)));
+  const used=series.length*barWidth+Math.max(0,series.length-1)*gap,x0=left+i*step+step/2-used/2;
   return row.values.map((value,j)=>{
    if(value<=0)return '';
-   const y=toY(value),barHeight=top+plotHeight-y;
-   return '<rect x="'+(x0+j*(barWidth+gap)).toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+barWidth.toFixed(2)+'" height="'+barHeight.toFixed(2)+'" rx="2" fill="'+gpAnalyticsPalette[j%gpAnalyticsPalette.length]+'">'+
-    '<title>'+e(people[j].name)+' · week of '+e(row.week)+' · '+formatHours(value)+'</title></rect>';
+   const y=toY(value);
+   return '<rect x="'+(x0+j*(barWidth+gap)).toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+barWidth.toFixed(2)+'" height="'+(top+plotHeight-y).toFixed(2)+'" rx="2" fill="'+e(series[j].color)+'">'+
+    '<title>'+e(series[j].name)+' · '+e(row.period)+' · '+formatHours(value)+'</title></rect>';
   }).join('');
  }).join('');
- const weekLabels=rows.map((row,i)=>{
-  const x=left+i*step+step/2,date=new Date(row.week+'T00:00:00Z');
-  const label=date.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
-  return '<text x="'+x.toFixed(2)+'" y="'+(height-bottom+25)+'" text-anchor="middle" font-size="11.5" fill="#746a78">'+e(label)+'</text>';
+ const labels=rows.map((row,i)=>{
+  const date=new Date(row.period+'T00:00:00Z'),label=date.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
+  return '<text x="'+(left+i*step+step/2).toFixed(2)+'" y="'+(height-bottom+25)+'" text-anchor="middle" font-size="11.5" fill="#746a78">'+e(label)+'</text>';
  }).join('');
- const line=gpAnalyticsSettings.velocity?(()=>{
-  const points=weekly.line.map((value,i)=>(left+i*step+step/2).toFixed(2)+','+toY(value).toFixed(2)).join(' ');
-  return '<polyline points="'+points+'" fill="none" stroke="#3e2a45" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/>'+
-   weekly.line.map((value,i)=>{
-    const x=left+i*step+step/2,y=toY(value);
-    return '<circle cx="'+x.toFixed(2)+'" cy="'+y.toFixed(2)+'" r="3.3" fill="#fff" stroke="#3e2a45" stroke-width="2">'+
-     '<title>Team velocity (3-week average) · '+e(rows[i].week)+' · '+formatHours(value)+' per week</title></circle>';
-   }).join('');
- })():'';
- const legend=people.map((p,i)=>'<span class="gp-analytics-legend-item"><i style="background:'+gpAnalyticsPalette[i%gpAnalyticsPalette.length]+'"></i>'+e(p.name)+'</span>').join('')+
- (gpAnalyticsSettings.velocity?'<span class="gp-analytics-legend-item"><i class="gp-analytics-line-key"></i>Team velocity (3-week avg)</span>':'');
- const displayedTotal=rows.reduce((sum,row)=>sum+row.total,0);
- return '<div class="gp-analytics-graph-scroll" tabindex="0" aria-label="Scrollable weekly hours graph">'+
-  '<svg class="gp-weekly-chart" viewBox="0 0 '+width+' '+height+'" width="'+width+'" height="'+height+'" role="img" aria-label="Vertical grouped bars showing logged hours per week by team member'+(gpAnalyticsSettings.velocity?', with a three-week moving average team velocity line':'')+'">'+
-   '<title>Weekly logged hours by person</title>'+labels+bars+line+weekLabels+'</svg></div>'+
-   '<div class="gp-analytics-legend">'+legend+'</div>'+
-   '<p class="gp-analytics-chart-caption">'+formatHours(displayedTotal)+' logged across the displayed weeks · Time is credited to whoever logged it, not the task assignee.'+
-   (gpAnalyticsSettings.velocity?' The line shows average team hours for the current and previous two weeks.':'')+'</p>';
+ const average=gpAnalyticsSettings.velocity?('<polyline points="'+grouped.line.map((v,i)=>(left+i*step+step/2).toFixed(2)+','+toY(v).toFixed(2)).join(' ')+'" fill="none" stroke="#3e2a45" stroke-width="2.7" stroke-linejoin="round"/>'+
+  grouped.line.map((v,i)=>'<circle cx="'+(left+i*step+step/2).toFixed(2)+'" cy="'+toY(v).toFixed(2)+'" r="3.3" fill="#fff" stroke="#3e2a45" stroke-width="2">'+
+   '<title>'+grouped.window+'-'+(isDaily?'day':'week')+' average · '+e(rows[i].period)+' · '+formatHours(v)+'</title></circle>').join('')):'';
+ const legend=series.map(s=>'<span class="gp-analytics-legend-item"><i style="background:'+e(s.color)+'"></i>'+e(s.name)+'</span>').join('')+
+  (gpAnalyticsSettings.velocity?'<span class="gp-analytics-legend-item"><i class="gp-analytics-line-key"></i>Team hours ('+grouped.window+'-'+(isDaily?'day':'week')+' avg)</span>':'');
+ const displayed=rows.reduce((sum,row)=>sum+row.total,0);
+ return '<div class="gp-analytics-graph-scroll" tabindex="0" aria-label="Scrollable hours graph">'+
+  '<svg class="gp-weekly-chart" viewBox="0 0 '+width+' '+height+'" width="'+width+'" height="'+height+'" role="img" aria-label="Vertical grouped bars of hours by '+(gpAnalyticsSettings.group==='tag'?'tag':'member')+' each '+(isDaily?'day':'week')+'"><title>Logged hours</title>'+
+  grid+bars+average+labels+'</svg></div><div class="gp-analytics-legend">'+legend+'</div>'+
+  '<p class="gp-analytics-chart-caption">'+formatHours(displayed)+' logged across displayed '+(isDaily?'days':'weeks')+
+  (gpAnalyticsSettings.group==='tag'?' · Each log counts toward the task’s first tag only, so tagged hours are never counted twice.':' · Hours are credited to whoever logged them.')+
+  (gpAnalyticsSettings.velocity?' The line shows the trailing '+grouped.window+'-'+(isDaily?'day':'week')+' average of total team hours.':'')+'</p>';
 }
 function gpAnalyticsFeatureList(scope){
- const all=scope.features;
- if(!all.length)return '<div class="gp-analytics-no-features">No features match this milestone.</div>';
- const milestoneIds=[...new Set(all.map(f=>String(f.milestone_id)))];
- const ordered=projectMilestonesNewestFirst().filter(m=>milestoneIds.includes(String(m.milestone_id)));
- const rows=ordered.map(m=>{
-  const features=all.filter(f=>String(f.milestone_id)===String(m.milestone_id));
+ if(!scope.features.length)return '<div class="gp-analytics-no-features">No features match this milestone.</div>';
+ const ids=new Set(scope.features.map(f=>String(f.milestone_id)));
+ let ordered=projectMilestonesNewestFirst().filter(m=>ids.has(String(m.milestone_id)));
+ if(gpAnalyticsSettings.featureSort==='oldest')ordered.reverse();
+ const groups=ordered.map(m=>{
+  const features=scope.features.filter(f=>String(f.milestone_id)===String(m.milestone_id));
   const body=features.map(f=>{
    const tasks=scope.tasks.filter(t=>String(t.feature_id)===String(f.feature_id));
    const estimated=tasks.reduce((sum,t)=>sum+Math.max(0,Number(t.estimated_hours)||0),0);
    const logged=tasks.reduce((sum,t)=>sum+taskHours(t),0);
    const remaining=tasks.reduce((sum,t)=>sum+taskRemainingHours(t),0);
-   const done=tasks.filter(t=>t.status==='Done').length;
-   return '<tr><th scope="row">'+e(f.name)+'<span class="gp-feature-tasks-count">'+done+'/'+tasks.length+' tasks done</span></th>'+
+   return '<tr><th scope="row">'+e(f.name)+'<span class="gp-feature-tasks-count">'+tasks.filter(t=>t.status==='Done').length+'/'+tasks.length+' tasks done</span></th>'+
     '<td>'+formatHours(logged)+'</td><td>'+formatHours(estimated)+'</td><td>'+formatHours(remaining)+'</td></tr>';
   }).join('');
-  return '<section class="gp-feature-time-group"><h3>'+e(m.name)+'</h3>'+
-   '<div class="gp-feature-time-scroll"><table><thead><tr><th scope="col">Feature</th><th scope="col">Logged</th><th scope="col">Estimated</th><th scope="col">Remaining</th></tr></thead><tbody>'+body+'</tbody></table></div></section>';
+  return '<section class="gp-feature-time-group"><h3>'+e(m.name)+'</h3><div class="gp-feature-time-scroll"><table><thead><tr><th scope="col">Feature</th><th scope="col">Logged</th><th scope="col">Estimated</th><th scope="col">Remaining</th></tr></thead><tbody>'+body+'</tbody></table></div></section>';
  }).join('');
- return rows;
+ return groups;
 }
 function gpAnalytics(){
- if(gpAnalyticsSettings.project!==String(activeProject))Object.assign(gpAnalyticsSettings,{project:String(activeProject),milestone:'all',weeks:'8',velocity:true});
+ if(gpAnalyticsSettings.project!==String(activeProject))Object.assign(gpAnalyticsSettings,{project:String(activeProject),milestone:'all',interval:'week',range:'8',group:'person',velocity:true,featureSort:'newest'});
  const milestones=projectMilestonesNewestFirst();
  if(gpAnalyticsSettings.milestone!=='all'&&!milestones.some(m=>String(m.milestone_id)===gpAnalyticsSettings.milestone))gpAnalyticsSettings.milestone='all';
- const scope=gpAnalyticsScope(),weekly=gpAnalyticsWeeklyData(scope);
- const selected=gpAnalyticsSettings.milestone;
- const options='<option value="all"'+(selected==='all'?' selected':'')+'>All milestones</option>'+
-  milestones.map(m=>'<option value="'+e(m.milestone_id)+'"'+(selected===String(m.milestone_id)?' selected':'')+'>'+e(m.name)+'</option>').join('');
- const weeks=[['4','Last 4 weeks'],['8','Last 8 weeks'],['12','Last 12 weeks'],['all','All logged weeks']];
- const ranges=weeks.map(([id,label])=>'<option value="'+id+'"'+(gpAnalyticsSettings.weeks===id?' selected':'')+'>'+label+'</option>').join('');
- const graph=gpAnalyticsChart(scope,weekly);
- const footer='<section class="gp-analytics-feature-section"><div class="gp-analytics-feature-heading"><h2>Feature time</h2><p>Compare actual logged time against estimates for every feature in the selected milestone.</p></div>'+gpAnalyticsFeatureList(scope)+'</section>';
- const controls='<section class="gp-analytics-settings"><div class="gp-analytics-settings-title"><h2>Chart settings</h2><span>Choose a milestone and time range</span></div><div class="gp-analytics-settings-fields">'+
+ const settings=gpAnalyticsSettings,scope=gpAnalyticsScope(),grouped=gpAnalyticsGroupedData(scope);
+ const options='<option value="all"'+(settings.milestone==='all'?' selected':'')+'>All milestones</option>'+
+  milestones.map(m=>'<option value="'+e(m.milestone_id)+'"'+(settings.milestone===String(m.milestone_id)?' selected':'')+'>'+e(m.name)+'</option>').join('');
+ const choices=(entries,current)=>entries.map(([id,name])=>'<option value="'+id+'"'+(String(id)===String(current)?' selected':'')+'>'+name+'</option>').join('');
+ const daily=settings.interval==='day';
+ const ranges=daily?[['7','Last 7 days'],['14','Last 14 days'],['30','Last 30 days'],['all','All logged days']]:
+  [['4','Last 4 weeks'],['8','Last 8 weeks'],['12','Last 12 weeks'],['all','All logged weeks']];
+ const chart=gpAnalyticsChart(scope,grouped);
+ const controls='<section class="gp-analytics-settings"><div class="gp-analytics-settings-title"><h2>Chart settings</h2><span>Choose what the bars represent</span></div><div class="gp-analytics-settings-fields">'+
   '<label>Milestone<select id="gpAnalyticsMilestone">'+options+'</select></label>'+
-  '<label>Time range<select id="gpAnalyticsWeeks">'+ranges+'</select></label>'+
-  '<label class="gp-analytics-velocity-toggle"><input type="checkbox" id="gpAnalyticsVelocity"'+(gpAnalyticsSettings.velocity?' checked':'')+'> Show 3-week average velocity</label>'+
-  '</div></section>';
+  '<label>Interval<select id="gpAnalyticsInterval">'+choices([['day','Daily'],['week','Weekly']],settings.interval)+'</select></label>'+
+  '<label>Bars show<select id="gpAnalyticsGroup">'+choices([['person','Team members'],['tag','Task tags']],settings.group)+'</select></label>'+
+  '<label>Time range<select id="gpAnalyticsRange">'+choices(ranges,settings.range)+'</select></label>'+
+  '<label class="gp-analytics-velocity-toggle"><input type="checkbox" id="gpAnalyticsVelocity"'+(settings.velocity?' checked':'')+'> Show average velocity</label></div></section>';
+ const featureSort='<label class="gp-feature-sort">Sort milestones<select id="gpFeatureSort">'+choices([['newest','Newest first'],['oldest','Oldest first']],settings.featureSort)+'</select></label>';
+ const footer='<section class="gp-analytics-feature-section"><div class="gp-analytics-feature-heading"><div><h2>Feature time</h2><p>Logged, estimated, and remaining time, organized by milestone.</p></div>'+featureSort+'</div>'+gpAnalyticsFeatureList(scope)+'</section>';
  const undatedHours=scope.undated.reduce((sum,row)=>sum+row.hours,0);
- const undatedNote=scope.undated.length?'<p class="gp-analytics-undated">There are '+scope.undated.length+' undated time entries ('+formatHours(undatedHours)+') not included in the weekly chart; feature totals still include them.</p>':'';
- const root=$('#gpExtra');
- root.innerHTML='<section class="gp-analytics-main-chart"><div class="gp-analytics-heading"><div><h2>Weekly work</h2><p>Logged hours by team member, grouped by week</p></div></div>'+graph+undatedNote+'</section>'+controls+footer;
- $('#gpAnalyticsMilestone').onchange=ev=>{gpAnalyticsSettings.milestone=ev.target.value;gpAnalytics()};
- $('#gpAnalyticsWeeks').onchange=ev=>{gpAnalyticsSettings.weeks=ev.target.value;gpAnalytics()};
- $('#gpAnalyticsVelocity').onchange=ev=>{gpAnalyticsSettings.velocity=ev.target.checked;gpAnalytics()};
+ const undatedNote=scope.undated.length?'<p class="gp-analytics-undated">'+scope.undated.length+' undated entries ('+formatHours(undatedHours)+') omitted from the timeline but included in feature totals.</p>':'';
+ $('#gpExtra').innerHTML='<section class="gp-analytics-main-chart"><div class="gp-analytics-heading"><div><h2>'+ (daily?'Daily':'Weekly')+' work</h2><p>Logged hours by '+(settings.group==='tag'?'task tag':'team member')+'</p></div></div>'+chart+undatedNote+'</section>'+controls+footer;
+ $('#gpAnalyticsMilestone').onchange=ev=>{settings.milestone=ev.target.value;gpAnalytics()};
+ $('#gpAnalyticsInterval').onchange=ev=>{settings.interval=ev.target.value;settings.range=settings.interval==='day'?'14':'8';gpAnalytics()};
+ $('#gpAnalyticsGroup').onchange=ev=>{settings.group=ev.target.value;gpAnalytics()};
+ $('#gpAnalyticsRange').onchange=ev=>{settings.range=ev.target.value;gpAnalytics()};
+ $('#gpAnalyticsVelocity').onchange=ev=>{settings.velocity=ev.target.checked;gpAnalytics()};
+ $('#gpFeatureSort').onchange=ev=>{settings.featureSort=ev.target.value;gpAnalytics()};
 }
 gpAddShell();
 gpSetupHierarchyAnimation();
