@@ -5,7 +5,7 @@ A lightweight task-and-project board, published from this repository with GitHub
 ## Working rules for future development chats
 
 1. **Inspect the current `main` branch before editing.** Do not assume a previous chat's code or versions are current. Keep existing design language and make focused changes rather than redesigning unrelated screens.
-2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.07.70**.
+2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.07.71**.
 3. **Refresh the offline cache identifier** in `service-worker.js` when changing front-end assets, so older clients do not keep a stale shell. This is separate from the human-readable app version.
 4. **Publish by committing to `main`.** Check the GitHub Pages build/deployment state and confirm the public URL serves the new version. If `main` is protected, create a feature branch and PR, then merge when checks permit. Never claim a successful deployment from a successful commit alone.
 5. **If the page looks stale:** hard-refresh, verify the live HTML version and asset query strings, inspect Actions/Pages deployment status, and inspect the service worker/cache. Don't blindly repeat commits. See `.github/workflows/recover-pages.yml` for a *manual recovery workflow specific to a previously stale deployment*; don't run or alter it without confirming it still applies.
@@ -53,3 +53,10 @@ A lightweight task-and-project board, published from this repository with GitHub
 - Use the **All milestones** dropdown in the Board filter bar to show every milestone (default) or one milestone. The advanced Filters menu continues to handle status, tags, assignees and priority.
 - Newest milestones appear first. Newly created/imported milestones record creation timestamps; older milestones fall back to target date and their saved order.
 - After importing a milestone, GamePlan returns to the full Project Overview and clears leftover search, My tasks, assignee and advanced filter selections. The import remains additive.
+
+## Configurable Project Overview stats
+
+- The Project Overview defaults to five statistics: Total tasks, Tasks remaining, Completed, Time logged, and Time remaining. Estimated time is optional.
+- Use **Customize** beside *Overview stats* to check or uncheck each statistic. The selection persists per project and signed-in local identity on the current device, without changing cloud board/task data.
+- Every statistic reflects the currently visible, filtered tasks, including the **All milestones** selector, My tasks, search, and faceted filters. Tasks remaining counts unfinished tasks, and Time remaining sums the existing calculated task remaining hours (completed tasks contribute zero).
+- The settings menu remains accessible even if all statistics are unchecked.
