@@ -1695,10 +1695,13 @@ a:hover,.link:hover{color:#80115c}
 .gp-team-colors-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:9px}
 .gp-team-chart-color-row{display:flex;flex-direction:row;justify-content:space-between;align-items:center;gap:12px;border:1px solid #eae2ea;border-radius:9px;padding:10px 12px;min-width:0;color:#564b5a;font-size:12px;font-weight:600}
 .gp-team-chart-color-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.gp-team-chart-color,.gp-team-chart-color-row{cursor:default}
-.gp-team-chart-color{display:flex;flex-direction:row;align-items:center;gap:8px;color:#706375;font-size:12px}
-.gp-team-chart-color input[type=color],.gp-team-chart-color-row input[type=color]{width:32px;height:28px;padding:2px;border:1px solid #d9ccd9;border-radius:7px;background:white;flex:none;min-width:32px;cursor:pointer}
-.gp-team-chart-color input:disabled,.gp-team-chart-color-row input:disabled{opacity:.55;cursor:not-allowed}
+.gp-team-chart-color-row{cursor:default}
+.gp-team-color-trigger{display:inline-flex;align-items:center;gap:8px;border:1px solid #e2d5e0;background:#fff;border-radius:8px;color:#604d61;font-size:12px;font-weight:600;padding:5px 8px;white-space:nowrap}
+.gp-team-color-trigger:hover:not(:disabled){border-color:#bb88ab;background:#fdf2fa}
+.gp-team-color-trigger:disabled{opacity:.5;cursor:not-allowed}
+.gp-team-color-swatch{width:23px;height:23px;flex:none;border:1px solid #0002;border-radius:6px}
+.gp-team-preview-chip{--gp-member-color:#a81578;display:inline-flex;align-items:center;gap:7px;border:1px solid #e8dce5;background:#fff;border-radius:9px;color:#524657;padding:7px 10px;font-size:12px;font-weight:650}
+.gp-team-preview-chip::before{content:'';display:block;width:13px;height:13px;flex:none;background:var(--gp-member-color);border-radius:4px;border:1px solid #0002}
 @media(max-width:740px){.gp-analytics-settings-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.gp-analytics-settings-fields>.gp-analytics-velocity-toggle{grid-column:1/-1}}
 @media(max-width:470px){.gp-analytics-settings-fields{grid-template-columns:1fr}.gp-analytics-settings-fields>.gp-analytics-velocity-toggle{grid-column:auto}}
 /* Match secondary page headings to Project Overview. */
@@ -2048,8 +2051,8 @@ a:hover,.link:hover{color:#80115c}
 .gp-toast-dismiss{flex:none;padding:0 3px;border:0;background:transparent;color:#7b7080;font-size:21px;line-height:1;cursor:pointer}
 .gp-toast-dismiss:hover{color:#35203d}
 @media(max-width:650px){.gp-toast{top:66px;right:12px;left:12px;width:auto;max-width:none}}
-</style><link rel="stylesheet" href="account-ui.css?v=2026.11.07.73"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.07.73</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+</style><link rel="stylesheet" href="account-ui.css?v=2026.11.07.74"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.07.74</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><button type="button" class="button gp-my-filter" id="gpMyTasks" aria-pressed="false" title="Show only your unfinished assigned tasks">My tasks <span id="gpMyCount" class="gp-my-count">0</span></button><select id="gpMilestoneFilter" aria-label="Filter board by milestone" title="Filter by milestone"><option value="">All milestones</option></select><select id="assigneeFilter" hidden aria-hidden="true"><option value="">All assignees</option></select><div class="gp-filter-wrap"><button type="button" class="button gp-filter-trigger" id="gpFilterTrigger" aria-expanded="false" aria-controls="gpFilterPanel"><span aria-hidden="true">⚲</span> Filters <span id="gpFilterCount" class="gp-filter-count" hidden>0</span></button><div class="gp-filter-panel" id="gpFilterPanel" hidden></div></div><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div id="gpFilterChips" class="gp-filter-chips" hidden></div>
@@ -2060,7 +2063,7 @@ a:hover,.link:hover{color:#80115c}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.07.73';
+let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.07.74';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=[];
@@ -2781,4 +2784,4 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="gameplan.js?v=2026.11.07.73"></script><script src="local-first-sync.js?v=2026.11.07.73"></script><script src="account-ui.js?v=2026.11.07.73"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
+</script><script src="gameplan.js?v=2026.11.07.74"></script><script src="local-first-sync.js?v=2026.11.07.74"></script><script src="account-ui.js?v=2026.11.07.74"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
