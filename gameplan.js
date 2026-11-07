@@ -594,8 +594,9 @@ function gpTeamPage(){
  const roster=data.roster||data.members;
  $('#gpExtra').innerHTML='<div class="gp-flex"><div class="gp-page-card-spacer"></div><button id="gpAddMember" class="button main">+ Add member</button></div><div id="gpTeamRows" class="gp-list">'+memberships.map(m=>{
   const person=roster.find(p=>String(p.member_id)===String(m.member_id))||data.members.find(p=>String(p.member_id)===String(m.member_id));
-  const name=person?.display_name||'Unknown',color=window.GamePlanColors?.getColor(m.member_id)||'#98aab6';
-  return '<div class="gp-card gp-flex"><div class="gp-team-person-copy"><strong><span class="gp-assignee-color-dot" style="--gp-member-color:'+e(color)+'"></span>'+e(name)+'</strong><div class="sub">'+e(m.project_role||'Member')+(m.discipline?' · '+e(m.discipline):'')+'</div></div>'+
+  const name=person?.display_name||'Unknown';
+  const avatar=window.GamePlanAvatars?.markup?.(m.member_id,name,'team')||'';
+  return '<div class="gp-card gp-flex gp-team-local-row">'+avatar+'<div class="gp-team-person-copy"><strong>'+e(name)+'</strong><div class="sub">'+e(m.project_role||'Member')+(m.discipline?' · '+e(m.discipline):'')+'</div></div>'+
   '<button type="button" class="button" data-gp-member="'+e(m.member_id)+'">Manage</button></div>';
  }).join('')+'</div>';
  $('#gpAddMember').onclick=()=>quickCreate('member');
@@ -999,6 +1000,56 @@ function gpAccountMemberId(row){
  return String(row.legacy_member_id||(row.member_role==='owner'?data.projects.find(p=>p.project_id===activeProject)?.project_manager_member_id:null)||'account:'+row.member_user_id);
 }
 window.GamePlanColors={getColor:gpMemberColor,setColor:gpSetMemberColor,accountMemberId:gpAccountMemberId,manageMarkup:gpMemberManageColorMarkup,setupManage:gpSetupMemberManageColor,rememberPalette:gpRememberPaletteColor};
+
+// Discord avatars are public image URLs already supplied by the account's
+// OAuth metadata. We do not fetch Discord APIs, expose private metadata, or
+// trust arbitrary image hosts. No avatar URL is stored in project task rows.
+const gpAvatarUrlAllowlist=new Set(['cdn.discordapp.com','media.discordapp.net']);
+function gpValidDiscordAvatarUrl(value){
+ try{
+  const parsed=new URL(String(value||''));
+  if(parsed.protocol!=='https:'||!gpAvatarUrlAllowlist.has(parsed.hostname.toLowerCase()))return '';
+  if(!/^\/(?:avatars\/|embed\/avatars\/)/.test(parsed.pathname))return '';
+  return parsed.href;
+ }catch{return ''}
+}
+const gpAvatarCacheByProject=new Map();
+function gpSetTeamAvatars(projectId,rows,currentUser){
+ const project=data.projects.find(p=>String(p.project_id)===String(projectId));
+ const cache=new Map();
+ const own=gpValidDiscordAvatarUrl(currentUser?.user_metadata?.avatar_url||currentUser?.user_metadata?.picture);
+ for(const row of rows||[]){
+  const memberId=String(row.legacy_member_id||(row.member_role==='owner'?project?.project_manager_member_id:null)||'account:'+row.member_user_id);
+  const avatar=gpValidDiscordAvatarUrl(row.avatar_url)||(String(row.member_user_id)===String(currentUser?.id)?own:'');
+  if(!avatar)continue;
+  cache.set(memberId,avatar);
+  cache.set('account:'+row.member_user_id,avatar);
+ }
+ gpAvatarCacheByProject.set(String(projectId),cache);
+}
+function gpMemberAvatarMarkup(memberId,displayName,size='board'){
+ const name=String(displayName||'').trim();
+ const first=Array.from(name)[0]?.toUpperCase()||'?';
+ const avatar=gpAvatarCacheByProject.get(String(activeProject))?.get(String(memberId))||'';
+ const color=gpMemberColor(memberId);
+ const cssClass=size==='team'?'gp-member-avatar gp-member-avatar-team':'gp-member-avatar gp-member-avatar-board';
+ return '<span class="'+cssClass+'" style="--gp-member-color:'+e(color)+'" title="'+e(name)+'">'+
+  '<span class="gp-member-avatar-initial">'+e(first)+'</span>'+
+  (avatar?'<img class="gp-member-avatar-image" src="'+e(avatar)+'" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">':'')+
+  '</span>';
+}
+// An unavailable or outdated Discord image falls back to the initial,
+// while retaining the chosen color border.
+document.addEventListener('error',event=>{
+ if(event.target?.matches?.('img.gp-member-avatar-image'))event.target.remove();
+},true);
+window.GamePlanAvatars={
+ markup:gpMemberAvatarMarkup,
+ setTeam:gpSetTeamAvatars,
+ urlFor:memberId=>gpAvatarCacheByProject.get(String(activeProject))?.get(String(memberId))||'',
+ clear:()=>gpAvatarCacheByProject.clear()
+};
+
 function gpAnalyticsDate(raw){
  const match=String(raw||'').match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T)/);
  if(!match)return '';
