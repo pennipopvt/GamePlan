@@ -5,7 +5,7 @@ A lightweight task-and-project board, published from this repository with GitHub
 ## Working rules for future development chats
 
 1. **Inspect the current `main` branch before editing.** Do not assume a previous chat's code or versions are current. Keep existing design language and make focused changes rather than redesigning unrelated screens.
-2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.07.83**.
+2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.07.84**.
 3. **Refresh the offline cache identifier** in `service-worker.js` when changing front-end assets, so older clients do not keep a stale shell. This is separate from the human-readable app version.
 4. **Publish by committing to `main`.** Check the GitHub Pages build/deployment state and confirm the public URL serves the new version. If `main` is protected, create a feature branch and PR, then merge when checks permit. Never claim a successful deployment from a successful commit alone.
 5. **If the page looks stale:** hard-refresh, verify the live HTML version and asset query strings, inspect Actions/Pages deployment status, and inspect the service worker/cache. Don't blindly repeat commits. See `.github/workflows/recover-pages.yml` for a *manual recovery workflow specific to a previously stale deployment*; don't run or alter it without confirming it still applies.
@@ -145,3 +145,12 @@ When converting **previously published** content to private, GamePlan displays a
 Already-downloaded copies on teammates' browsers **cannot be retroactively erased**. New unpublished edits are visible only in the owner's current browser account cache; they are excluded from normal shared sync until republished. A recipient with an out-of-date cached board may need to sync to receive the removal. No new Supabase SQL migration is required; existing project-owner permissions and per-record tombstones are reused.
 
 Data is never removed from the owner's private board during the transition; milestones' features/tasks and tasks' time logs remain available locally, with their original identifiers and logged hours preserved. Only a project owner sees the privacy controls, and successful publication restores normal cloud sync.
+
+## Board/UI polish and future custom domains (v2026.11.07.84)
+
+- The owner-only milestone and feature **Publish** buttons now have a natural min-width and 32px height. Earlier highly specific icon-control styles mistakenly forced the milestone button to 32px width and clipped the text.
+- The milestone disclosure caret is vertically centered against the full milestone summary, even with a description and progress row; mobile alignment is consistent.
+- **Project Settings → Project Tags / Danger Zone** headings and explanation use neutral charcoal and muted mauve instead of inherited green text. The destructive action retains intentional red styling.
+- Authentication callback URLs (Discord, Google, email sign-in and linked identity) now derive from the site's current document base path instead of hardcoding `/ProjectPlanner/`. The original GitHub Pages address behaves the same, and a future custom domain at the site root can use `/supabase/discord.html`.
+
+**Future custom domain:** No `CNAME` file, GitHub Pages setting or DNS records are changed in this release. When a domain has been registered by the project owner, add it under **GitHub repository → Settings → Pages → Custom domain**, point DNS at GitHub Pages, and turn on HTTPS. Add the new `https://YOUR-DOMAIN/supabase/discord.html` to **Supabase Authentication → URL Configuration → Redirect URLs** before testing Discord/Google/email authentication. Keep the old GitHub Pages callback temporarily while moving existing users/invite links. The `gameplan.com` name is already used by another education platform, so choose and verify a different available domain before purchasing.

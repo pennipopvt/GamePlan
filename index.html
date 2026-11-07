@@ -2236,8 +2236,54 @@ a:hover,.link:hover{color:#80115c}
 #milestoneList .gp-publish-draft:hover{background:#f6d5e9}
 .gp-draft-warning{padding:10px 12px;border:1px solid #edc5e0;border-radius:9px;background:#fff3fa;color:#85366b;font-size:13px;line-height:1.5}
 
-</style><link rel="stylesheet" href="account-ui.css?v=2026.11.07.83"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.07.83</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+
+/* Consistent full-sized Publish actions. The more specific earlier
+   .milestone-tools button rule otherwise squeezes this button to 32px. */
+#milestoneList .milestone-summary .milestone-tools button.gp-publish-draft,
+#milestoneList .feature-summary .feature-heading-actions button.gp-publish-draft{
+  display:inline-flex;align-items:center;justify-content:center;
+  flex:0 0 auto;width:auto;min-width:86px;height:32px;
+  padding:0 12px;line-height:1.2;
+  border:1px solid #ebb0d7;border-radius:8px;
+  background:#fcedf7;color:#9d226d;
+  font-size:12px;font-weight:700;white-space:nowrap;
+  opacity:1;
+}
+#milestoneList .milestone-summary .milestone-tools button.gp-publish-draft:hover,
+#milestoneList .feature-summary .feature-heading-actions button.gp-publish-draft:hover{
+  background:#f6d5e9;border-color:#df83ba;color:#86185f;
+}
+#milestoneList .milestone-summary .milestone-tools,
+#milestoneList .feature-summary .feature-heading-actions{
+  flex-wrap:wrap;row-gap:7px;
+}
+/* Vertically center the disclosure caret on the full milestone header,
+   rather than aligning it beside the small milestone eyebrow/title. */
+#milestoneList .milestone-summary>.chevron{
+  align-self:center;margin:0;flex-shrink:0;
+}
+/* Project Settings inherited green headings and explanatory copy from
+   the original theme. Use the same charcoal/mauve neutrals as the Board. */
+#gpExtra>h2,#gpExtra .gp-danger-zone>h2{
+  color:#342b37;
+}
+#gpExtra>p.sub,#gpExtra .gp-danger-zone>p.sub{
+  color:#817586;
+}
+#gpExtra .gp-danger-zone>h2{color:#a44848}
+#gpExtra .gp-danger-zone .button.danger{
+  color:#a44848;border-color:#e6bebe;background:#fff7f7;
+}
+@media(max-width:700px){
+  #milestoneList .milestone-summary>.chevron{align-self:center;margin:0}
+  #milestoneList .milestone-summary .milestone-tools button.gp-publish-draft,
+  #milestoneList .feature-summary .feature-heading-actions button.gp-publish-draft{
+    min-width:78px;height:30px;padding:0 9px;
+  }
+}
+
+</style><link rel="stylesheet" href="account-ui.css?v=2026.11.07.84"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.07.84</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><button type="button" class="button gp-my-filter" id="gpMyTasks" aria-pressed="false" title="Show only your unfinished assigned tasks">My tasks <span id="gpMyCount" class="gp-my-count">0</span></button><select id="gpMilestoneFilter" aria-label="Filter board by milestone" title="Filter by milestone"><option value="">All milestones</option></select><select id="assigneeFilter" hidden aria-hidden="true"><option value="">All assignees</option></select><div class="gp-filter-wrap"><button type="button" class="button gp-filter-trigger" id="gpFilterTrigger" aria-expanded="false" aria-controls="gpFilterPanel"><span aria-hidden="true">⚲</span> Filters <span id="gpFilterCount" class="gp-filter-count" hidden>0</span></button><div class="gp-filter-panel" id="gpFilterPanel" hidden></div></div><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div id="gpFilterChips" class="gp-filter-chips" hidden></div>
@@ -2248,7 +2294,7 @@ a:hover,.link:hover{color:#80115c}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.07.83';
+let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.07.84';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=[];
@@ -3094,5 +3140,5 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="supabase/public-config.js?v=2026.11.07.83"></script>
-<script src="gameplan.js?v=2026.11.07.83"></script><script src="local-first-sync.js?v=2026.11.07.83"></script><script src="account-ui.js?v=2026.11.07.83"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
+</script><script src="supabase/public-config.js?v=2026.11.07.84"></script>
+<script src="gameplan.js?v=2026.11.07.84"></script><script src="local-first-sync.js?v=2026.11.07.84"></script><script src="account-ui.js?v=2026.11.07.84"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
