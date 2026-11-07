@@ -2356,6 +2356,38 @@ function gpAlert(message){
 }
 function setNotice(msg,bad=false){const el=$('#notice');el.innerHTML=msg;el.className='card banner'+(bad?' error':'');el.hidden=/^Local mode ·/.test(msg)}
 
+// Owner-only, unpublished planning. Drafts stay solely in the signed-in
+// user's local account cache until explicitly published. They must NEVER
+// be included in the normal shared gp_items feed.
+const gpDraftOwner=()=>window.GamePlanSync?.roleFor?.(activeProject)==='owner';
+const gpDraftMilestone=id=>!!data.milestones.find(m=>String(m.milestone_id)===String(id))?.__gp_private;
+const gpDraftFeature=f=>!!(f&& (f.__gp_private||gpDraftMilestone(f.milestone_id)));
+const gpDraftTask=t=>!!(t&&(t.__gp_private||gpDraftFeature(data.features.find(f=>String(f.feature_id)===String(t.feature_id)))));
+function gpPublishDraft(kind,id){
+ if(!gpDraftOwner()){gpAlert('Only the project owner can publish private drafts.');return}
+ const old=JSON.parse(JSON.stringify(data));
+ if(kind==='milestone'){
+  const m=data.milestones.find(x=>String(x.milestone_id)===String(id)&&x.project_id===activeProject);
+  if(!m?.__gp_private)return;
+  delete m.__gp_private;
+  for(const f of data.features.filter(x=>x.project_id===activeProject&&String(x.milestone_id)===String(id))){
+   delete f.__gp_private;
+   for(const t of data.tasks.filter(t=>String(t.feature_id)===String(f.feature_id)))delete t.__gp_private;
+  }
+ }else if(kind==='feature'){
+  const f=data.features.find(x=>String(x.feature_id)===String(id)&&x.project_id===activeProject);
+  if(!f?.__gp_private||gpDraftMilestone(f.milestone_id))return;
+  delete f.__gp_private;
+  for(const t of data.tasks.filter(t=>String(t.feature_id)===String(id)))delete t.__gp_private;
+ }else if(kind==='task'){
+  const t=data.tasks.find(x=>String(x.task_id)===String(id)&&x.project_id===activeProject);
+  if(!t?.__gp_private||gpDraftFeature(data.features.find(f=>String(f.feature_id)===String(t.feature_id))))return;
+  delete t.__gp_private;
+ }else return;
+ try{persist();render();gpAlert('Draft published. It will appear to the team after cloud sync.')}
+ catch(err){data=old;render();gpAlert('Could not publish draft: '+err.message)}
+}
+
 function rpc(op,p={}){
  try{
   if(op==='load')return Promise.resolve(data);
@@ -2377,7 +2409,8 @@ function rpc(op,p={}){
    const id=uid();data.projects.push({project_id:id,project_name:required(p.name,'Project name'),description:p.description||'',status:'Active',project_manager_member_id:data.me.member_id});
    data.team.push({project_id:id,member_id:data.me.member_id,project_role:'Owner',discipline:'',membership_status:'Active'});activeProject=id;saveProject();
   }else if(op==='createMilestone'){
-   data.milestones.push({milestone_id:uid(),project_id:projectId,name:required(p.name,'Milestone name'),description:p.description||'',status:'To do',target_date:'',display_number:milestoneNumber(p.display_number),created_at:new Date().toISOString()});
+   if(p.private_draft&&!gpDraftOwner())throw Error('Only the project owner can create private drafts.');
+   data.milestones.push({milestone_id:uid(),project_id:projectId,name:required(p.name,'Milestone name'),description:p.description||'',status:'To do',target_date:'',display_number:milestoneNumber(p.display_number),created_at:new Date().toISOString(),...(p.private_draft?{__gp_private:true}:{})});
   }else if(op==='editMilestone'){
    const m=parent(data.milestones,'milestone_id',p.milestone_id);Object.assign(m,{name:required(p.name,'Milestone name'),description:p.description||'',status:p.status,target_date:p.target_date||'',display_number:milestoneNumber(p.display_number)});
   }else if(op==='deleteMilestone'){
@@ -2391,9 +2424,10 @@ function rpc(op,p={}){
    data.milestones=data.milestones.filter(x=>x!==m);
   }else if(op==='createFeature'){
    const m=parent(data.milestones,'milestone_id',p.milestone_id);
-   data.features.push({feature_id:uid(),project_id:projectId,milestone_id:m.milestone_id,name:required(p.name,'Feature name'),description:p.description||'',status:'To do',estimated_hours:0});
+   data.features.push({feature_id:uid(),project_id:projectId,milestone_id:m.milestone_id,name:required(p.name,'Feature name'),description:p.description||'',status:'To do',estimated_hours:0,...(gpDraftMilestone(m.milestone_id)?{__gp_private:true}:{})});
   }else if(op==='editFeature'){
    const f=parent(data.features,'feature_id',p.feature_id),m=parent(data.milestones,'milestone_id',p.milestone_id);
+   if(gpDraftMilestone(m.milestone_id)&&!f.__gp_private)f.__gp_private=true;
    Object.assign(f,{name:required(p.name,'Feature name'),description:p.description||'',milestone_id:m.milestone_id});
   }else if(op==='deleteFeature'){
    const f=parent(data.features,'feature_id',p.feature_id);
@@ -2411,7 +2445,8 @@ function rpc(op,p={}){
    return Promise.resolve({ok:true});
   }else if(op==='createTask'){
    const f=parent(data.features,'feature_id',p.feature_id);
-   data.tasks.push({task_id:uid(),project_id:projectId,feature_id:f.feature_id,title:required(p.title,'Task title'),description:p.description||'',assignee_member_id:p.assignee_member_id||'',status:p.status||'To do',priority:p.priority||'Normal',estimated_hours:hours(p.estimated_hours),created_by_member_id:data.me.member_id,updated_at:new Date().toISOString()});
+   if(p.private_draft&&!gpDraftOwner())throw Error('Only the project owner can create private drafts.');
+   data.tasks.push({task_id:uid(),project_id:projectId,feature_id:f.feature_id,title:required(p.title,'Task title'),description:p.description||'',assignee_member_id:p.assignee_member_id||'',status:p.status||'To do',priority:p.priority||'Normal',estimated_hours:hours(p.estimated_hours),created_by_member_id:data.me.member_id,updated_at:new Date().toISOString(),...(p.private_draft||gpDraftFeature(f)?{__gp_private:true}:{})});
   }else if(op==='editTask'){
    if(!task)throw Error('Task not found');
    parent(data.features,'feature_id',p.feature_id);
@@ -2708,6 +2743,7 @@ function taskForm(t,preferredFeatureId=''){
  <label>Estimated hours<input name="estimate_hours" type="number" min="0" step="1" value="${Math.floor(minutes/60)}" required></label>
  <label>Estimated minutes<input name="estimate_minutes" type="number" min="0" max="59" step="1" value="${minutes%60}" required></label>
  <div class="wide sub">Remaining time is calculated from the estimate minus logged time for unfinished tasks${t?': '+formatHours(taskRemainingHours(t)):''}.</div>
+ ${!t&&gpDraftOwner()?'<label class="wide gp-draft-choice"><input type="checkbox" name="private_draft" value="true"> Save as private draft (only on this device until published)</label>':''}
  </div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button>${t?'<button class="button danger" type="button" id="deleteTask">Delete task</button>':''}<button class="button main" type="submit">Save task</button></div></form>`);
  $('#cancel').onclick=closeModal;
  if(t)$('#deleteTask').onclick=()=>deleteItem('task',t.task_id,t.title);
@@ -2739,7 +2775,7 @@ function logHours(id){
   if(del)deleteLog(id,del.dataset.deleteLog,()=>logHours(id));
  };
 }
-function quickCreate(kind,preferredMilestoneId=''){const milestones=data.milestones.filter(x=>x.project_id===activeProject);let body='',op='';if(kind==='milestone'){op='createMilestone';body=field('name','Milestone name','','text',true)+'<label class="wide">Description<textarea name="description"></textarea></label><label>Milestone number (optional)<input name="display_number" type="number" min="1" max="9999" step="1" inputmode="numeric" placeholder="Automatic"></label><div class="wide sub">Leave blank for automatic chronological numbering.</div>'}else if(kind==='feature'){op='createFeature';body=field('name','Feature name','','text',true)+select('milestone_id','Milestone',opts(milestones,'milestone_id'),preferredMilestoneId||milestones[0]?.milestone_id)}else if(kind==='member'){op='addMember';body=field('display_name','Member name','','text',true)+field('google_email','Email (optional)','','email',true)+field('discipline','Discipline / role description')}else if(kind==='project'){op='createProject';body=field('name','Project name','','text',true)+'<label class="wide">Description<textarea name="description"></textarea></label>'}modal('Create '+kind,`<form id="actionForm"><div class="fields">${body}</div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button class="button main">Create</button></div></form>`);$('#cancel').onclick=closeModal;$('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit(op,{project_id:activeProject,...Object.fromEntries(new FormData(ev.currentTarget).entries())})}}
+function quickCreate(kind,preferredMilestoneId=''){const milestones=data.milestones.filter(x=>x.project_id===activeProject);let body='',op='';if(kind==='milestone'){op='createMilestone';body=field('name','Milestone name','','text',true)+'<label class="wide">Description<textarea name="description"></textarea></label><label>Milestone number (optional)<input name="display_number" type="number" min="1" max="9999" step="1" inputmode="numeric" placeholder="Automatic"></label><div class="wide sub">Leave blank for automatic chronological numbering.</div>'+(gpDraftOwner()?'<label class="wide gp-draft-choice"><input type="checkbox" name="private_draft" value="true"> Save as private draft (only on this device until published)</label>':'')}else if(kind==='feature'){op='createFeature';body=field('name','Feature name','','text',true)+select('milestone_id','Milestone',opts(milestones,'milestone_id'),preferredMilestoneId||milestones[0]?.milestone_id)}else if(kind==='member'){op='addMember';body=field('display_name','Member name','','text',true)+field('google_email','Email (optional)','','email',true)+field('discipline','Discipline / role description')}else if(kind==='project'){op='createProject';body=field('name','Project name','','text',true)+'<label class="wide">Description<textarea name="description"></textarea></label>'}modal('Create '+kind,`<form id="actionForm"><div class="fields">${body}</div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button class="button main">Create</button></div></form>`);$('#cancel').onclick=closeModal;$('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit(op,{project_id:activeProject,...Object.fromEntries(new FormData(ev.currentTarget).entries())})}}
 async function submit(op,payload){const btn=$('#actionForm button[type="submit"],#actionForm button:not([type])');if(btn)btn.disabled=true;try{await rpc(op,payload);closeModal();await refresh()}catch(err){gpAlert(err.message);if(btn)btn.disabled=false}}
 async function deleteItem(kind,id,name){
  if(!isPM())return;
