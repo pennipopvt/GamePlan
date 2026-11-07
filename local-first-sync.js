@@ -65,10 +65,21 @@ if(!config()&&incoming.has('backend')&&incoming.has('publishable')){
 }
 function current(){return links[String(activeProject)]||''}
 function projectRows(pid,source=data){
- const taskIds=new Set((source.tasks||[]).filter(x=>String(x.project_id)===String(pid)).map(x=>String(x.task_id)));
+ // Private drafts remain ONLY in this account's local browser cache until
+ // explicitly published. Filter the whole milestone / feature / task tree,
+ // not just the root, so descendants and their logs never leak into gp_items.
+ const privateMilestones=new Set((source.milestones||[]).filter(m=>m.__gp_private&&String(m.project_id)===String(pid)).map(m=>String(m.milestone_id)));
+ const privateFeatures=new Set((source.features||[]).filter(f=>String(f.project_id)===String(pid)&&(f.__gp_private||privateMilestones.has(String(f.milestone_id)))).map(f=>String(f.feature_id)));
+ const privateTasks=new Set((source.tasks||[]).filter(t=>String(t.project_id)===String(pid)&&(t.__gp_private||privateFeatures.has(String(t.feature_id)))).map(t=>String(t.task_id)));
+ const taskIds=new Set((source.tasks||[]).filter(t=>String(t.project_id)===String(pid)).map(t=>String(t.task_id)));
  const out={};
  for(const kind of KINDS){
-  const arr=(source[kind]||[]).filter(x=>(kind==='logs'?taskIds.has(String(x.task_id)):String(x.project_id)===String(pid))&&!(kind==='team'&&x.__gp_account_shadow));
+  const arr=(source[kind]||[]).filter(x=>(kind==='logs'?taskIds.has(String(x.task_id)):String(x.project_id)===String(pid))
+   &&!(kind==='team'&&x.__gp_account_shadow)
+   &&!(kind==='milestones'&&privateMilestones.has(String(x.milestone_id)))
+   &&!(kind==='features'&&privateFeatures.has(String(x.feature_id)))
+   &&!(kind==='tasks'&&privateTasks.has(String(x.task_id)))
+   &&!(kind==='logs'&&privateTasks.has(String(x.task_id))));
   for(const [sort_order,obj] of arr.entries()){
    const id=unique(kind,obj);if(!id)continue;
    // Time logs are linked to a project through their task in local data.
@@ -684,14 +695,31 @@ gpSettings=function(...args){
  }
  return value;
 };
-const previousDeleteProject=gpDeleteProject;
-gpDeleteProject=async function(){
- if(current()){
-  if(roleFor(activeProject)!=='owner')return gpAlert('Only the project owner can delete it.');
-  return gpAlert('Shared project deletion is temporarily disabled to protect your team data. Export a backup first.');
- }
- return previousDeleteProject();
-};
+// Deletion is now handled by gpDeleteProject, which confirms and backs up the
+// local board, deletes the cloud project first, then clears its browser copy.
+// Never clear the local link merely because a network request was started.
+async function deleteSharedProject(pid){
+ if(!user||!api||!navigator.onLine)throw Error('Sign in and connect to the internet first.');
+ if(roleFor(pid)!=='owner')throw Error('Only the project owner can permanently delete it.');
+ const cloudId=links[String(pid)];
+ if(!cloudId)throw Error('This project has no cloud connection.');
+ const {data:deleted,error}=await api.client.from('gp_projects')
+  .delete().eq('id',cloudId).eq('owner_id',user.id).select('id');
+ if(error)throw error;
+ if(!Array.isArray(deleted)||deleted.length!==1||String(deleted[0]?.id)!==String(cloudId))
+  throw Error('Supabase did not confirm deleting the project. Your board was left unchanged.');
+ if(watched===cloudId){subscription?.();subscription=null;watched=''}
+ delete links[pid];store(LINKS,links);
+ delete bases[pid];store(BASE,bases);
+ delete deletedIntents[pid];store(DELETED,deletedIntents);
+ delete nameDirty[pid];store(NAME_DIRTY,nameDirty);
+ delete knownNames[pid];store(NAME_KNOWN,knownNames);
+ delete teamByProject[pid];
+ store('gp-account-teams-v1:'+user.id,teamByProject);
+ cloudProjectList=cloudProjectList.filter(p=>p.id!==cloudId);
+ store('gp-account-cloud-projects-v1:'+user.id,cloudProjectList);
+ return true;
+}
 const previousCloseModal=closeModal;
 closeModal=function(...args){const value=previousCloseModal(...args);schedule();return value};
 async function watch(){
@@ -1129,7 +1157,7 @@ async function initialize(){
 void initialize();
 // Optional API for the main page's project management UI.
 window.GamePlanSync={
- connect,shareCurrent,shareInvite,schedule,backup:downloadBackup,
+ connect,shareCurrent,shareInvite,schedule,backup:downloadBackup,deleteSharedProject,
  isLinked:pid=>!!links[String(pid)],status:refreshStatus,
  currentUser:()=>user,api:()=>api,roleFor,
  ownAssigneeIds(pid=activeProject){
