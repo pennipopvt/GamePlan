@@ -35,13 +35,13 @@ begin
     select v.avatar_url
     from auth.identities i
     cross join lateral (values
-      (i.identity_data->>'avatar_url'),
-      (i.identity_data->>'picture')
-    ) as v(avatar_url)
+      (1, i.identity_data->>'avatar_url'),
+      (2, i.identity_data->>'picture')
+    ) as v(priority, avatar_url)
     where i.user_id=m.user_id
       and i.provider='discord'
       and v.avatar_url ~* '^https://(cdn\.discordapp\.com|media\.discordapp\.net)/(avatars|embed/avatars)/'
-    order by i.last_sign_in_at desc nulls last
+    order by i.last_sign_in_at desc nulls last, v.priority asc
     limit 1
    ),
    -- Older Discord-only logins may only have their avatar in user metadata.
