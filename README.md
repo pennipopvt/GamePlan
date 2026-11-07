@@ -5,7 +5,7 @@ A lightweight task-and-project board, published from this repository with GitHub
 ## Working rules for future development chats
 
 1. **Inspect the current `main` branch before editing.** Do not assume a previous chat's code or versions are current. Keep existing design language and make focused changes rather than redesigning unrelated screens.
-2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.07.75**.
+2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.07.76**.
 3. **Refresh the offline cache identifier** in `service-worker.js` when changing front-end assets, so older clients do not keep a stale shell. This is separate from the human-readable app version.
 4. **Publish by committing to `main`.** Check the GitHub Pages build/deployment state and confirm the public URL serves the new version. If `main` is protected, create a feature branch and PR, then merge when checks permit. Never claim a successful deployment from a successful commit alone.
 5. **If the page looks stale:** hard-refresh, verify the live HTML version and asset query strings, inspect Actions/Pages deployment status, and inspect the service worker/cache. Don't blindly repeat commits. See `.github/workflows/recover-pages.yml` for a *manual recovery workflow specific to a previously stale deployment*; don't run or alter it without confirming it still applies.
@@ -90,3 +90,11 @@ A lightweight task-and-project board, published from this repository with GitHub
 - The **shared tag/team palette** includes an editable **hex color** field supporting `#RRGGBB`, `RRGGBB`, `#RGB` and `RGB`. It updates the selected swatch and preview; invalid text blocks saving. A newly typed custom hex is added to the shared project palette only when changes are saved.
 - **Board task assignees** and the task detail’s Assigned to label display a subtle colored dot based on that person’s synchronized team color. The existing **You** label remains intact. Unassigned tasks show no color marker.
 - Chart color settings remain stored in each project team member’s existing `chart_color` field. No existing team colors, tasks, time logs, or tags were migrated or overwritten.
+
+## Discord avatars with member-color borders
+
+- **Team** displays round profile portraits with each member's existing chart color as the border, and improved name/role/Manage spacing. The old tiny name-side color dots are removed.
+- **Board** assignees and the task-detail "Assigned to" field show a compact round avatar with that same colored border, replacing the tiny colored dot. The "You" label is unchanged. Missing, invalid, or broken image URLs fall back to an initial in a color-bordered circle.
+- Avatar URLs are read from each member's Discord OAuth public avatar metadata, validated against Discord CDN hosts, and are not copied into task records. GamePlan does not make separate Discord API requests.
+- **One-time Supabase setup for teammates' pictures:** Run [`supabase/team-avatars.sql`](supabase/team-avatars.sql) in your project's Supabase **SQL Editor**, after the existing team-accounts setup. Then reload GamePlan or click Sync. This additive function exposes only a public Discord CDN avatar URL to signed-in members of the same project. It does not replace the existing team RPC, change membership, alter project tasks, or require a new auth connection.
+- Until this optional SQL migration is applied, the signed-in user's Discord picture may appear from their own login metadata, while other people show color-bordered initials. Likewise, non-Discord sign-in accounts or accounts without a public Discord avatar use initials. When a user changes their Discord picture, it may take a later OAuth refresh/sign-in for Supabase's stored avatar metadata to update.
