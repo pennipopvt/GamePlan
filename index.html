@@ -265,7 +265,7 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 .gp-sidebar-toggle{border:0;background:transparent;color:#517368;border-radius:9px;cursor:pointer}
 .gp-sidebar-toggle:hover{background:#dce9e0;color:#246c60}
 #menuToggle{display:none}
-@media(max-width:680px){#menuToggle{display:inline-flex}#gpSidebarToggle{display:none}#gpBoardNav{margin-left:15px}}
+@media(max-width:680px){#menuToggle{display:inline-flex}#gpSidebarToggle{display:none}}
 
 /* Workspace header and destructive controls */
 #teamSection,#project{display:none!important}
@@ -882,11 +882,11 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
  color:#fff;background:#ffffff2b;border-radius:8px;font-weight:600;
  box-shadow:inset 3px 0 0 var(--gp-cyan)
 }
-#gpBoardNav .side-label,.sidebar .side-label{color:#d9b6dd}
-#gpBoardNav .side-link,.sidebar .side-link{color:#ead8e9}
-#gpBoardNav .side-link:hover,.sidebar .side-link:hover{background:#ffffff17;color:#fff}
-#gpBoardNav .side-link.active,.sidebar .side-link.active{background:#ffffff25;color:#fff;box-shadow:none;font-weight:600}
-#gpBoardNav .side-count,.sidebar .side-count{color:#f4d9f4}
+
+
+
+
+
 .sidebar .sidebar-foot{color:#cfb1d4}
 .sidebar .gp-nav .gp-icon{color:inherit}
 /* Statistics echo the vivid dashboard reference without coloring task surfaces neon. */
@@ -990,11 +990,11 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
 #gpPrimary>.gp-nav.active,.gp-collapsed #gpPrimary>.gp-nav.active{
  background:#ffffff1d;color:#fff;box-shadow:inset 3px 0 0 #b5d9da
 }
-#gpBoardNav .side-label,.sidebar .side-label{color:#aab1c0}
-#gpBoardNav .side-link,.sidebar .side-link{color:#c7cfda}
-#gpBoardNav .side-link:hover,.sidebar .side-link:hover{background:#ffffff12;color:#fff}
-#gpBoardNav .side-link.active,.sidebar .side-link.active{background:#ffffff1b;color:#fff;box-shadow:none}
-#gpBoardNav .side-count,.sidebar .side-count{color:#bfcbd3}
+
+
+
+
+
 .sidebar .sidebar-foot{color:#a4adba}
 .sidebar .gp-nav .gp-icon{color:inherit}
 
@@ -1014,7 +1014,7 @@ a:hover,.link:hover{color:#80115c}
 .gp-header-project #gpProjectTrigger{color:var(--gp-accent-ink)}
 .gp-header-project #gpProjectTrigger:hover{background:var(--gp-accent-pale);color:#88105c}
 #gpPrimary>.gp-nav.active,.gp-collapsed #gpPrimary>.gp-nav.active{box-shadow:inset 3px 0 0 var(--gp-accent)}
-#gpBoardNav .side-link.active,.sidebar .side-link.active{box-shadow:inset 3px 0 0 var(--gp-accent)}
+
 .gp-project-choice:hover{background:#fceaf7;border-color:#f3addd}
 .gp-project-choice[aria-current="true"]{background:#fbe0f2;border-color:#eb77be}
 .gp-project-choice .gp-choice-current,.gp-project-chooser-create{color:var(--gp-accent-ink)}
@@ -1587,9 +1587,8 @@ a:hover,.link:hover{color:#80115c}
 #milestoneList .feature-summary .feature-hours{font-size:13px}
 #milestoneList .feature-summary .title-stack strong{font-size:14px}
 #mainApp .grid .stat .muted{font-size:13px}
-.sidebar .side-link,.sidebar .side-count,#gpBoardNav .side-link,
 #gpPrimary>.gp-nav{font-size:13px}
-.sidebar .side-label,#gpBoardNav .side-label{font-size:12px;letter-spacing:.035em}
+
 .gp-filter-choice,.gp-filter-chip,.gp-filter-clear,.gp-filter-help,
 .gp-filter-group-heading{font-size:13px}
 .gp-tag-editor .gp-tag-chip,.gp-tag-editor .gp-tag-add-inline,
@@ -1993,6 +1992,11 @@ a:hover,.link:hover{color:#80115c}
 .gp-sync-error-detail{background:#fff0f3;border:1px solid #efc2d0;color:#9e263e;border-radius:8px;padding:11px;font-size:13px;overflow-wrap:anywhere}
 
 /* My tasks: full project by default with a quiet self-assigned cue. */
+/* Milestone selection belongs in the Board filter bar, not in sidebar subtabs. */
+#gpMilestoneFilter{min-width:170px;max-width:min(280px,48vw);border:1px solid #e7dce7;background:#fff;color:#51415a;border-radius:9px;padding:8px 11px;min-height:34px;font-size:12px;font-weight:600}
+#gpMilestoneFilter:hover{border-color:#e9add3;background:#fff7fc}
+#gpMilestoneFilter:focus-visible{outline:2px solid #d843a9;outline-offset:2px}
+@media(max-width:680px){#gpMilestoneFilter{min-width:145px;max-width:100%}}
 #gpMyTasks.gp-my-filter{display:inline-flex;align-items:center;justify-content:center;gap:7px;
  padding:8px 11px;min-height:34px;white-space:nowrap;border:1px solid #e7dce7;
  border-radius:9px;background:#fff;color:#77707d;font-size:12px;font-weight:650}
