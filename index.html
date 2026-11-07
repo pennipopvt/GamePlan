@@ -2179,8 +2179,39 @@ a:hover,.link:hover{color:#80115c}
   #milestoneList .milestone-summary .gp-milestone-ratio{white-space:normal}
 }
 
-</style><link rel="stylesheet" href="account-ui.css?v=2026.11.07.80"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.07.80</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+
+/* Milestone refinement: allow the text and progress to span the card; bring
+   back Design B's colored side rail without losing Editorial typography. */
+#milestoneList .milestone-section{
+ border:1px solid #eadce7;
+ border-left:5px solid #b62585;
+}
+#milestoneList .milestone-summary .gp-milestone-description{
+ max-width:none;
+ width:calc(100% + 104px);
+ padding-right:0;
+}
+#milestoneList .milestone-summary .gp-milestone-progress-row{
+ width:calc(100% + 104px);
+}
+#milestoneList .milestone-summary .gp-milestone-time{
+ margin-left:auto;
+ text-align:right;
+}
+@media(max-width:800px){
+ #milestoneList .milestone-summary .gp-milestone-description,
+ #milestoneList .milestone-summary .gp-milestone-progress-row{
+  width:100%;
+ }
+ #milestoneList .milestone-summary .gp-milestone-time{
+  flex-basis:100%;
+  margin-left:auto;
+  text-align:right;
+ }
+}
+
+</style><link rel="stylesheet" href="account-ui.css?v=2026.11.07.81"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.07.81</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><button type="button" class="button gp-my-filter" id="gpMyTasks" aria-pressed="false" title="Show only your unfinished assigned tasks">My tasks <span id="gpMyCount" class="gp-my-count">0</span></button><select id="gpMilestoneFilter" aria-label="Filter board by milestone" title="Filter by milestone"><option value="">All milestones</option></select><select id="assigneeFilter" hidden aria-hidden="true"><option value="">All assignees</option></select><div class="gp-filter-wrap"><button type="button" class="button gp-filter-trigger" id="gpFilterTrigger" aria-expanded="false" aria-controls="gpFilterPanel"><span aria-hidden="true">⚲</span> Filters <span id="gpFilterCount" class="gp-filter-count" hidden>0</span></button><div class="gp-filter-panel" id="gpFilterPanel" hidden></div></div><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div id="gpFilterChips" class="gp-filter-chips" hidden></div>
@@ -2191,7 +2222,7 @@ a:hover,.link:hover{color:#80115c}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.07.80';
+let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.07.81';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=[];
@@ -2332,15 +2363,23 @@ function rpc(op,p={}){
   const get=(arr,key,id)=>arr.find(x=>String(x[key])===String(id));
   const required=(value,name)=>{if(!String(value??'').trim())throw Error(name+' is required');return String(value).trim()};
   const hours=v=>{const n=Number(v||0);if(!Number.isFinite(n)||n<0)throw Error('Hours must be positive');return n};
+  // A blank milestone number follows automatic oldest-to-newest numbering.
+  const milestoneNumber=v=>{
+   const value=String(v??'').trim();
+   if(!value)return null;
+   const n=Number(value);
+   if(!Number.isInteger(n)||n<1||n>9999)throw Error('Milestone number must be a whole number from 1 to 9999.');
+   return n;
+  };
   const parent=(arr,key,id)=>{const item=get(arr,key,id);if(!item||item.project_id!==projectId)throw Error('Invalid parent');return item};
   const task=get(data.tasks,'task_id',p.task_id);
   if(op==='createProject'){
    const id=uid();data.projects.push({project_id:id,project_name:required(p.name,'Project name'),description:p.description||'',status:'Active',project_manager_member_id:data.me.member_id});
    data.team.push({project_id:id,member_id:data.me.member_id,project_role:'Owner',discipline:'',membership_status:'Active'});activeProject=id;saveProject();
   }else if(op==='createMilestone'){
-   data.milestones.push({milestone_id:uid(),project_id:projectId,name:required(p.name,'Milestone name'),description:p.description||'',status:'To do',target_date:'',created_at:new Date().toISOString()});
+   data.milestones.push({milestone_id:uid(),project_id:projectId,name:required(p.name,'Milestone name'),description:p.description||'',status:'To do',target_date:'',display_number:milestoneNumber(p.display_number),created_at:new Date().toISOString()});
   }else if(op==='editMilestone'){
-   const m=parent(data.milestones,'milestone_id',p.milestone_id);Object.assign(m,{name:required(p.name,'Milestone name'),description:p.description||'',status:p.status,target_date:p.target_date||''});
+   const m=parent(data.milestones,'milestone_id',p.milestone_id);Object.assign(m,{name:required(p.name,'Milestone name'),description:p.description||'',status:p.status,target_date:p.target_date||'',display_number:milestoneNumber(p.display_number)});
   }else if(op==='deleteMilestone'){
    const m=parent(data.milestones,'milestone_id',p.milestone_id);
    // Delete only descendants of this milestone in the active project.
@@ -2508,15 +2547,20 @@ function taskRow(t){
 function renderMilestones(){
  const filtered=visibleTasks(),project=projectTasks(),isFiltered=gpMyOnly||!!$('#assigneeFilter').value||!!$('#searchTasks').value||(typeof gpHasFacetFilters==='function'&&gpHasFacetFilters());
  gpRenderOverviewStats(filtered);
- const ms=projectMilestonesNewestFirst().filter(m=>!gpMilestoneSelection||String(m.milestone_id)===gpMilestoneSelection);
- $('#milestoneList').innerHTML=ms.map((m,index)=>{
+ const allMilestones=projectMilestonesNewestFirst();
+ // The top of the board is newest-first, but numbering goes oldest-first.
+ // Compute BEFORE filtering so selecting one milestone doesn't change its label.
+ const autoNumbers=new Map(allMilestones.map((m,i)=>[String(m.milestone_id),allMilestones.length-i]));
+ const ms=allMilestones.filter(m=>!gpMilestoneSelection||String(m.milestone_id)===gpMilestoneSelection);
+ $('#milestoneList').innerHTML=ms.map(m=>{
   const fs=data.features.filter(f=>f.project_id===activeProject&&f.milestone_id===m.milestone_id);
   const allForMilestone=project.filter(t=>fs.some(f=>f.feature_id===t.feature_id));
   const shown=filtered.filter(t=>fs.some(f=>f.feature_id===t.feature_id));
   if(isFiltered&&!shown.length)return '';
   const percent=allForMilestone.length?100*allForMilestone.filter(t=>t.status==='Done').length/allForMilestone.length:0;
   const open=!collapsedMilestones.has(String(m.milestone_id));
-  return `<details class="milestone-section" data-ms="${e(m.milestone_id)}" ${open?'open':''}><summary class="milestone-summary"><span class="chevron" aria-hidden="true">▸</span><div class="title-stack"><div class="gp-milestone-kicker-row"><span class="gp-milestone-eyebrow">MILESTONE ${String(index+1).padStart(2,'0')}</span>${m.target_date?`<span class="gp-milestone-target">Target · ${e(m.target_date)}</span>`:''}</div><div class="gp-milestone-title-row"><strong>${e(m.name)}</strong></div>${m.description?`<div class="sub gp-milestone-description">${e(m.description)}</div>`:''}<div class="gp-milestone-progress-row"><span class="gp-milestone-ratio">${allForMilestone.filter(t=>t.status==='Done').length} of ${allForMilestone.length} tasks complete</span><div class="progress-line" role="progressbar" aria-label="Milestone tasks completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(percent)}"><span style="width:${percent}%"></span></div><span class="gp-milestone-time" title="Time logged and remaining for this milestone">${formatHours(allForMilestone.reduce((sum,t)=>sum+taskHours(t),0))} logged · ${formatHours(allForMilestone.reduce((sum,t)=>sum+taskRemainingHours(t),0))} remaining</span></div></div><div class="milestone-tools"><button class="icon-edit" type="button" data-add-feature="${e(m.milestone_id)}" title="Add feature" aria-label="Add feature to ${e(m.name)}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M13 3v5h5"/><path d="M16 5h6M19 2v6"/></svg></button><button class="icon-edit" type="button" data-milestone="${e(m.milestone_id)}" aria-label="Edit milestone: ${e(m.name)}" title="Edit milestone"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></summary>${fs.map(f=>{
+  const n=Number(m.display_number),milestoneNumber=Number.isInteger(n)&&n>=1&&n<=9999?n:autoNumbers.get(String(m.milestone_id))||1;
+  return `<details class="milestone-section" data-ms="${e(m.milestone_id)}" ${open?'open':''}><summary class="milestone-summary"><span class="chevron" aria-hidden="true">▸</span><div class="title-stack"><div class="gp-milestone-kicker-row"><span class="gp-milestone-eyebrow">MILESTONE ${String(milestoneNumber).padStart(2,'0')}</span>${m.target_date?`<span class="gp-milestone-target">Target · ${e(m.target_date)}</span>`:''}</div><div class="gp-milestone-title-row"><strong>${e(m.name)}</strong></div>${m.description?`<div class="sub gp-milestone-description">${e(m.description)}</div>`:''}<div class="gp-milestone-progress-row"><span class="gp-milestone-ratio">${allForMilestone.filter(t=>t.status==='Done').length} of ${allForMilestone.length} tasks complete</span><div class="progress-line" role="progressbar" aria-label="Milestone tasks completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(percent)}"><span style="width:${percent}%"></span></div><span class="gp-milestone-time" title="Time logged and remaining for this milestone">${formatHours(allForMilestone.reduce((sum,t)=>sum+taskHours(t),0))} logged · ${formatHours(allForMilestone.reduce((sum,t)=>sum+taskRemainingHours(t),0))} remaining</span></div></div><div class="milestone-tools"><button class="icon-edit" type="button" data-add-feature="${e(m.milestone_id)}" title="Add feature" aria-label="Add feature to ${e(m.name)}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M13 3v5h5"/><path d="M16 5h6M19 2v6"/></svg></button><button class="icon-edit" type="button" data-milestone="${e(m.milestone_id)}" aria-label="Edit milestone: ${e(m.name)}" title="Edit milestone"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></summary>${fs.map(f=>{
    const tasks=shown.filter(t=>t.feature_id===f.feature_id);
    if(isFiltered&&!tasks.length)return '';
    const all=project.filter(t=>t.feature_id===f.feature_id),expanded=!collapsedFeatures.has(String(f.feature_id)),derivedStatus=featureStatus(f.feature_id);
@@ -2557,7 +2601,8 @@ function renderMilestones(){
 function editMilestone(id){
   if(!isPM())return;
   const m=find(data.milestones,id,'milestone_id');if(!m)return;
-  modal('Edit milestone',`<form id="actionForm"><div class="fields">${field('name','Milestone name',m.name,'text',true)}<label class="wide">Description<textarea name="description">${e(m.description||'')}</textarea></label>${select('status','Status',ST.map(x=>({value:x,label:x})),m.status)}${field('target_date','Target date',m.target_date||'','date')}</div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="button" class="button danger" id="deleteMilestone">Delete entire milestone</button><button type="submit" class="button main">Save milestone</button></div></form>`);
+  const ordered=projectMilestonesNewestFirst(),autoNumber=ordered.length-ordered.findIndex(x=>String(x.milestone_id)===String(id));
+  modal('Edit milestone',`<form id="actionForm"><div class="fields">${field('name','Milestone name',m.name,'text',true)}<label class="wide">Description<textarea name="description">${e(m.description||'')}</textarea></label>${select('status','Status',ST.map(x=>({value:x,label:x})),m.status)}${field('target_date','Target date',m.target_date||'','date')}<label>Milestone number (optional)<input name="display_number" type="number" min="1" max="9999" step="1" inputmode="numeric" placeholder="Auto · ${autoNumber}" value="${e(m.display_number??'')}"></label><div class="wide sub">Leave the number blank to label milestones automatically by age (oldest is 01, newest is highest). This does not rename or reorder them.</div></div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button type="button" class="button danger" id="deleteMilestone">Delete entire milestone</button><button type="submit" class="button main">Save milestone</button></div></form>`);
   $('#cancel').onclick=closeModal;
   $('#deleteMilestone').onclick=()=>deleteItem('milestone',id,m.name);
   $('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit('editMilestone',{milestone_id:id,...Object.fromEntries(new FormData(ev.currentTarget).entries())})};
@@ -2694,7 +2739,7 @@ function logHours(id){
   if(del)deleteLog(id,del.dataset.deleteLog,()=>logHours(id));
  };
 }
-function quickCreate(kind,preferredMilestoneId=''){const milestones=data.milestones.filter(x=>x.project_id===activeProject);let body='',op='';if(kind==='milestone'){op='createMilestone';body=field('name','Milestone name','','text',true)+'<label class="wide">Description<textarea name="description"></textarea></label>'}else if(kind==='feature'){op='createFeature';body=field('name','Feature name','','text',true)+select('milestone_id','Milestone',opts(milestones,'milestone_id'),preferredMilestoneId||milestones[0]?.milestone_id)}else if(kind==='member'){op='addMember';body=field('display_name','Member name','','text',true)+field('google_email','Email (optional)','','email',true)+field('discipline','Discipline / role description')}else if(kind==='project'){op='createProject';body=field('name','Project name','','text',true)+'<label class="wide">Description<textarea name="description"></textarea></label>'}modal('Create '+kind,`<form id="actionForm"><div class="fields">${body}</div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button class="button main">Create</button></div></form>`);$('#cancel').onclick=closeModal;$('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit(op,{project_id:activeProject,...Object.fromEntries(new FormData(ev.currentTarget).entries())})}}
+function quickCreate(kind,preferredMilestoneId=''){const milestones=data.milestones.filter(x=>x.project_id===activeProject);let body='',op='';if(kind==='milestone'){op='createMilestone';body=field('name','Milestone name','','text',true)+'<label class="wide">Description<textarea name="description"></textarea></label><label>Milestone number (optional)<input name="display_number" type="number" min="1" max="9999" step="1" inputmode="numeric" placeholder="Automatic"></label><div class="wide sub">Leave blank for automatic chronological numbering.</div>'}else if(kind==='feature'){op='createFeature';body=field('name','Feature name','','text',true)+select('milestone_id','Milestone',opts(milestones,'milestone_id'),preferredMilestoneId||milestones[0]?.milestone_id)}else if(kind==='member'){op='addMember';body=field('display_name','Member name','','text',true)+field('google_email','Email (optional)','','email',true)+field('discipline','Discipline / role description')}else if(kind==='project'){op='createProject';body=field('name','Project name','','text',true)+'<label class="wide">Description<textarea name="description"></textarea></label>'}modal('Create '+kind,`<form id="actionForm"><div class="fields">${body}</div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button><button class="button main">Create</button></div></form>`);$('#cancel').onclick=closeModal;$('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit(op,{project_id:activeProject,...Object.fromEntries(new FormData(ev.currentTarget).entries())})}}
 async function submit(op,payload){const btn=$('#actionForm button[type="submit"],#actionForm button:not([type])');if(btn)btn.disabled=true;try{await rpc(op,payload);closeModal();await refresh()}catch(err){gpAlert(err.message);if(btn)btn.disabled=false}}
 async function deleteItem(kind,id,name){
  if(!isPM())return;
@@ -2932,5 +2977,5 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="supabase/public-config.js?v=2026.11.07.80"></script>
-<script src="gameplan.js?v=2026.11.07.80"></script><script src="local-first-sync.js?v=2026.11.07.80"></script><script src="account-ui.js?v=2026.11.07.80"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
+</script><script src="supabase/public-config.js?v=2026.11.07.81"></script>
+<script src="gameplan.js?v=2026.11.07.81"></script><script src="local-first-sync.js?v=2026.11.07.81"></script><script src="account-ui.js?v=2026.11.07.81"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
