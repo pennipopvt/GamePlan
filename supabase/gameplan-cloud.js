@@ -58,6 +58,38 @@ export function createGamePlanCloud({url,publishableKey}){
   async signOut(){const {error}=await client.auth.signOut();check(error)},
   async getSession(){const {data,error}=await client.auth.getSession();check(error);return data.session},
   onAuthChange(callback){return client.auth.onAuthStateChange((_event,session)=>callback(session)).data.subscription},
+  // Separate application access from membership in any specific project.
+  // Before the optional app-invites.sql migration, this RPC is unavailable.
+  async appAccessStatus(){
+   await currentUser();
+   const {data,error}=await client.rpc('gp_app_access_status');
+   check(error);return data||{access:false,admin:false};
+  },
+  async createAppInvite(expiresDays=7,maxUses=25){
+   await currentUser();
+   if(!Number.isInteger(expiresDays)||expiresDays<1||expiresDays>30)throw Error('Expiration must be 1–30 days.');
+   if(!Number.isInteger(maxUses)||maxUses<1||maxUses>100)throw Error('Usage limit must be 1–100.');
+   const {data,error}=await client.rpc('gp_create_app_invite',{p_expires_days:expiresDays,p_max_uses:maxUses});
+   check(error);const invite=Array.isArray(data)?data[0]:data;
+   if(!invite?.invite_token)throw Error('Could not generate GamePlan invitation.');
+   return invite;
+  },
+  async listAppInvites(){
+   await currentUser();
+   const {data,error}=await client.rpc('gp_list_app_invites');
+   check(error);return data||[];
+  },
+  async revokeAppInvite(inviteId){
+   await currentUser();
+   const {data,error}=await client.rpc('gp_revoke_app_invite',{p_invite:inviteId});
+   check(error);return data===true;
+  },
+  async acceptAppInvite(token){
+   await currentUser();
+   if(!/^[a-f0-9]{64}$/.test(String(token||'')))throw Error('Invalid GamePlan invitation.');
+   const {data,error}=await client.rpc('gp_accept_app_invite',{p_token:token});
+   check(error);return data===true;
+  },
   async listProjects(){
    await currentUser();
    const {error:claimError}=await client.rpc('gp_claim_invites');check(claimError);
