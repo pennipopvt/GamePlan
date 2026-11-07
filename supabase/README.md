@@ -3,7 +3,7 @@
 GamePlan has **one main board**: [open GamePlan](https://pennipopvt.github.io/ProjectPlanner/index.html).
 
 - Everything is saved immediately into browser localStorage under `little-dock-local-v2`, even if Supabase or the internet is unavailable.
-- Supabase is optional for collaboration. Use **Connect Discord**, then **Share project** to publish the currently open browser project or link to an existing shared project.
+- Authenticated GamePlan accounts use the existing Supabase backend. New projects created while signed in are automatically cloud-backed. Existing unlinked browser projects still require an explicit **Share project** action to protect offline work and avoid accidental merges.
 - The cloud uploader preserves task IDs, all related time logs, tags, features, milestones and display names. In particular, time logs have no local `project_id`: they are included via their `task_id`.
 - An explicitly linked project uses a durable local baseline plus per-row Supabase updates. Pending changes remain in the browser until they can be uploaded.
 - Changes from other members are merged only when they don't conflict with local edits. Local changes to the same item take precedence. A missing/partial cloud read never silently deletes the browser copy.
@@ -12,7 +12,7 @@ GamePlan has **one main board**: [open GamePlan](https://pennipopvt.github.io/Pr
 
 ## Signed-in accounts, team roles and migration (2026-11-05)
 
-GamePlan now requires an authenticated account to open its main workspace. A new account starts with an **empty workspace** and creates projects with the logged-in Supabase user as **Owner** (not the old Penni/PM sample). The main UI uses the same browser-first cache, now namespaced per Supabase user ID.
+GamePlan now requires an authenticated account to open its main workspace. A newly admitted account starts with an **empty workspace** and creates projects with the logged-in Supabase user as **Owner** (not the old Penni/PM sample). The main UI uses the same browser-first cache, now namespaced per Supabase user ID.
 
 **One-time team permissions migration:** Run [team-accounts.sql](team-accounts.sql) in your EXISTING Supabase project's SQL Editor. Do not rerun `schema.sql` or delete old tables. This adds:
 - A project-scoped authenticated member profile table for user-selected display names and optional links to historical task assignees.
@@ -80,3 +80,48 @@ For deletions made by older GamePlan releases, the sync client independently che
 - Cloud configuration and browser data remain on the current device. No service-role key or Discord client secret is committed to the repository.
 
 This is still a collaboration beta, not a fully conflict-free distributed offline database.
+
+
+## App-wide invitations and default Supabase connection (v2026.11.07.78)
+
+**GamePlan access is separate from project membership.** An app invitation lets a signed-in person use GamePlan and create their own projects; it does **not** add them to Fishing Game or any other project. Existing "Share project" invitations still grant access to that specific project, with their Editor/Viewer role.
+
+### One-time backend upgrade
+
+Run [app-invites.sql](app-invites.sql) in the **existing Supabase project's SQL Editor**, after [schema.sql](schema.sql) and [link-invites.sql](link-invites.sql). Do not rerun the full schema or create a new project. This migration:
+
+- Grants app access to **all users already in Supabase Auth at the moment of the first run**, including accounts that have no project yet. A bootstrap marker ensures rerunning the migration **does not** grant access to users who signed up later.
+- Authorizes existing project owners to create and revoke GamePlan-wide invitations. The owner of the existing shared Fishing Game is an app invitation administrator.
+- Keeps project data protected by existing Supabase RLS permissions. A GamePlan invitation **never grants membership** to anyone else's project.
+- Adds an RLS check preventing brand-new, uninvited Supabase users from creating cloud projects merely by signing in.
+- Uses unguessable 64-character bearer tokens, SHA-256 hashes at rest, expiry, usage limits, and admin-only create/list/revoke methods. The token is carried in the **URL fragment** and is not logged as a query parameter.
+- Does not migrate, modify, or remove existing project memberships, task records, or time logs.
+
+**Important:** This SQL is not automatically installed by a GitHub commit. If you don't run it, the site keeps its previous access behavior and the app invitation button is unavailable. Older project-invite links continue to work.
+
+### One-time public frontend configuration
+
+For GamePlan to **automatically connect to your existing Supabase project on any browser**, fill in the two values in [public-config.js](public-config.js):
+
+```js
+window.GamePlanPublicConfig=Object.freeze({
+  url: "https://YOUR-PROJECT.supabase.co",
+  publishableKey: "sb_publishable_YOUR_PUBLIC_KEY"
+});
+```
+
+Find them in **Supabase → Project Settings → API Keys / Project URL**. The `sb_publishable_...` key and project URL are intentionally **public frontend values**, safe in a static GitHub Pages app. **Never include a service_role key or any sb_secret_ key.** Deploy the edited file to GitHub Pages. Existing browsers' saved connection settings are retained rather than overwritten.
+
+Until that one-time file is configured, an app or project invitation still sets the browser's public connection information automatically via its link. Returning users on their current browser retain their already saved connection.
+
+### Invite someone to GamePlan
+
+After installing the SQL, an existing project owner signs in and opens **Account → Invite someone to GamePlan** (not the project's **Invite teammates** action). Choose an expiry and maximum uses, generate a link, and copy it. Recipients sign in with Discord, Google or email, and the link grants GamePlan access but no shared projects. The inviter can see usage and revoke an active link. A link can be revoked for future sign-ups; people who already accepted it retain their individual GamePlan access.
+
+If the recipient follows a link while already logged in, it will grant access to their current account. If an email sign-in opens a separate tab, reopen the original GamePlan invite link after completing sign-in so the secret token can be redeemed.
+
+New uninvited auth users may still authenticate at Supabase, but the GamePlan workspace shows **Invitation required** until an invitation is accepted or they join an existing project through a valid project invitation. Uninvited users cannot create cloud projects under the new RLS policy.
+
+### Offline and safety behavior
+
+Previously approved users with saved local board data can keep using their local workspace offline; cloud access is verified when online. The existing non-destructive migration for legacy browser boards and explicit "Share project" process for **unlinked old local projects** remain unchanged, preventing accidental uploads or merging similarly named projects. Projects created **after signing in** are already created in Supabase automatically.
