@@ -5,7 +5,7 @@ A lightweight task-and-project board, published from this repository with GitHub
 ## Working rules for future development chats
 
 1. **Inspect the current `main` branch before editing.** Do not assume a previous chat's code or versions are current. Keep existing design language and make focused changes rather than redesigning unrelated screens.
-2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.07.69**.
+2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.07.70**.
 3. **Refresh the offline cache identifier** in `service-worker.js` when changing front-end assets, so older clients do not keep a stale shell. This is separate from the human-readable app version.
 4. **Publish by committing to `main`.** Check the GitHub Pages build/deployment state and confirm the public URL serves the new version. If `main` is protected, create a feature branch and PR, then merge when checks permit. Never claim a successful deployment from a successful commit alone.
 5. **If the page looks stale:** hard-refresh, verify the live HTML version and asset query strings, inspect Actions/Pages deployment status, and inspect the service worker/cache. Don't blindly repeat commits. See `.github/workflows/recover-pages.yml` for a *manual recovery workflow specific to a previously stale deployment*; don't run or alter it without confirming it still applies.
@@ -46,3 +46,10 @@ A lightweight task-and-project board, published from this repository with GitHub
 - The **Import milestone** action accepts a standalone milestone JSON file; it adds a milestone to the selected project without replacing other tasks, tags, or logs. See [MILESTONE_IMPORT.md](MILESTONE_IMPORT.md) for the compact format.
 - Imported tasks support `estimated_minutes`, display-name assignees, multiple named tags and tag colors. Existing tags are reused by name.
 - Remaining hours are **calculated**, not edited: an unfinished task has `max(0, estimated hours - logged hours)` remaining, and a completed task has zero. Summaries and charts use the same calculation. Exported full backups include the calculated value for compatibility with older clients.
+
+## Board navigation and milestone filtering
+
+- The **Board** sidebar item always opens the single Project Overview board. The legacy "All/Open/Completed/Milestone" sidebar subtabs and their hidden selection state have been removed.
+- Use the **All milestones** dropdown in the Board filter bar to show every milestone (default) or one milestone. The advanced Filters menu continues to handle status, tags, assignees and priority.
+- Newest milestones appear first. Newly created/imported milestones record creation timestamps; older milestones fall back to target date and their saved order.
+- After importing a milestone, GamePlan returns to the full Project Overview and clears leftover search, My tasks, assignee and advanced filter selections. The import remains additive.
