@@ -1681,6 +1681,26 @@ a:hover,.link:hover{color:#80115c}
 @media(max-width:740px){.gp-analytics-settings-fields{grid-template-columns:1fr 1fr}.gp-analytics-settings-fields>.gp-analytics-velocity-toggle{grid-column:1/-1}.gp-analytics-heading h2{font-size:16px!important}}
 @media(max-width:470px){.gp-analytics-settings-fields{grid-template-columns:1fr}.gp-analytics-settings-fields>.gp-analytics-velocity-toggle{grid-column:auto}.gp-analytics-feature-section{padding-top:17px}}
 
+
+/* Analytics interval, series and milestone order controls. */
+.gp-analytics-settings-fields{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.gp-analytics-settings-fields>.gp-analytics-velocity-toggle{grid-column:auto;align-self:end;min-height:37px}
+.gp-analytics-feature-heading{display:flex;justify-content:space-between;align-items:end;gap:14px;flex-wrap:wrap}
+.gp-feature-sort{display:flex;flex-direction:column;gap:5px;min-width:155px;color:#716477;font-size:12px;font-weight:600}
+.gp-feature-sort select{min-height:35px;border:1px solid #e2dbe4;border-radius:8px;color:#38313b;padding:7px 10px;background:white;font-size:12px}
+/* Team settings: consistent, editable chart colors for synced members. */
+.gp-team-colors-settings{margin-top:22px;padding-top:20px;border-top:1px solid #eae2e9}
+.gp-team-colors-settings h3{margin:0 0 4px;color:#403343;font-size:15px;font-weight:650}
+.gp-team-colors-settings .sub{margin:0 0 13px;font-size:12px}
+.gp-team-colors-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:9px}
+.gp-team-chart-color-row{display:flex;flex-direction:row;justify-content:space-between;align-items:center;gap:12px;border:1px solid #eae2ea;border-radius:9px;padding:10px 12px;min-width:0;color:#564b5a;font-size:12px;font-weight:600}
+.gp-team-chart-color-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gp-team-chart-color,.gp-team-chart-color-row{cursor:default}
+.gp-team-chart-color{display:flex;flex-direction:row;align-items:center;gap:8px;color:#706375;font-size:12px}
+.gp-team-chart-color input[type=color],.gp-team-chart-color-row input[type=color]{width:32px;height:28px;padding:2px;border:1px solid #d9ccd9;border-radius:7px;background:white;flex:none;min-width:32px;cursor:pointer}
+.gp-team-chart-color input:disabled,.gp-team-chart-color-row input:disabled{opacity:.55;cursor:not-allowed}
+@media(max-width:740px){.gp-analytics-settings-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.gp-analytics-settings-fields>.gp-analytics-velocity-toggle{grid-column:1/-1}}
+@media(max-width:470px){.gp-analytics-settings-fields{grid-template-columns:1fr}.gp-analytics-settings-fields>.gp-analytics-velocity-toggle{grid-column:auto}}
 /* Match secondary page headings to Project Overview. */
 #gpExtra h1{
  font-family:inherit!important;
@@ -2028,8 +2048,8 @@ a:hover,.link:hover{color:#80115c}
 .gp-toast-dismiss{flex:none;padding:0 3px;border:0;background:transparent;color:#7b7080;font-size:21px;line-height:1;cursor:pointer}
 .gp-toast-dismiss:hover{color:#35203d}
 @media(max-width:650px){.gp-toast{top:66px;right:12px;left:12px;width:auto;max-width:none}}
-</style><link rel="stylesheet" href="account-ui.css?v=2026.11.07.72"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.07.72</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+</style><link rel="stylesheet" href="account-ui.css?v=2026.11.07.73"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.07.73</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><button type="button" class="button gp-my-filter" id="gpMyTasks" aria-pressed="false" title="Show only your unfinished assigned tasks">My tasks <span id="gpMyCount" class="gp-my-count">0</span></button><select id="gpMilestoneFilter" aria-label="Filter board by milestone" title="Filter by milestone"><option value="">All milestones</option></select><select id="assigneeFilter" hidden aria-hidden="true"><option value="">All assignees</option></select><div class="gp-filter-wrap"><button type="button" class="button gp-filter-trigger" id="gpFilterTrigger" aria-expanded="false" aria-controls="gpFilterPanel"><span aria-hidden="true">⚲</span> Filters <span id="gpFilterCount" class="gp-filter-count" hidden>0</span></button><div class="gp-filter-panel" id="gpFilterPanel" hidden></div></div><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div id="gpFilterChips" class="gp-filter-chips" hidden></div>
@@ -2040,7 +2060,7 @@ a:hover,.link:hover{color:#80115c}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.07.72';
+let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.07.73';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=[];
@@ -2761,4 +2781,4 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="gameplan.js?v=2026.11.07.72"></script><script src="local-first-sync.js?v=2026.11.07.72"></script><script src="account-ui.js?v=2026.11.07.72"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
+</script><script src="gameplan.js?v=2026.11.07.73"></script><script src="local-first-sync.js?v=2026.11.07.73"></script><script src="account-ui.js?v=2026.11.07.73"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
