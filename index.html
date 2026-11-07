@@ -1997,6 +1997,21 @@ a:hover,.link:hover{color:#80115c}
 #gpMilestoneFilter:hover{border-color:#e9add3;background:#fff7fc}
 #gpMilestoneFilter:focus-visible{outline:2px solid #d843a9;outline-offset:2px}
 @media(max-width:680px){#gpMilestoneFilter{min-width:145px;max-width:100%}}
+/* Compact, configurable overview statistics with a single menu. */
+.gp-overview-stats-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:17px;margin-bottom:0}
+.gp-stats-heading{font-size:12px;font-weight:600;color:#817485}
+.gp-stats-settings{position:relative;z-index:45}
+.gp-stats-settings-trigger{list-style:none;cursor:pointer;border:1px solid transparent;border-radius:8px;padding:5px 9px;color:#796d7d;font-size:12px;font-weight:600;user-select:none}
+.gp-stats-settings-trigger::-webkit-details-marker{display:none}
+.gp-stats-settings-trigger:hover,.gp-stats-settings[open]>.gp-stats-settings-trigger{background:#fce5f5;border-color:#efc5df;color:#9c1a71}
+.gp-stats-settings-menu{position:absolute;z-index:60;top:calc(100% + 5px);right:0;width:min(265px,calc(100vw - 32px));display:grid;gap:5px;background:#fff;border:1px solid #e9dce7;border-radius:11px;box-shadow:0 12px 35px #2f163323;padding:12px 13px}
+.gp-stats-settings-menu strong{font-size:12px;font-weight:700;color:#4c3950;margin-bottom:3px}
+.gp-stats-settings-menu label{display:flex;align-items:center;flex-direction:row;gap:9px;padding:6px 7px;border-radius:7px;font-size:12px;font-weight:500;color:#5b4b60;cursor:pointer}
+.gp-stats-settings-menu label:hover{background:#fdf0f8}
+.gp-stats-settings-menu input{flex:none;accent-color:#a81578;min-width:auto;margin:0}
+.gp-stats-settings-menu p{font-size:11px;line-height:1.5;color:#928497;margin:5px 3px 0}
+#gpOverviewStats{grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-top:8px}
+#gpOverviewStats [hidden]{display:none!important}
 #gpMyTasks.gp-my-filter{display:inline-flex;align-items:center;justify-content:center;gap:7px;
  padding:8px 11px;min-height:34px;white-space:nowrap;border:1px solid #e7dce7;
  border-radius:9px;background:#fff;color:#77707d;font-size:12px;font-weight:650}
@@ -2018,18 +2033,19 @@ a:hover,.link:hover{color:#80115c}
 .gp-toast-dismiss{flex:none;padding:0 3px;border:0;background:transparent;color:#7b7080;font-size:21px;line-height:1;cursor:pointer}
 .gp-toast-dismiss:hover{color:#35203d}
 @media(max-width:650px){.gp-toast{top:66px;right:12px;left:12px;width:auto;max-width:none}}
-</style><link rel="stylesheet" href="account-ui.css?v=2026.11.07.70"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.07.70</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+</style><link rel="stylesheet" href="account-ui.css?v=2026.11.07.71"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.07.71</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><button type="button" class="button gp-my-filter" id="gpMyTasks" aria-pressed="false" title="Show only your unfinished assigned tasks">My tasks <span id="gpMyCount" class="gp-my-count">0</span></button><select id="gpMilestoneFilter" aria-label="Filter board by milestone" title="Filter by milestone"><option value="">All milestones</option></select><select id="assigneeFilter" hidden aria-hidden="true"><option value="">All assignees</option></select><div class="gp-filter-wrap"><button type="button" class="button gp-filter-trigger" id="gpFilterTrigger" aria-expanded="false" aria-controls="gpFilterPanel"><span aria-hidden="true">⚲</span> Filters <span id="gpFilterCount" class="gp-filter-count" hidden>0</span></button><div class="gp-filter-panel" id="gpFilterPanel" hidden></div></div><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div id="gpFilterChips" class="gp-filter-chips" hidden></div>
-<div class="grid"><div class="card stat"><span class="muted">Total tasks</span><b id="total">0</b></div><div class="card stat"><span class="muted">Completed</span><b id="completed">0</b></div><div class="card stat"><span class="muted">Time logged</span><b id="hours">0h</b></div></div>
+<div class="gp-overview-stats-head"><span class="gp-stats-heading">Overview stats</span><details class="gp-stats-settings" id="gpStatsSettings"><summary class="gp-stats-settings-trigger" aria-label="Choose overview statistics" title="Choose overview statistics">⚙ <span>Customize</span></summary><div class="gp-stats-settings-menu" id="gpStatsOptions"><strong>Show on overview</strong><label><input type="checkbox" data-overview-stat="total"> Total tasks</label><label><input type="checkbox" data-overview-stat="remainingTasks"> Tasks remaining</label><label><input type="checkbox" data-overview-stat="completed"> Completed tasks</label><label><input type="checkbox" data-overview-stat="hours"> Time logged</label><label><input type="checkbox" data-overview-stat="remainingHours"> Time remaining</label><label><input type="checkbox" data-overview-stat="estimatedHours"> Estimated time</label><p>These totals follow the current board filters. Your choices are saved on this device for each project.</p></div></details></div>
+<div class="grid gp-overview-stats" id="gpOverviewStats"><div class="card stat" data-overview-card="total"><span class="muted">Total tasks</span><b id="total">0</b></div><div class="card stat" data-overview-card="remainingTasks"><span class="muted">Tasks remaining</span><b id="remainingTasks">0</b></div><div class="card stat" data-overview-card="completed"><span class="muted">Completed</span><b id="completed">0</b></div><div class="card stat" data-overview-card="hours"><span class="muted">Time logged</span><b id="hours">0h</b></div><div class="card stat" data-overview-card="remainingHours"><span class="muted">Time remaining</span><b id="remainingHours">0h</b></div><div class="card stat" data-overview-card="estimatedHours"><span class="muted">Estimated time</span><b id="estimatedHours">0h</b></div></div>
 <div class="gp-work-breakdown"><div id="milestoneList"></div></div><details class="card" id="teamSection"><summary><h2 style="font:700 19px Georgia,serif">Project Team</h2><div class="section-actions"><button class="button main" id="inviteMember" hidden>+ Add member</button><span class="sub">▸ Team details</span></div></summary><div id="teamList" style="margin-top:14px"></div></details></section></main></div>
 <div class="modal-back" id="back"><div class="modal" role="dialog" aria-modal="true"><div class="head"><h2 id="modalTitle"></h2><button class="button" id="close" type="button" aria-label="Close dialog" title="Close dialog">×</button></div><div id="modalBody"></div></div></div>
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.07.70';
+let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.07.71';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=[];
@@ -2088,6 +2104,52 @@ const feature=id=>find(data.features,id,'feature_id');
 const milestone=f=>find(data.milestones,f?.milestone_id,'milestone_id');
 const isPM=()=>window.GamePlanAuth?.canEdit?.(activeProject)??false;
 const canUpdate=t=>isPM()||String(t.assignee_member_id)===String(data.me.member_id);
+// Overview statistics are local UI preferences, not shared task-board data.
+const GP_STATS_PREF_KEY='gameplan-overview-stats-v1';
+const GP_OVERVIEW_STATS=[
+ {id:'total',defaultOn:true},
+ {id:'remainingTasks',defaultOn:true},
+ {id:'completed',defaultOn:true},
+ {id:'hours',defaultOn:true},
+ {id:'remainingHours',defaultOn:true},
+ {id:'estimatedHours',defaultOn:false}
+];
+function gpOverviewStatsPrefScope(){return String(data?.me?.member_id||'local')+':'+String(activeProject||'');}
+function gpReadOverviewStats(){
+ try{
+  const prefs=JSON.parse(localStorage.getItem(GP_STATS_PREF_KEY)||'{}');
+  const saved=prefs?.[gpOverviewStatsPrefScope()];
+  if(Array.isArray(saved))return new Set(saved.filter(id=>GP_OVERVIEW_STATS.some(s=>s.id===id)));
+ }catch{}
+ return new Set(GP_OVERVIEW_STATS.filter(s=>s.defaultOn).map(s=>s.id));
+}
+function gpSaveOverviewStats(selected){
+ try{
+  const old=JSON.parse(localStorage.getItem(GP_STATS_PREF_KEY)||'{}');
+  const prefs=old&&typeof old==='object'&&!Array.isArray(old)?old:{};
+  prefs[gpOverviewStatsPrefScope()]=GP_OVERVIEW_STATS.filter(s=>selected.has(s.id)).map(s=>s.id);
+  localStorage.setItem(GP_STATS_PREF_KEY,JSON.stringify(prefs));
+ }catch(err){gpAlert('Could not save overview preferences: '+err.message)}
+}
+function gpRenderOverviewStats(tasks){
+ const completed=tasks.filter(t=>t.status==='Done').length;
+ const values={
+  total:tasks.length,
+  remainingTasks:tasks.length-completed,
+  completed,
+  hours:formatHours(tasks.reduce((sum,t)=>sum+taskHours(t),0)),
+  remainingHours:formatHours(tasks.reduce((sum,t)=>sum+taskRemainingHours(t),0)),
+  estimatedHours:formatHours(tasks.reduce((sum,t)=>sum+Math.max(0,Number(t.estimated_hours)||0),0))
+ };
+ const visible=gpReadOverviewStats();
+ for(const setting of GP_OVERVIEW_STATS){
+  $('#'+setting.id).textContent=values[setting.id];
+  const card=document.querySelector('[data-overview-card="'+setting.id+'"]');
+  if(card)card.hidden=!visible.has(setting.id);
+  const checkbox=document.querySelector('[data-overview-stat="'+setting.id+'"]');
+  if(checkbox)checkbox.checked=visible.has(setting.id);
+ }
+}
 const taskHours=t=>data.logs.filter(x=>String(x.task_id)===String(t.task_id)).reduce((n,x)=>n+Number(x.hours||0),0);
 // Calculate remaining hours from the estimate and time logs for unfinished tasks.
 // The older stored remaining_hours value is no longer used for display or analytics.
@@ -2285,9 +2347,7 @@ function taskRow(t){
 }
 function renderMilestones(){
  const filtered=visibleTasks(),project=projectTasks(),isFiltered=gpMyOnly||!!$('#assigneeFilter').value||!!$('#searchTasks').value||(typeof gpHasFacetFilters==='function'&&gpHasFacetFilters());
- $('#total').textContent=filtered.length;
- $('#completed').textContent=filtered.filter(t=>t.status==='Done').length;
- $('#hours').textContent=formatHours(filtered.reduce((n,t)=>n+taskHours(t),0));
+ gpRenderOverviewStats(filtered);
  const ms=projectMilestonesNewestFirst().filter(m=>!gpMilestoneSelection||String(m.milestone_id)===gpMilestoneSelection);
  $('#milestoneList').innerHTML=ms.map(m=>{
   const fs=data.features.filter(f=>f.project_id===activeProject&&f.milestone_id===m.milestone_id);
@@ -2534,6 +2594,17 @@ async function gpClockOut(){
 setInterval(()=>{if(gpClockRead()&&!document.hidden)gpRenderClock()},1000);
 
 $('#inviteMember').onclick=ev=>{ev.preventDefault();ev.stopPropagation();quickCreate('member')};
+$('#gpStatsOptions').addEventListener('change',ev=>{
+ const control=ev.target.closest('input[data-overview-stat]');
+ if(!control)return;
+ const selected=new Set([...document.querySelectorAll('#gpStatsOptions input[data-overview-stat]')].filter(box=>box.checked).map(box=>box.dataset.overviewStat));
+ gpSaveOverviewStats(selected);
+ gpRenderOverviewStats(visibleTasks());
+});
+document.addEventListener('click',ev=>{
+ const menu=$('#gpStatsSettings');
+ if(menu?.open&&!menu.contains(ev.target))menu.open=false;
+});
 $('#newTask').onclick=()=>taskForm(null);$('#project').onchange=ev=>{activeProject=ev.target.value;gpMilestoneSelection='';gpMyOnly=false;$('#searchTasks').value='';$('#assigneeFilter').value='';if(typeof gpResetFacets==='function')gpResetFacets();saveProject();render()};$('#gpMilestoneFilter').onchange=ev=>{gpMilestoneSelection=ev.target.value;render()};$('#assigneeFilter').onchange=render;$('#searchTasks').oninput=render;$('#gpMyTasks').onclick=()=>{gpMyOnly=!gpMyOnly;render()};$('#menuToggle').onclick=()=>$('#sidebar').classList.toggle('visible');$('#reload').onclick=()=>{const url=new URL(location.href);url.searchParams.set('v',APP_VERSION);location.assign(url.toString())};
 
 function downloadBackup(){
@@ -2695,4 +2766,4 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="gameplan.js?v=2026.11.07.70"></script><script src="local-first-sync.js?v=2026.11.07.70"></script><script src="account-ui.js?v=2026.11.07.70"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
+</script><script src="gameplan.js?v=2026.11.07.71"></script><script src="local-first-sync.js?v=2026.11.07.71"></script><script src="account-ui.js?v=2026.11.07.71"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
