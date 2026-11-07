@@ -96,9 +96,9 @@ returns table(invite_id uuid,invite_token text,expires_at timestamptz)
 language plpgsql security definer set search_path=''
 as $$
 declare
- token text;
- invite_id uuid;
- expiry timestamptz;
+ v_token text;
+ v_id uuid;
+ v_expiry timestamptz;
 begin
  if not public.gp_is_app_admin() then
   raise exception 'Only GamePlan invitation admins can create access links'
@@ -110,15 +110,15 @@ begin
  if p_max_uses is null or p_max_uses not between 1 and 100 then
   raise exception 'Usage limit must be between 1 and 100';
  end if;
- token:=replace(gen_random_uuid()::text,'-','')
+ v_token:=replace(gen_random_uuid()::text,'-','')
        || replace(gen_random_uuid()::text,'-','');
  insert into public.gp_app_invites(token_hash,created_by,expires_at,max_uses)
  values(
-  encode(sha256(convert_to(token,'UTF8')),'hex'),
+  encode(sha256(convert_to(v_token,'UTF8')),'hex'),
   auth.uid(),now()+make_interval(days=>p_expires_days),p_max_uses
  )
- returning id,gp_app_invites.expires_at into invite_id,expiry;
- return query select invite_id,token,expiry;
+ returning id,gp_app_invites.expires_at into v_id,v_expiry;
+ return query select v_id,v_token,v_expiry;
 end;
 $$;
 
