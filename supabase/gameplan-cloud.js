@@ -120,6 +120,11 @@ export function createGamePlanCloud({url,publishableKey}){
    const {data,error}=await client.rpc('gp_project_team',{p_project:projectId});
    check(error);return data||[];
   },
+  async projectTeamAvatars(projectId){
+   await currentUser();
+   const {data,error}=await client.rpc('gp_project_team_avatars',{p_project:projectId});
+   check(error);return data||[];
+  },
   async setTeamMember(projectId,userId,displayName,legacyMemberId){
    await currentUser();
    const {data,error}=await client.rpc('gp_set_team_member',{
