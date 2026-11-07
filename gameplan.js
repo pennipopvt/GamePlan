@@ -290,28 +290,76 @@ function gpHSVToColor(h,s,v){
 }
 // Shared swatch palette and HSV picker for Project Tags and Team chart colors.
 // One implementation means both dialogs use identical selection and custom-color behavior.
+function gpNormalizeHexColor(value){
+ const hex=String(value||'').trim().replace(/^#/,'');
+ if(/^[a-f0-9]{3}$/i.test(hex))return '#'+[...hex.toLowerCase()].map(c=>c+c).join('');
+ if(/^[a-f0-9]{6}$/i.test(hex))return '#'+hex.toLowerCase();
+ return null;
+}
+function gpRememberPaletteColor(value){
+ const color=gpNormalizeHexColor(value);
+ if(!color)throw Error('Choose a valid hex color');
+ if(GP_COLORS.some(c=>c.hex.toLowerCase()===color))return;
+ if(!Array.isArray(data.custom_tag_colors))data.custom_tag_colors=[];
+ if(!data.custom_tag_colors.some(c=>c.project_id===activeProject&&c.color.toLowerCase()===color))
+  data.custom_tag_colors.push({project_id:activeProject,color});
+}
 function gpColorPaletteMarkup(selected,label){
  const defaults=GP_COLORS.map(c=>c.hex);
  const saved=(data.custom_tag_colors||[]).filter(c=>c.project_id===activeProject).map(c=>c.color);
  const palette=[...new Set([...defaults,...saved,...(selected?[selected]:[])])];
  const tile=color=>'<label class="gp-color-tile" data-gp-color="'+e(color)+'" title="'+(defaults.includes(color)?'Default color':'Right-click to delete custom color')+'" aria-label="Select '+e(color)+'"><input type="radio" name="color" value="'+e(color)+'" '+(selected===color?'checked':'')+'><span class="gp-color-fill" style="background:'+e(color)+'"></span></label>';
  const picker='<div id="gpInlinePicker" class="gp-inline-picker" hidden><div class="gp-picker-sv" id="gpPickerSV" role="slider" aria-label="Saturation and brightness" tabindex="0"><div class="gp-picker-sv-cursor" id="gpPickerCursor"></div></div><div class="gp-picker-hue-row"><div class="gp-hue-track"><input type="range" id="gpPickerHue" min="0" max="360" value="0" aria-label="Hue"></div><span id="gpPickerSwatch" class="gp-picker-swatch"></span></div><div class="gp-picker-actions"><button type="button" class="button" id="gpPickerCancel">Cancel</button><button type="button" class="button main" id="gpPickerConfirm">Add Color</button></div></div>';
- return '<div class="wide"><strong>'+e(label)+'</strong><div class="gp-color-grid" id="gpColorGrid">'+palette.map(tile).join('')+'<button type="button" class="gp-color-add" id="gpOpenPicker" title="Add custom color" aria-label="Add custom color">+</button></div>'+
+ return '<div class="wide gp-member-palette"><strong>'+e(label)+'</strong><div class="gp-color-grid" id="gpColorGrid">'+palette.map(tile).join('')+'<button type="button" class="gp-color-add" id="gpOpenPicker" title="Add custom color" aria-label="Add custom color">+</button></div>'+
+ '<div class="gp-hex-color-row"><label for="gpHexColor">Hex code</label><input id="gpHexColor" type="text" spellcheck="false" autocomplete="off" maxlength="7" placeholder="#RRGGBB" value="'+e(selected.toUpperCase())+'" aria-describedby="gpHexHelp"><span class="sub" id="gpHexHelp">#RRGGBB or #RGB</span></div>'+
  '<div class="gp-palette-tools"><button type="button" class="button" id="gpClearColors">Clear custom colors</button><span class="sub">Right-click a custom square to delete it.</span></div>'+
  '<div class="gp-color-context" id="gpColorContext" hidden><button type="button" id="gpDeleteColor">Delete color</button></div>'+picker+'</div>';
 }
 function gpSetupColorPalette(form,selected,preview){
  const defaults=GP_COLORS.map(c=>c.hex);
- const grid=form.querySelector('#gpColorGrid'),panel=form.querySelector('#gpInlinePicker'),sv=form.querySelector('#gpPickerSV'),hue=form.querySelector('#gpPickerHue'),context=form.querySelector('#gpColorContext');
+ const grid=form.querySelector('#gpColorGrid'),panel=form.querySelector('#gpInlinePicker'),sv=form.querySelector('#gpPickerSV'),hue=form.querySelector('#gpPickerHue'),context=form.querySelector('#gpColorContext'),hex=form.querySelector('#gpHexColor');
  const checked=()=>form.querySelector('[name=color]:checked')?.value||selected;
  const tile=color=>'<label class="gp-color-tile" data-gp-color="'+e(color)+'" title="'+(defaults.includes(color)?'Default color':'Right-click to delete custom color')+'" aria-label="Select '+e(color)+'"><input type="radio" name="color" value="'+e(color)+'"><span class="gp-color-fill" style="background:'+e(color)+'"></span></label>';
  let draft=gpColorToHSV(selected),contextColor=null;
+ const redraw=()=>{
+  sv.style.backgroundColor=gpHSVToColor(draft.h,1,1);
+  form.querySelector('#gpPickerCursor').style.left=(draft.s*100)+'%';
+  form.querySelector('#gpPickerCursor').style.top=((1-draft.v)*100)+'%';
+  form.querySelector('#gpPickerSwatch').style.backgroundColor=gpHSVToColor(draft.h,draft.s,draft.v);
+ };
+ const selectColor=(value,updateHex=true)=>{
+  const color=gpNormalizeHexColor(value);if(!color)return false;
+  let radio=[...grid.querySelectorAll('[name=color]')].find(r=>r.value.toLowerCase()===color);
+  if(!radio){
+   form.querySelector('#gpOpenPicker').insertAdjacentHTML('beforebegin',tile(color));
+   radio=[...grid.querySelectorAll('[name=color]')].find(r=>r.value.toLowerCase()===color);
+  }
+  radio.checked=true;
+  if(updateHex)hex.value=color.toUpperCase();
+  hex.setCustomValidity('');hex.setAttribute('aria-invalid','false');
+  preview(color);
+  return true;
+ };
+ const validateHex=()=>{
+  const valid=!!gpNormalizeHexColor(hex.value);
+  hex.setCustomValidity(valid?'':'Enter a color such as #AABBCC or #ABC');
+  hex.setAttribute('aria-invalid',String(!valid));
+  return valid;
+ };
+ hex.addEventListener('input',()=>{
+  const color=gpNormalizeHexColor(hex.value);
+  validateHex();
+  if(color)selectColor(color,false);
+ });
+ grid.addEventListener('change',ev=>{
+  if(ev.target.matches('[name=color]'))selectColor(ev.target.value);
+ });
  const closeContext=()=>{context.hidden=true;contextColor=null};
  const removeCustomColor=color=>{
   data.custom_tag_colors=(data.custom_tag_colors||[]).filter(c=>!(c.project_id===activeProject&&c.color===color));
   const matching=[...grid.querySelectorAll('[data-gp-color]')].find(el=>el.dataset.gpColor===color);
   if(matching){const wasSelected=matching.querySelector('input').checked;matching.remove();if(wasSelected){const fallback=grid.querySelector('[name=color]');if(fallback)fallback.checked=true}}
-  closeContext();persist();preview(checked());
+  closeContext();persist();selectColor(checked());
  };
  grid.addEventListener('contextmenu',ev=>{
   const target=ev.target.closest('[data-gp-color]');if(!target)return;
@@ -330,13 +378,7 @@ function gpSetupColorPalette(form,selected,preview){
   data.custom_tag_colors=(data.custom_tag_colors||[]).filter(c=>c.project_id!==activeProject);
   const wasCustom=!defaults.includes(checked());custom.forEach(el=>el.remove());
   if(wasCustom){const fallback=grid.querySelector('[name=color]');if(fallback)fallback.checked=true}
-  closeContext();persist();preview(checked());
- };
- const redraw=()=>{
-  sv.style.backgroundColor=gpHSVToColor(draft.h,1,1);
-  form.querySelector('#gpPickerCursor').style.left=(draft.s*100)+'%';
-  form.querySelector('#gpPickerCursor').style.top=((1-draft.v)*100)+'%';
-  form.querySelector('#gpPickerSwatch').style.backgroundColor=gpHSVToColor(draft.h,draft.s,draft.v);
+  closeContext();persist();selectColor(checked());
  };
  form.querySelector('#gpOpenPicker').onclick=()=>{
   draft=gpColorToHSV(checked());hue.value=String(Math.round(draft.h));redraw();panel.hidden=false;
@@ -360,19 +402,31 @@ function gpSetupColorPalette(form,selected,preview){
  });
  form.querySelector('#gpPickerConfirm').onclick=()=>{
   const color=gpHSVToColor(draft.h,draft.s,draft.v);
-  let radio=[...grid.querySelectorAll('[name=color]')].find(r=>r.value.toLowerCase()===color);
-  if(!radio){form.querySelector('#gpOpenPicker').insertAdjacentHTML('beforebegin',tile(color));radio=[...grid.querySelectorAll('[name=color]')].find(r=>r.value===color)}
-  radio.checked=true;
+  selectColor(color);
   if(!data.custom_tag_colors)data.custom_tag_colors=[];
   if(!defaults.includes(color)&&!data.custom_tag_colors.some(c=>c.project_id===activeProject&&c.color===color)){
    data.custom_tag_colors.push({project_id:activeProject,color});persist();
   }
-  panel.hidden=true;preview(checked());
+  panel.hidden=true;
  };
- form.addEventListener('input',()=>preview(checked()));
- form.addEventListener('change',()=>preview(checked()));
+ form.addEventListener('input',ev=>{if(ev.target!==hex)preview(checked())});
+ form.addEventListener('change',ev=>{if(ev.target!==hex)preview(checked())});
  preview(checked());
- return checked;
+ const selectedColor=()=>{if(!validateHex()){hex.reportValidity();return null}return checked()};
+ selectedColor.remember=()=>{const color=selectedColor();if(color)gpRememberPaletteColor(color);return color};
+ return selectedColor;
+}
+function gpMemberManageColorMarkup(memberId){
+ const selected=window.GamePlanColors?.getColor?.(memberId)||GP_COLORS[0].hex;
+ return '<details class="gp-manage-member-color wide"><summary class="gp-manage-member-color-summary">Chart color <span id="gpManageColorSwatch" class="gp-team-color-swatch" style="background:'+e(selected)+'"></span></summary>'+
+  '<div class="gp-manage-member-color-body">'+gpColorPaletteMarkup(selected,'Choose color')+'</div></details>';
+}
+function gpSetupMemberManageColor(form,memberId){
+ const selected=window.GamePlanColors?.getColor?.(memberId)||GP_COLORS[0].hex;
+ return gpSetupColorPalette(form,selected,color=>{
+  const swatch=form.querySelector('#gpManageColorSwatch');
+  if(swatch)swatch.style.backgroundColor=color;
+ });
 }
 function gpEditTag(id=''){
  const tag=gpTags().find(t=>t.tag_id===id),selected=tag?.color||GP_COLORS[0].hex;
@@ -390,30 +444,12 @@ function gpEditTag(id=''){
   ev.preventDefault();
   const name=String(new FormData(form).get('name')||'').trim();if(!name)return;
   if(gpTags().some(t=>t.name.toLowerCase()===name.toLowerCase()&&t!==tag)){gpAlert('Tag name already exists');return}
-  if(tag){tag.name=name;tag.color=selectedColor()}else data.tags.push({tag_id:uid(),project_id:activeProject,name,color:selectedColor()});
+  const color=selectedColor();if(!color)return;
+  selectedColor.remember();
+  if(tag){tag.name=name;tag.color=color}else data.tags.push({tag_id:uid(),project_id:activeProject,name,color});
   persist();closeModal();render();
  };
 }
-function gpEditTeamColor(memberId,displayName){
- if(!window.GamePlanAuth?.canEdit?.(activeProject)){gpAlert('Only project editors can change team colors.');return}
- const name=String(displayName||member(memberId)||'Team member');
- const selected=window.GamePlanColors?.getColor?.(memberId)||GP_COLORS[0].hex;
- modal('Team member color','<form id="actionForm"><div class="fields">'+
-  '<div class="wide"><strong>'+e(name)+'</strong><p class="sub">Choose this member’s color for Analytics.</p></div>'+
-  gpColorPaletteMarkup(selected,'Chart color')+
-  '<div class="wide gp-color-preview"><span class="sub">Preview</span><span id="gpPreviewMember" class="gp-team-preview-chip">'+e(name)+'</span></div></div>'+
-  '<div class="controls"><button type="button" class="button" id="gpCancel">Cancel</button><button type="submit" class="button main">Save color</button></div></form>');
- $('#gpCancel').onclick=closeModal;
- const form=$('#actionForm');
- const selectedColor=gpSetupColorPalette(form,selected,color=>$('#gpPreviewMember').style.setProperty('--gp-member-color',color));
- form.onsubmit=ev=>{
-  ev.preventDefault();
-  try{
-   if(window.GamePlanColors?.setColor?.(memberId,selectedColor()))closeModal();
-  }catch(err){gpAlert('Could not save chart color: '+err.message)}
- };
-}
-
 async function gpDeleteTag(id){
  const tag=gpTags().find(t=>t.tag_id===id);if(!tag||!await gpConfirm('Delete '+tag.name+'? Tasks and templates will retain all other data.',{danger:true,confirmLabel:'Delete tag'}))return;
  data.tags=data.tags.filter(t=>t!==tag);
@@ -556,20 +592,14 @@ function gpOpenProjectDialog(){
 function gpTeamPage(){
  const memberships=(data.team||[]).filter(m=>m.project_id===activeProject);
  const roster=data.roster||data.members;
- const canColor=!!window.GamePlanAuth?.canEdit?.(activeProject);
  $('#gpExtra').innerHTML='<div class="gp-flex"><div class="gp-page-card-spacer"></div><button id="gpAddMember" class="button main">+ Add member</button></div><div id="gpTeamRows" class="gp-list">'+memberships.map(m=>{
   const person=roster.find(p=>String(p.member_id)===String(m.member_id))||data.members.find(p=>String(p.member_id)===String(m.member_id));
   const name=person?.display_name||'Unknown',color=window.GamePlanColors?.getColor(m.member_id)||'#98aab6';
-  return '<div class="gp-card gp-flex"><div><strong>'+e(name)+'</strong><div class="sub">'+e(m.project_role||'Member')+(m.discipline?' · '+e(m.discipline):'')+'</div></div>'+
-  '<button type="button" class="gp-team-color-trigger" data-gp-team-color="'+e(m.member_id)+'" data-gp-color-name="'+e(name)+'" aria-label="Change chart color for '+e(name)+'"'+(canColor?'':' disabled')+'><span class="gp-team-color-swatch" style="background:'+e(color)+'"></span> Change color</button>'+
-  '<button type="button" class="button" data-gp-member="'+e(m.member_id)+'">Edit</button></div>';
+  return '<div class="gp-card gp-flex"><div class="gp-team-person-copy"><strong><span class="gp-assignee-color-dot" style="--gp-member-color:'+e(color)+'"></span>'+e(name)+'</strong><div class="sub">'+e(m.project_role||'Member')+(m.discipline?' · '+e(m.discipline):'')+'</div></div>'+
+  '<button type="button" class="button" data-gp-member="'+e(m.member_id)+'">Manage</button></div>';
  }).join('')+'</div>';
  $('#gpAddMember').onclick=()=>quickCreate('member');
  $('#gpTeamRows').onclick=ev=>{const btn=ev.target.closest('[data-gp-member]');if(btn)editMember(btn.dataset.gpMember)};
- $('#gpTeamRows').addEventListener('click',ev=>{
-  const button=ev.target.closest('button[data-gp-team-color]');
-  if(button)gpEditTeamColor(button.dataset.gpTeamColor,button.dataset.gpColorName);
- });
 }
 const gpTrashSVG='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v7M14 10v7"/></svg>';
 function gpDecorateDeletes(){
@@ -968,7 +998,7 @@ function gpSetMemberColor(memberId,color){
 function gpAccountMemberId(row){
  return String(row.legacy_member_id||(row.member_role==='owner'?data.projects.find(p=>p.project_id===activeProject)?.project_manager_member_id:null)||'account:'+row.member_user_id);
 }
-window.GamePlanColors={getColor:gpMemberColor,setColor:gpSetMemberColor,accountMemberId:gpAccountMemberId,openPicker:gpEditTeamColor};
+window.GamePlanColors={getColor:gpMemberColor,setColor:gpSetMemberColor,accountMemberId:gpAccountMemberId,manageMarkup:gpMemberManageColorMarkup,setupManage:gpSetupMemberManageColor,rememberPalette:gpRememberPaletteColor};
 function gpAnalyticsDate(raw){
  const match=String(raw||'').match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T)/);
  if(!match)return '';
