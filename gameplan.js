@@ -614,20 +614,14 @@ function gpOpenProjectDialog(){
 function gpTeamPage(){
  const memberships=(data.team||[]).filter(m=>m.project_id===activeProject);
  const roster=data.roster||data.members;
- const canColor=!!window.GamePlanAuth?.canEdit?.(activeProject);
  $('#gpExtra').innerHTML='<div class="gp-flex"><div class="gp-page-card-spacer"></div><button id="gpAddMember" class="button main">+ Add member</button></div><div id="gpTeamRows" class="gp-list">'+memberships.map(m=>{
   const person=roster.find(p=>String(p.member_id)===String(m.member_id))||data.members.find(p=>String(p.member_id)===String(m.member_id));
   const name=person?.display_name||'Unknown',color=window.GamePlanColors?.getColor(m.member_id)||'#98aab6';
-  return '<div class="gp-card gp-flex"><div><strong>'+e(name)+'</strong><div class="sub">'+e(m.project_role||'Member')+(m.discipline?' · '+e(m.discipline):'')+'</div></div>'+
-  '<button type="button" class="gp-team-color-trigger" data-gp-team-color="'+e(m.member_id)+'" data-gp-color-name="'+e(name)+'" aria-label="Change chart color for '+e(name)+'"'+(canColor?'':' disabled')+'><span class="gp-team-color-swatch" style="background:'+e(color)+'"></span> Change color</button>'+
-  '<button type="button" class="button" data-gp-member="'+e(m.member_id)+'">Edit</button></div>';
+  return '<div class="gp-card gp-flex"><div class="gp-team-person-copy"><strong><span class="gp-assignee-color-dot" style="--gp-member-color:'+e(color)+'"></span>'+e(name)+'</strong><div class="sub">'+e(m.project_role||'Member')+(m.discipline?' · '+e(m.discipline):'')+'</div></div>'+
+  '<button type="button" class="button" data-gp-member="'+e(m.member_id)+'">Manage</button></div>';
  }).join('')+'</div>';
  $('#gpAddMember').onclick=()=>quickCreate('member');
  $('#gpTeamRows').onclick=ev=>{const btn=ev.target.closest('[data-gp-member]');if(btn)editMember(btn.dataset.gpMember)};
- $('#gpTeamRows').addEventListener('click',ev=>{
-  const button=ev.target.closest('button[data-gp-team-color]');
-  if(button)gpEditTeamColor(button.dataset.gpTeamColor,button.dataset.gpColorName);
- });
 }
 const gpTrashSVG='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v7M14 10v7"/></svg>';
 function gpDecorateDeletes(){
