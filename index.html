@@ -7,11 +7,11 @@
 .sidebar{position:sticky;top:0;height:100vh;overflow:auto;background:#eaf0ec;border-right:1px solid #dce7df;padding:28px 16px;display:flex;flex-direction:column;gap:20px}
 .sidebar-brand{padding:0 12px 10px;font:700 25px Georgia,serif;color:#2b5f5b}
 .sidebar-brand span{color:#31847c}
-.side-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:750;color:#869994;padding:0 11px}
+
 .side-nav{display:grid;gap:4px}
-.side-link{width:100%;border:0;background:transparent;color:#476560;padding:12px 11px;border-radius:10px;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:9px}
-.side-link:hover{background:#dfeae3}.side-link.active{background:#fff;color:#226f69;font-weight:750;box-shadow:0 2px 12px #1232}
-.side-count{font-size:11px;color:#859c93}
+
+
+
 .sidebar-foot{margin-top:auto;font-size:12px;color:#77918a;padding:10px}
 .workspace{min-width:0;padding:27px clamp(18px,3.4vw,54px) 60px;max-width:1500px;width:100%;margin:0 auto}
 .workspace .top{margin-bottom:14px}
@@ -265,7 +265,7 @@ details[open]>summary .chevron{transform:rotate(90deg)}
 .gp-sidebar-toggle{border:0;background:transparent;color:#517368;border-radius:9px;cursor:pointer}
 .gp-sidebar-toggle:hover{background:#dce9e0;color:#246c60}
 #menuToggle{display:none}
-@media(max-width:680px){#menuToggle{display:inline-flex}#gpSidebarToggle{display:none}#gpBoardNav{margin-left:15px}}
+@media(max-width:680px){#menuToggle{display:inline-flex}#gpSidebarToggle{display:none}}
 
 /* Workspace header and destructive controls */
 #teamSection,#project{display:none!important}
@@ -882,11 +882,11 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
  color:#fff;background:#ffffff2b;border-radius:8px;font-weight:600;
  box-shadow:inset 3px 0 0 var(--gp-cyan)
 }
-#gpBoardNav .side-label,.sidebar .side-label{color:#d9b6dd}
-#gpBoardNav .side-link,.sidebar .side-link{color:#ead8e9}
-#gpBoardNav .side-link:hover,.sidebar .side-link:hover{background:#ffffff17;color:#fff}
-#gpBoardNav .side-link.active,.sidebar .side-link.active{background:#ffffff25;color:#fff;box-shadow:none;font-weight:600}
-#gpBoardNav .side-count,.sidebar .side-count{color:#f4d9f4}
+
+
+
+
+
 .sidebar .sidebar-foot{color:#cfb1d4}
 .sidebar .gp-nav .gp-icon{color:inherit}
 /* Statistics echo the vivid dashboard reference without coloring task surfaces neon. */
@@ -990,11 +990,11 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
 #gpPrimary>.gp-nav.active,.gp-collapsed #gpPrimary>.gp-nav.active{
  background:#ffffff1d;color:#fff;box-shadow:inset 3px 0 0 #b5d9da
 }
-#gpBoardNav .side-label,.sidebar .side-label{color:#aab1c0}
-#gpBoardNav .side-link,.sidebar .side-link{color:#c7cfda}
-#gpBoardNav .side-link:hover,.sidebar .side-link:hover{background:#ffffff12;color:#fff}
-#gpBoardNav .side-link.active,.sidebar .side-link.active{background:#ffffff1b;color:#fff;box-shadow:none}
-#gpBoardNav .side-count,.sidebar .side-count{color:#bfcbd3}
+
+
+
+
+
 .sidebar .sidebar-foot{color:#a4adba}
 .sidebar .gp-nav .gp-icon{color:inherit}
 
@@ -1014,7 +1014,7 @@ a:hover,.link:hover{color:#80115c}
 .gp-header-project #gpProjectTrigger{color:var(--gp-accent-ink)}
 .gp-header-project #gpProjectTrigger:hover{background:var(--gp-accent-pale);color:#88105c}
 #gpPrimary>.gp-nav.active,.gp-collapsed #gpPrimary>.gp-nav.active{box-shadow:inset 3px 0 0 var(--gp-accent)}
-#gpBoardNav .side-link.active,.sidebar .side-link.active{box-shadow:inset 3px 0 0 var(--gp-accent)}
+
 .gp-project-choice:hover{background:#fceaf7;border-color:#f3addd}
 .gp-project-choice[aria-current="true"]{background:#fbe0f2;border-color:#eb77be}
 .gp-project-choice .gp-choice-current,.gp-project-chooser-create{color:var(--gp-accent-ink)}
@@ -1587,9 +1587,8 @@ a:hover,.link:hover{color:#80115c}
 #milestoneList .feature-summary .feature-hours{font-size:13px}
 #milestoneList .feature-summary .title-stack strong{font-size:14px}
 #mainApp .grid .stat .muted{font-size:13px}
-.sidebar .side-link,.sidebar .side-count,#gpBoardNav .side-link,
 #gpPrimary>.gp-nav{font-size:13px}
-.sidebar .side-label,#gpBoardNav .side-label{font-size:12px;letter-spacing:.035em}
+
 .gp-filter-choice,.gp-filter-chip,.gp-filter-clear,.gp-filter-help,
 .gp-filter-group-heading{font-size:13px}
 .gp-tag-editor .gp-tag-chip,.gp-tag-editor .gp-tag-add-inline,
@@ -1993,6 +1992,11 @@ a:hover,.link:hover{color:#80115c}
 .gp-sync-error-detail{background:#fff0f3;border:1px solid #efc2d0;color:#9e263e;border-radius:8px;padding:11px;font-size:13px;overflow-wrap:anywhere}
 
 /* My tasks: full project by default with a quiet self-assigned cue. */
+/* Milestone selection belongs in the Board filter bar, not in sidebar subtabs. */
+#gpMilestoneFilter{min-width:170px;max-width:min(280px,48vw);border:1px solid #e7dce7;background:#fff;color:#51415a;border-radius:9px;padding:8px 11px;min-height:34px;font-size:12px;font-weight:600}
+#gpMilestoneFilter:hover{border-color:#e9add3;background:#fff7fc}
+#gpMilestoneFilter:focus-visible{outline:2px solid #d843a9;outline-offset:2px}
+@media(max-width:680px){#gpMilestoneFilter{min-width:145px;max-width:100%}}
 #gpMyTasks.gp-my-filter{display:inline-flex;align-items:center;justify-content:center;gap:7px;
  padding:8px 11px;min-height:34px;white-space:nowrap;border:1px solid #e7dce7;
  border-radius:9px;background:#fff;color:#77707d;font-size:12px;font-weight:650}
@@ -2014,10 +2018,10 @@ a:hover,.link:hover{color:#80115c}
 .gp-toast-dismiss{flex:none;padding:0 3px;border:0;background:transparent;color:#7b7080;font-size:21px;line-height:1;cursor:pointer}
 .gp-toast-dismiss:hover{color:#35203d}
 @media(max-width:650px){.gp-toast{top:66px;right:12px;left:12px;width:auto;max-width:none}}
-</style><link rel="stylesheet" href="account-ui.css?v=2026.11.07.69"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.07.69</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+</style><link rel="stylesheet" href="account-ui.css?v=2026.11.07.70"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.07.70</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
-<section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><button type="button" class="button gp-my-filter" id="gpMyTasks" aria-pressed="false" title="Show only your unfinished assigned tasks">My tasks <span id="gpMyCount" class="gp-my-count">0</span></button><select id="assigneeFilter" hidden aria-hidden="true"><option value="">All assignees</option></select><div class="gp-filter-wrap"><button type="button" class="button gp-filter-trigger" id="gpFilterTrigger" aria-expanded="false" aria-controls="gpFilterPanel"><span aria-hidden="true">⚲</span> Filters <span id="gpFilterCount" class="gp-filter-count" hidden>0</span></button><div class="gp-filter-panel" id="gpFilterPanel" hidden></div></div><button class="button main" id="newTask" hidden>+ Task</button></div></div>
+<section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><button type="button" class="button gp-my-filter" id="gpMyTasks" aria-pressed="false" title="Show only your unfinished assigned tasks">My tasks <span id="gpMyCount" class="gp-my-count">0</span></button><select id="gpMilestoneFilter" aria-label="Filter board by milestone" title="Filter by milestone"><option value="">All milestones</option></select><select id="assigneeFilter" hidden aria-hidden="true"><option value="">All assignees</option></select><div class="gp-filter-wrap"><button type="button" class="button gp-filter-trigger" id="gpFilterTrigger" aria-expanded="false" aria-controls="gpFilterPanel"><span aria-hidden="true">⚲</span> Filters <span id="gpFilterCount" class="gp-filter-count" hidden>0</span></button><div class="gp-filter-panel" id="gpFilterPanel" hidden></div></div><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div id="gpFilterChips" class="gp-filter-chips" hidden></div>
 <div class="grid"><div class="card stat"><span class="muted">Total tasks</span><b id="total">0</b></div><div class="card stat"><span class="muted">Completed</span><b id="completed">0</b></div><div class="card stat"><span class="muted">Time logged</span><b id="hours">0h</b></div></div>
 <div class="gp-work-breakdown"><div id="milestoneList"></div></div><details class="card" id="teamSection"><summary><h2 style="font:700 19px Georgia,serif">Project Team</h2><div class="section-actions"><button class="button main" id="inviteMember" hidden>+ Add member</button><span class="sub">▸ Team details</span></div></summary><div id="teamList" style="margin-top:14px"></div></details></section></main></div>
@@ -2025,11 +2029,11 @@ a:hover,.link:hover{color:#80115c}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.07.69';
+let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.07.70';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=[];
-let data=null,activeProject='',noticeTimer=null,activeView='all',gpMyOnly=false;const collapsedMilestones=new Set(),collapsedFeatures=new Set();
+let data=null,activeProject='',noticeTimer=null,gpMilestoneSelection='',gpMyOnly=false;const collapsedMilestones=new Set(),collapsedFeatures=new Set();
 function persist(){try{localStorage.setItem(LOCAL_KEY,JSON.stringify(data))}catch(err){gpAlert('Could not save locally: '+err.message);throw err}}
 function readProject(){try{return localStorage.getItem(PROJECT_KEY)||''}catch{return ''}}
 function saveProject(){try{localStorage.setItem(PROJECT_KEY,activeProject)}catch{}}
@@ -2126,7 +2130,7 @@ function rpc(op,p={}){
    const id=uid();data.projects.push({project_id:id,project_name:required(p.name,'Project name'),description:p.description||'',status:'Active',project_manager_member_id:data.me.member_id});
    data.team.push({project_id:id,member_id:data.me.member_id,project_role:'Owner',discipline:'',membership_status:'Active'});activeProject=id;saveProject();
   }else if(op==='createMilestone'){
-   data.milestones.push({milestone_id:uid(),project_id:projectId,name:required(p.name,'Milestone name'),description:p.description||'',status:'To do',target_date:''});
+   data.milestones.push({milestone_id:uid(),project_id:projectId,name:required(p.name,'Milestone name'),description:p.description||'',status:'To do',target_date:'',created_at:new Date().toISOString()});
   }else if(op==='editMilestone'){
    const m=parent(data.milestones,'milestone_id',p.milestone_id);Object.assign(m,{name:required(p.name,'Milestone name'),description:p.description||'',status:p.status,target_date:p.target_date||''});
   }else if(op==='deleteMilestone'){
@@ -2230,28 +2234,31 @@ function visibleTasks(){
  const term=$('#searchTasks').value.trim().toLowerCase(),assignee=$('#assigneeFilter').value;
  return projectTasks().filter(t=>{
   if(gpMyOnly&&(t.status==='Done'||!gpTaskIsMine(t)))return false;
-  if(activeView==='open'&&t.status==='Done')return false;
-  if(activeView==='done'&&t.status!=='Done')return false;
-  if(activeView.startsWith('m:')){
-   const f=feature(t.feature_id);
-   if(String(f?.milestone_id)!==activeView.slice(2))return false;
-  }
+  const f=feature(t.feature_id);
+  if(gpMilestoneSelection&&String(f?.milestone_id)!==gpMilestoneSelection)return false;
   if(assignee&&String(t.assignee_member_id)!==assignee)return false;
-  const f=feature(t.feature_id),m=milestone(f);
+  const m=milestone(f);
   return !term||[t.title,t.description,member(t.assignee_member_id),f?.name,m?.name].join(' ').toLowerCase().includes(term);
  });
 }
-function renderNavigation(){
- const total=projectTasks();
- const items=[['all','All tasks',total.length],['open','Open tasks',total.filter(t=>t.status!=='Done').length],['done','Completed',total.filter(t=>t.status==='Done').length]];
- $('#viewNav').innerHTML=items.map(([id,label,count])=>`<button class="side-link ${activeView===id?'active':''}" data-view="${id}"><span>${e(label)}</span><span class="side-count">${count}</span></button>`).join('');
- $('#milestoneNav').innerHTML=data.milestones.filter(m=>m.project_id===activeProject).map(m=>{
-  const fids=new Set(data.features.filter(f=>f.milestone_id===m.milestone_id).map(f=>f.feature_id));
-  const count=total.filter(t=>fids.has(t.feature_id)).length;
-  return `<button class="side-link ${activeView==='m:'+m.milestone_id?'active':''}" data-view="m:${e(m.milestone_id)}"><span>${e(m.name)}</span><span class="side-count">${count}</span></button>`;
- }).join('')||'<span class="sub" style="padding:10px">No milestones yet</span>';
- const click=ev=>{const btn=ev.target.closest('[data-view]');if(!btn)return;activeView=btn.dataset.view;$('#sidebar').classList.remove('visible');render()};
- $('#viewNav').onclick=click;$('#milestoneNav').onclick=click;
+// New milestones with creation timestamps appear first. For older milestones,
+// prefer later target dates, then reverse saved order as a stable fallback.
+function projectMilestonesNewestFirst(){
+ return data.milestones.map((milestone,index)=>({milestone,index}))
+  .filter(item=>item.milestone.project_id===activeProject)
+  .sort((a,b)=>{
+   const aCreated=Date.parse(a.milestone.created_at||'')||0,bCreated=Date.parse(b.milestone.created_at||'')||0;
+   if(aCreated!==bCreated)return bCreated-aCreated;
+   const aTarget=Date.parse(a.milestone.target_date||'')||0,bTarget=Date.parse(b.milestone.target_date||'')||0;
+   if(aTarget!==bTarget)return bTarget-aTarget;
+   return b.index-a.index;
+  }).map(item=>item.milestone);
+}
+function renderMilestoneFilter(){
+ const select=$('#gpMilestoneFilter'),milestones=projectMilestonesNewestFirst();
+ if(gpMilestoneSelection&&!milestones.some(m=>String(m.milestone_id)===gpMilestoneSelection))gpMilestoneSelection='';
+ select.innerHTML='<option value="">All milestones</option>'+milestones.map(m=>`<option value="${e(m.milestone_id)}">${e(m.name)}</option>`).join('');
+ select.value=gpMilestoneSelection;
 }
 function render(){
  const projectList=data.projects;
@@ -2260,16 +2267,15 @@ function render(){
  $('#assigneeFilter').innerHTML='<option value="">All assignees</option>'+who.map(m=>`<option value="${e(m.member_id)}">${e(m.display_name)}</option>`).join('');
  $('#assigneeFilter').value=who.some(m=>String(m.member_id)===oldAssignee)?oldAssignee:'';
  $('#newTask').hidden=true;$('#inviteMember').hidden=false;
- const m=activeView.startsWith('m:')?find(data.milestones,activeView.slice(2),'milestone_id'):null;
  $('#pageHeading').textContent='Project Overview';
- $('#roleDescription').textContent=m?.description||'Organize milestones, features, and everyone’s assigned work';
+ $('#roleDescription').textContent='Organize milestones, features, and everyone’s assigned work';
  const ownOpen=projectTasks().filter(t=>t.status!=='Done'&&gpTaskIsMine(t)).length;
  const mine=$('#gpMyTasks');mine.classList.toggle('gp-my-filter-active',gpMyOnly);mine.setAttribute('aria-pressed',String(gpMyOnly));
  $('#gpMyCount').textContent=String(ownOpen);
  const actions=$('#pmActions');
  actions.innerHTML='<button class="button" data-action="milestone">+ Milestone</button>';
  actions.onclick=ev=>{const a=ev.target.closest('[data-action]');if(a)quickCreate(a.dataset.action)};
- renderNavigation();renderMilestones();renderTeam();gpRenderClock();
+ renderMilestoneFilter();renderMilestones();renderTeam();gpRenderClock();
 }
 function taskRow(t){
  const logs=taskHours(t);
@@ -2278,11 +2284,11 @@ function taskRow(t){
  return `<div class="task-entry ${statusClass}"><div><button class="task-title ${t.status==='Done'?'task-done':''}" data-detail="${e(t.task_id)}">${e(t.title)}</button><div class="sub">${e(t.priority)} · ${formatHours(t.estimated_hours)} estimated · ${formatHours(logs)} logged · ${formatHours(taskRemainingHours(t))} remaining</div></div><div class="meta-person sub">${isMine?'<span class="gp-mine-tag" title="Assigned to you">You</span>':e(member(t.assignee_member_id))}</div><select class="status-select ${statusClass}" data-status="${e(t.task_id)}" aria-label="Status for ${e(t.title)}">${ST.map(status=>`<option value="${e(status)}" ${t.status===status?'selected':''}>${e(status)}</option>`).join('')}</select><div class="actions"><button data-clock-in="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Start working: ${e(t.title)}" title="Start working">▶</button><button data-log="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Manage time: ${e(t.title)}" title="Manage time"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button><button class="icon-edit" data-edit="${e(t.task_id)}" type="button" aria-label="Edit task: ${e(t.title)}" title="Edit task"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></div>`;
 }
 function renderMilestones(){
- const filtered=visibleTasks(),project=projectTasks(),isFiltered=gpMyOnly||activeView==='open'||activeView==='done'||!!$('#assigneeFilter').value||!!$('#searchTasks').value||(typeof gpHasFacetFilters==='function'&&gpHasFacetFilters());
+ const filtered=visibleTasks(),project=projectTasks(),isFiltered=gpMyOnly||!!$('#assigneeFilter').value||!!$('#searchTasks').value||(typeof gpHasFacetFilters==='function'&&gpHasFacetFilters());
  $('#total').textContent=filtered.length;
  $('#completed').textContent=filtered.filter(t=>t.status==='Done').length;
  $('#hours').textContent=formatHours(filtered.reduce((n,t)=>n+taskHours(t),0));
- const ms=data.milestones.filter(m=>m.project_id===activeProject&&(!activeView.startsWith('m:')||activeView.slice(2)===String(m.milestone_id)));
+ const ms=projectMilestonesNewestFirst().filter(m=>!gpMilestoneSelection||String(m.milestone_id)===gpMilestoneSelection);
  $('#milestoneList').innerHTML=ms.map(m=>{
   const fs=data.features.filter(f=>f.project_id===activeProject&&f.milestone_id===m.milestone_id);
   const allForMilestone=project.filter(t=>fs.some(f=>f.feature_id===t.feature_id));
@@ -2477,7 +2483,7 @@ async function deleteItem(kind,id,name){
   const message=`Permanently delete milestone “${name}” and ALL of its contents?\n\nThis deletes:\n• ${features.length} feature(s)\n• ${tasks.length} task(s)\n• ${logs.length} time log(s)\n\nThis cannot be undone. Other milestones will not be affected.`;
   if(!await gpConfirm(message,{danger:true,confirmLabel:'Delete milestone'}))return;
   rpc('deleteMilestone',{milestone_id:id,project_id:activeProject}).then(async()=>{
-   if(activeView==='m:'+id)activeView='all';
+   if(gpMilestoneSelection===String(id))gpMilestoneSelection='';
    collapsedMilestones.delete(String(id));
    closeModal();await refresh();
   }).catch(err=>gpAlert(err.message));
@@ -2528,7 +2534,7 @@ async function gpClockOut(){
 setInterval(()=>{if(gpClockRead()&&!document.hidden)gpRenderClock()},1000);
 
 $('#inviteMember').onclick=ev=>{ev.preventDefault();ev.stopPropagation();quickCreate('member')};
-$('#newTask').onclick=()=>taskForm(null);$('#project').onchange=ev=>{activeProject=ev.target.value;activeView='all';saveProject();render()};$('#assigneeFilter').onchange=render;$('#searchTasks').oninput=render;$('#gpMyTasks').onclick=()=>{gpMyOnly=!gpMyOnly;activeView='all';render()};$('#menuToggle').onclick=()=>$('#sidebar').classList.toggle('visible');$('#reload').onclick=()=>{const url=new URL(location.href);url.searchParams.set('v',APP_VERSION);location.assign(url.toString())};
+$('#newTask').onclick=()=>taskForm(null);$('#project').onchange=ev=>{activeProject=ev.target.value;gpMilestoneSelection='';gpMyOnly=false;$('#searchTasks').value='';$('#assigneeFilter').value='';if(typeof gpResetFacets==='function')gpResetFacets();saveProject();render()};$('#gpMilestoneFilter').onchange=ev=>{gpMilestoneSelection=ev.target.value;render()};$('#assigneeFilter').onchange=render;$('#searchTasks').oninput=render;$('#gpMyTasks').onclick=()=>{gpMyOnly=!gpMyOnly;render()};$('#menuToggle').onclick=()=>$('#sidebar').classList.toggle('visible');$('#reload').onclick=()=>{const url=new URL(location.href);url.searchParams.set('v',APP_VERSION);location.assign(url.toString())};
 
 function downloadBackup(){
  const blob=new Blob([JSON.stringify({version:2,exported_at:new Date().toISOString(),...data,tasks:data.tasks.map(t=>({...t,remaining_hours:taskRemainingHours(t)}))},null,2)],{type:'application/json'});
@@ -2642,7 +2648,7 @@ async function importOneMilestone(source){
   }
   return result;
  };
- next.milestones.push({milestone_id:newMilestoneId,project_id:activeProject,name,description:milestone.description||'',status:milestone.status||'To do',target_date:milestone.target_date||''});
+ next.milestones.push({milestone_id:newMilestoneId,project_id:activeProject,name,description:milestone.description||'',status:milestone.status||'To do',target_date:milestone.target_date||'',created_at:new Date().toISOString()});
  const mappedFeatures=new Map(),mappedTasks=new Map();
  for(const f of features){
   const id=uid();mappedFeatures.set(fkey(f),id);
@@ -2666,7 +2672,7 @@ async function importOneMilestone(source){
  // Keep current board untouched if validation or persistence fails.
  const oldData=data;data=next;
  try{persist()}catch(err){data=oldData;throw err}
- activeView='m:'+newMilestoneId;saveProject();render();return true;
+ gpMilestoneSelection='';gpMyOnly=false;$('#searchTasks').value='';$('#assigneeFilter').value='';if(typeof gpResetFacets==='function')gpResetFacets();saveProject();if(typeof gpNavigate==='function')gpNavigate('board');else render();return true;
 }
 $('#importMilestone').onclick=()=>$('#milestoneFileInput').click();
 $('#milestoneFileInput').onchange=async ev=>{
@@ -2689,4 +2695,4 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="gameplan.js?v=2026.11.07.69"></script><script src="local-first-sync.js?v=2026.11.07.69"></script><script src="account-ui.js?v=2026.11.07.69"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
+</script><script src="gameplan.js?v=2026.11.07.70"></script><script src="local-first-sync.js?v=2026.11.07.70"></script><script src="account-ui.js?v=2026.11.07.70"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
