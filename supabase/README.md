@@ -91,7 +91,7 @@ This is still a collaboration beta, not a fully conflict-free distributed offlin
 Run [app-invites.sql](app-invites.sql) in the **existing Supabase project's SQL Editor**, after [schema.sql](schema.sql) and [link-invites.sql](link-invites.sql). Do not rerun the full schema or create a new project. This migration:
 
 - Grants app access to **all users already in Supabase Auth at the moment of the first run**, including accounts that have no project yet. A bootstrap marker ensures rerunning the migration **does not** grant access to users who signed up later.
-- Authorizes existing project owners to create and revoke GamePlan-wide invitations. The owner of the existing shared Fishing Game is an app invitation administrator.
+- **Does not authorize every project owner to invite users to GamePlan.** After running this file, run [owner-only-invites.sql](owner-only-invites.sql) with the designated owner's Supabase Auth user UUID to select exactly **one** app-wide invitation administrator. If you previously ran an older version, this additional script also revokes app-invitation privileges from other project owners.
 - Keeps project data protected by existing Supabase RLS permissions. A GamePlan invitation **never grants membership** to anyone else's project.
 - Adds an RLS check preventing brand-new, uninvited Supabase users from creating cloud projects merely by signing in.
 - Uses unguessable 64-character bearer tokens, SHA-256 hashes at rest, expiry, usage limits, and admin-only create/list/revoke methods. The token is carried in the **URL fragment** and is not logged as a query parameter.
@@ -116,7 +116,7 @@ Until that one-time file is configured, an app or project invitation still sets 
 
 ### Invite someone to GamePlan
 
-After installing the SQL, an existing project owner signs in and opens **Account → Invite someone to GamePlan** (not the project's **Invite teammates** action). Choose an expiry and maximum uses, generate a link, and copy it. Recipients sign in with Discord, Google or email, and the link grants GamePlan access but no shared projects. The inviter can see usage and revoke an active link. A link can be revoked for future sign-ups; people who already accepted it retain their individual GamePlan access.
+After running **both** SQL scripts, the **designated GamePlan owner only** signs in and opens **Account → Invite someone to GamePlan** (not the project's **Invite teammates** action). Choose an expiry and maximum uses, generate a link, and copy it. Recipients sign in with Discord, Google or email, and the link grants GamePlan access but no shared projects. The inviter can see usage and revoke an active link. A link can be revoked for future sign-ups; people who already accepted it retain their individual GamePlan access.
 
 If the recipient follows a link while already logged in, it will grant access to their current account. If an email sign-in opens a separate tab, reopen the original GamePlan invite link after completing sign-in so the secret token can be redeemed.
 
@@ -125,3 +125,9 @@ New uninvited auth users may still authenticate at Supabase, but the GamePlan wo
 ### Offline and safety behavior
 
 Previously approved users with saved local board data can keep using their local workspace offline; cloud access is verified when online. The existing non-destructive migration for legacy browser boards and explicit "Share project" process for **unlinked old local projects** remain unchanged, preventing accidental uploads or merging similarly named projects. Projects created **after signing in** are already created in Supabase automatically.
+
+### Restrict GamePlan-wide invites to a single owner
+
+To ensure **only your account** can create/revoke GamePlan-wide access links, use the additive [`owner-only-invites.sql`](owner-only-invites.sql) migration after the normal `app-invites.sql` installation. In **Supabase → Authentication → Users**, copy your own user UUID and paste it over `PASTE_YOUR_AUTH_USER_UUID_HERE` inside the SQL Editor before executing. Do not commit your personal Auth user ID into GitHub. The script refuses to run if the UUID is missing or does not correspond to an existing project owner.
+
+The migration removes other app-wide invitation admins and adds a unique-index constraint preventing a second administrator from being inserted accidentally. It retains existing GamePlan accounts, project-specific sharing privileges, memberships, tasks and time logs. Previously created invitation links remain redeemable until expiration or revocation; you can revoke them under **Account → Invite someone to GamePlan** afterward. The script ends with a verification query showing the **single authorized account**. Refresh GamePlan after running it so the account UI reads current permissions.

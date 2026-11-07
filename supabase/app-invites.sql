@@ -9,6 +9,10 @@
 --
 -- Existing auth.users are grandfathered only on FIRST installation.
 -- A bootstrap marker prevents reruns from admitting uninvited later signups.
+-- Project ownership never grants the ability to invite people to the app.
+-- After this migration, run owner-only-invites.sql with the intended
+-- account's auth.users UUID to grant exactly ONE app-wide inviter.
+-- Ordinary per-project sharing remains governed by project permissions.
 
 create table if not exists public.gp_app_members (
  user_id uuid primary key references auth.users(id) on delete cascade,
@@ -44,10 +48,8 @@ begin
  if not exists (select 1 from public.gp_app_bootstrap where completed=true) then
   insert into public.gp_app_members(user_id)
    select id from auth.users on conflict(user_id) do nothing;
-  -- Existing project owners are initial app inviters.
-  insert into public.gp_app_admins(user_id)
-   select distinct owner_id from public.gp_projects
-   on conflict(user_id) do nothing;
+  -- App inviter privileges are deliberately NOT granted to every project
+  -- owner. Assign the sole inviter explicitly with owner-only-invites.sql.
   insert into public.gp_app_bootstrap(completed) values(true)
    on conflict(completed) do nothing;
  end if;
