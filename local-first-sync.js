@@ -65,10 +65,21 @@ if(!config()&&incoming.has('backend')&&incoming.has('publishable')){
 }
 function current(){return links[String(activeProject)]||''}
 function projectRows(pid,source=data){
- const taskIds=new Set((source.tasks||[]).filter(x=>String(x.project_id)===String(pid)).map(x=>String(x.task_id)));
+ // Private drafts remain ONLY in this account's local browser cache until
+ // explicitly published. Filter the whole milestone / feature / task tree,
+ // not just the root, so descendants and their logs never leak into gp_items.
+ const privateMilestones=new Set((source.milestones||[]).filter(m=>m.__gp_private&&String(m.project_id)===String(pid)).map(m=>String(m.milestone_id)));
+ const privateFeatures=new Set((source.features||[]).filter(f=>String(f.project_id)===String(pid)&&(f.__gp_private||privateMilestones.has(String(f.milestone_id)))).map(f=>String(f.feature_id)));
+ const privateTasks=new Set((source.tasks||[]).filter(t=>String(t.project_id)===String(pid)&&(t.__gp_private||privateFeatures.has(String(t.feature_id)))).map(t=>String(t.task_id)));
+ const taskIds=new Set((source.tasks||[]).filter(t=>String(t.project_id)===String(pid)).map(t=>String(t.task_id)));
  const out={};
  for(const kind of KINDS){
-  const arr=(source[kind]||[]).filter(x=>(kind==='logs'?taskIds.has(String(x.task_id)):String(x.project_id)===String(pid))&&!(kind==='team'&&x.__gp_account_shadow));
+  const arr=(source[kind]||[]).filter(x=>(kind==='logs'?taskIds.has(String(x.task_id)):String(x.project_id)===String(pid))
+   &&!(kind==='team'&&x.__gp_account_shadow)
+   &&!(kind==='milestones'&&privateMilestones.has(String(x.milestone_id)))
+   &&!(kind==='features'&&privateFeatures.has(String(x.feature_id)))
+   &&!(kind==='tasks'&&privateTasks.has(String(x.task_id)))
+   &&!(kind==='logs'&&privateTasks.has(String(x.task_id))));
   for(const [sort_order,obj] of arr.entries()){
    const id=unique(kind,obj);if(!id)continue;
    // Time logs are linked to a project through their task in local data.
