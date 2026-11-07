@@ -2044,6 +2044,27 @@ a:hover,.link:hover{color:#80115c}
  font-weight:750;line-height:1.2;vertical-align:middle}
 @media(max-width:900px){#milestoneList .task-entry .meta-person{display:block}}
 .gp-running-clock{position:fixed;bottom:20px;right:20px;z-index:999;background:#fff;border:1px solid #e0d3e1;border-radius:14px;box-shadow:0 9px 34px #38223830;padding:12px 15px;display:flex;gap:14px;align-items:center;max-width:min(92vw,680px);flex-wrap:wrap}.gp-running-clock[hidden]{display:none}.gp-clock-label{font-size:13px;color:#655669;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gp-clock-elapsed{font-variant-numeric:tabular-nums;font-weight:700;font-size:17px;color:#452347}@media(max-width:650px){.gp-running-clock{left:12px;right:12px;bottom:12px;justify-content:space-between}}
+
+/* Small, consistent team colors on Board assignee names and Team member names. */
+.gp-assignee-label{display:inline-flex;align-items:center;gap:6px;min-width:0}
+.gp-assignee-color-dot{--gp-member-color:#98aab6;display:inline-block;flex:none;width:9px;height:9px;border-radius:50%;background:var(--gp-member-color);box-shadow:0 0 0 1px #0001}
+.gp-team-person-copy{min-width:0;flex:1}
+.gp-team-person-copy strong{display:flex;align-items:center;gap:7px;min-width:0;overflow-wrap:anywhere}
+/* Chart colors are edited inside the Manage dialog rather than a Team page section. */
+.gp-manage-member-color{margin-top:2px;border:1px solid #eae2e9;border-radius:10px;padding:10px 13px;background:#fff}
+.gp-manage-member-color-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;list-style:none;color:#59475b;font-size:13px;font-weight:650}
+.gp-manage-member-color-summary::-webkit-details-marker{display:none}
+.gp-manage-member-color-summary::after{content:'⌄';color:#8b7e8d;order:1}
+.gp-manage-member-color[open]>.gp-manage-member-color-summary::after{content:'⌃'}
+.gp-manage-member-color-summary .gp-team-color-swatch{margin-left:auto}
+.gp-manage-member-color-body{padding-top:14px}
+.gp-manage-member-color-body>.gp-member-palette{max-width:100%}
+.gp-hex-color-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:4px 0 12px}
+.gp-hex-color-row label{font-size:12px;font-weight:650;color:#605363}
+.gp-hex-color-row input{width:115px;min-width:115px;font-size:13px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.03em;padding:8px 9px}
+.gp-hex-color-row input[aria-invalid="true"]{border-color:#c65864;box-shadow:0 0 0 1px #c6586440}
+.gp-hex-color-row .sub{font-size:11px;color:#8e7e90}
+
 /* Toasts float over the workspace instead of occupying the page footer. */
 .gp-toast{position:fixed;top:78px;right:24px;bottom:auto;left:auto;z-index:11000;display:flex;align-items:flex-start;gap:16px;width:max-content;max-width:min(410px,calc(100vw - 32px));padding:13px 14px 13px 17px;border:1px solid #e4d8e3;border-left:3px solid #e729ad;border-radius:12px;background:#fff;color:#342b3c;box-shadow:0 10px 32px #3020362c;font-size:14px;line-height:1.45}
 .gp-toast[hidden]{display:none!important}
@@ -2281,6 +2302,10 @@ function rpc(op,p={}){
    const m=get(data.members,'member_id',p.member_id);const team=data.team.find(t=>t.project_id===projectId&&t.member_id===p.member_id);
    if(!m||!team)throw Error('Member not found');
    m.display_name=required(p.display_name,'Member name');m.google_email=p.google_email||'';team.discipline=p.discipline||'';team.membership_status='Active';
+   if(p.chart_color){
+    const color=gpNormalizeHexColor(p.chart_color);if(!color)throw Error('Invalid team color');
+    team.chart_color=color;gpRememberPaletteColor(color);
+   }
    const roster=get(data.roster,'member_id',m.member_id);if(roster)Object.assign(roster,m);
   }else if(op==='removeMember'){
    if(p.member_id===data.me.member_id)throw Error('Cannot remove project owner');
@@ -2360,8 +2385,10 @@ function render(){
 function taskRow(t){
  const logs=taskHours(t);
  const statusClass=({'To do':'status-todo','In progress':'status-progress','Blocked':'status-blocked','Done':'status-done'})[t.status]||'status-todo';
- const isMine=gpTaskIsMine(t);
- return `<div class="task-entry ${statusClass}"><div><button class="task-title ${t.status==='Done'?'task-done':''}" data-detail="${e(t.task_id)}">${e(t.title)}</button><div class="sub">${e(t.priority)} · ${formatHours(t.estimated_hours)} estimated · ${formatHours(logs)} logged · ${formatHours(taskRemainingHours(t))} remaining</div></div><div class="meta-person sub">${isMine?'<span class="gp-mine-tag" title="Assigned to you">You</span>':e(member(t.assignee_member_id))}</div><select class="status-select ${statusClass}" data-status="${e(t.task_id)}" aria-label="Status for ${e(t.title)}">${ST.map(status=>`<option value="${e(status)}" ${t.status===status?'selected':''}>${e(status)}</option>`).join('')}</select><div class="actions"><button data-clock-in="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Start working: ${e(t.title)}" title="Start working">▶</button><button data-log="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Manage time: ${e(t.title)}" title="Manage time"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button><button class="icon-edit" data-edit="${e(t.task_id)}" type="button" aria-label="Edit task: ${e(t.title)}" title="Edit task"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></div>`;
+ const isMine=gpTaskIsMine(t),personColor=t.assignee_member_id?window.GamePlanColors?.getColor?.(t.assignee_member_id):null;
+ const assigneeName=isMine?'<span class="gp-mine-tag" title="Assigned to you">You</span>':e(member(t.assignee_member_id));
+ const assignedHTML='<span class="gp-assignee-label">'+(personColor?'<span class="gp-assignee-color-dot" style="--gp-member-color:'+e(personColor)+'"></span>':'')+assigneeName+'</span>';
+ return `<div class="task-entry ${statusClass}"><div><button class="task-title ${t.status==='Done'?'task-done':''}" data-detail="${e(t.task_id)}">${e(t.title)}</button><div class="sub">${e(t.priority)} · ${formatHours(t.estimated_hours)} estimated · ${formatHours(logs)} logged · ${formatHours(taskRemainingHours(t))} remaining</div></div><div class="meta-person sub">${assignedHTML}</div><select class="status-select ${statusClass}" data-status="${e(t.task_id)}" aria-label="Status for ${e(t.title)}">${ST.map(status=>`<option value="${e(status)}" ${t.status===status?'selected':''}>${e(status)}</option>`).join('')}</select><div class="actions"><button data-clock-in="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Start working: ${e(t.title)}" title="Start working">▶</button><button data-log="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Manage time: ${e(t.title)}" title="Manage time"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button><button class="icon-edit" data-edit="${e(t.task_id)}" type="button" aria-label="Edit task: ${e(t.title)}" title="Edit task"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></div>`;
 }
 function renderMilestones(){
  const filtered=visibleTasks(),project=projectTasks(),isFiltered=gpMyOnly||!!$('#assigneeFilter').value||!!$('#searchTasks').value||(typeof gpHasFacetFilters==='function'&&gpHasFacetFilters());
@@ -2446,10 +2473,16 @@ function editMember(id){
  const person=(data.roster||[]).find(x=>String(x.member_id)===String(id))||data.members.find(x=>String(x.member_id)===String(id));
  if(!membership||!person)return;
  const canRemove=membership.project_role!=='PM'&&String(id)!==String(data.me.member_id);
- modal('Edit team member',`<form id="actionForm"><div class="fields">${field('display_name','Name',person.display_name||'','text',true)}${field('google_email','Google sign-in email',person.google_email||'','email',true)}${field('discipline','Team responsibility',membership.discipline||'','text',true)}</div><p class="sub">Email is optional for local tracking. Names and responsibilities can be edited freely.</p><div class="controls"><button type="button" class="button" id="cancel">Cancel</button>${canRemove?'<button type="button" class="button danger" id="removeMember">Remove from project</button>':''}<button type="submit" class="button main">Save member</button></div></form>`);
+ const picker=window.GamePlanColors?.manageMarkup?.(id)||'';
+ modal('Manage team member',`<form id="actionForm"><div class="fields">${field('display_name','Name',person.display_name||'','text',true)}${field('google_email','Google sign-in email',person.google_email||'','email',true)}${field('discipline','Team responsibility',membership.discipline||'','text',true)}${picker}</div><p class="sub">Email is optional for local tracking. Names and responsibilities can be edited freely.</p><div class="controls"><button type="button" class="button" id="cancel">Cancel</button>${canRemove?'<button type="button" class="button danger" id="removeMember">Remove from project</button>':''}<button type="submit" class="button main">Save member</button></div></form>`);
  $('#cancel').onclick=closeModal;
  if(canRemove)$('#removeMember').onclick=()=>removeMember(id,person.display_name);
- $('#actionForm').onsubmit=async ev=>{ev.preventDefault();await submit('updateMember',{project_id:activeProject,member_id:id,...Object.fromEntries(new FormData(ev.currentTarget).entries())})};
+ const selectedColor=window.GamePlanColors?.setupManage?.($('#actionForm'),id);
+ $('#actionForm').onsubmit=async ev=>{
+  ev.preventDefault();
+  const color=selectedColor?.();if(!color)return;
+  await submit('updateMember',{project_id:activeProject,member_id:id,...Object.fromEntries(new FormData(ev.currentTarget).entries()),chart_color:color});
+ };
 }
 async function removeMember(id,name){
  if(!isPM())return;
@@ -2468,7 +2501,7 @@ function details(id){
  ${detailTags.length?'<div class="gp-detail-tags" aria-label="Task tags">'+detailTags.map(tag=>'<span class="gp-detail-tag" style="--tc:'+e(tag.color||'#b18aa6')+'"><span class="gp-detail-tag-mark" aria-hidden="true"></span>'+e(tag.name)+'</span>').join('')+'</div>':''}
  <section class="gp-detail-section"><h3>Description</h3><div class="gp-detail-description">${e(t.description||'No description yet.')}</div></section>
  <div class="gp-detail-meta">
-  <div><span class="gp-detail-meta-label">Assigned to</span><strong>${e(member(t.assignee_member_id))}</strong></div>
+  <div><span class="gp-detail-meta-label">Assigned to</span><strong class="gp-assignee-label">${t.assignee_member_id?'<span class="gp-assignee-color-dot" style="--gp-member-color:'+e(window.GamePlanColors?.getColor?.(t.assignee_member_id)||'#98aab6')+'"></span>':''}${e(member(t.assignee_member_id))}</strong></div>
   <div><span class="gp-detail-meta-label">Status</span><strong class="gp-detail-status gp-detail-${statusTone}">${e(t.status)}</strong></div>
   <div><span class="gp-detail-meta-label">Remaining</span><strong>${formatHours(taskRemainingHours(t))}</strong></div>
  </div>
