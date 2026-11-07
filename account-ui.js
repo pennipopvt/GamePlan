@@ -152,6 +152,16 @@ function accountNudge(message,canLink,canSwitch=false){
  });
  $a('#gpNudgeDismiss').onclick=()=>banner.remove();
 }
+function gpAccountLinkErrorMessage(error){
+ const message=String(error?.message||error||'Unknown error');
+ if(/manual.{0,35}link(?:ing)?.{0,35}(?:disabled|not enabled|not allowed)|(?:disabled|not enabled).{0,35}manual.{0,35}link/i.test(message)){
+  return 'Account linking is disabled in this Supabase project. A project administrator must open Supabase Dashboard → Authentication → Settings and enable “Allow manual linking”, then try again. GamePlan cannot change this authentication setting itself.';
+ }
+ if(/(?:identity|account).{0,40}(?:already linked|already exists|already associated|another user)/i.test(message)){
+  return 'That login is already connected to another Supabase account. Linking does not merge existing accounts; use the original account or contact the project administrator before changing sign-in methods.';
+ }
+ return 'Could not link account: '+message;
+}
 async function accountDialog(){
  if(!currentUser)return;
  let ids=[];
@@ -168,7 +178,7 @@ async function accountDialog(){
   '<button type="button" class="button" data-link-provider="google" '+(providers.has('google')?'disabled':'')+'>'+googleIcon+' Link Google</button></div>'+
   '<div class="gp-link-email"><label>Email address for sign-in<input type="email" id="gpAccountEmail" value="'+html(currentUser.email||'')+'" autocomplete="email"></label>'+
   '<button type="button" class="button" id="gpLinkEmail">Add / update email</button></div>'+
-  '<p class="sub">OAuth linking requires manual identity linking to be enabled in Supabase. You must verify ownership of the second login; GamePlan never merges accounts automatically.</p>'+
+  '<p class="sub">To add Discord or Google to an existing GamePlan account, the Supabase workspace administrator must enable <strong>Allow manual linking</strong> under Authentication → Settings. Linking requires you to verify the other login and does not merge separate accounts. <a href="https://supabase.com/docs/guides/auth/auth-identity-linking" target="_blank" rel="noopener noreferrer">About account linking</a>.</p>'+
   '<div class="controls"><button type="button" class="button" id="gpAccountSignOut">Sign out</button>'+
   '<button type="button" class="button main" id="gpAccountClose">Done</button></div>');
  $a('#gpAccountClose').onclick=closeModal;
@@ -181,7 +191,7 @@ async function accountDialog(){
    button.disabled=true;
    await window.GamePlanSync.linkIdentity(button.dataset.linkProvider);
    // OAuth redirects, so no success claim until returning with an identity.
-  }catch(err){button.disabled=false;gpAlert('Could not link account: '+err.message)}
+  }catch(err){button.disabled=false;gpAlert(gpAccountLinkErrorMessage(err))}
  });
  $a('#gpLinkEmail').onclick=async()=>{
   const mail=$a('#gpAccountEmail').value.trim();
@@ -213,10 +223,6 @@ function renderTeamPage(){
   $a('#gpTeamShare').onclick=()=>void window.GamePlanSync.shareCurrent();
   return;
  }
- const reserved=new Set(teamRows.map(x=>x.legacy_member_id).filter(Boolean));
- const unlinked=(data.team||[]).filter(x=>x.project_id===activeProject&&!reserved.has(x.member_id)&&
-  !teamRows.some(m=>x.member_id==='account:'+m.member_user_id)&&
-  !teamRows.some(m=>m.member_role==='owner'&&x.member_id===data.projects.find(p=>p.project_id===activeProject)?.project_manager_member_id));
  const rowMarkup=teamRows.map(m=>{
   const name=memberName(m),isOwner=m.member_role==='owner';
   const colorId=window.GamePlanColors?.accountMemberId?.(m)||String(m.legacy_member_id||'account:'+m.member_user_id);
@@ -229,10 +235,7 @@ function renderTeamPage(){
  area.innerHTML='<div class="gp-team-real-head"><p class="sub">Team members are real signed-in accounts. Permissions are enforced in Supabase, not just by the interface.</p>'+
  (owner?'<button type="button" class="button main" id="gpInviteTeam">+ Invite people</button>':'')+'</div>'+
  (teamUpgradeNeeded?'<p class="gp-team-upgrade">To enable account names, renaming, and permissions, run <code>supabase/team-accounts.sql</code> once in Supabase SQL Editor. Existing members are still protected by the database.</p>':'')+
- '<div class="gp-team-people">'+(rowMarkup||'<p class="sub">No accounts loaded yet. Try Sync.</p>')+'</div>'+
- (owner&&unlinked.length?'<details class="gp-legacy-members"><summary>'+unlinked.length+' older assignee(s) not linked to an account</summary>'+
- '<p class="sub">These historical records are preserved to keep their tasks and hours. Match them to a signed-in teammate using Manage.</p>'+
- '<div>'+unlinked.map(x=>'<span class="gp-legacy-chip">'+html(data.members.find(m=>m.member_id===x.member_id)?.display_name||x.member_id)+'</span>').join('')+'</div></details>':'');
+ '<div class="gp-team-people">'+(rowMarkup||'<p class="sub">No accounts loaded yet. Try Sync.</p>')+'</div>';
  $a('#gpInviteTeam')?.addEventListener('click',()=>void window.GamePlanSync.shareCurrent());
  area.querySelectorAll('[data-gp-authmember]').forEach(b=>b.onclick=()=>void editTeamMember(b.dataset.gpAuthmember));
 
@@ -241,19 +244,13 @@ async function editTeamMember(id){
  const member=teamRows.find(m=>m.member_user_id===id);
  if(!member||accountRole!=='owner')return;
  if(teamUpgradeNeeded){gpAlert('Run supabase/team-accounts.sql in your Supabase SQL Editor to enable renaming and permissions.');return}
- const owner=member.member_role==='owner',assigned=new Set(teamRows.map(m=>m.legacy_member_id).filter(Boolean));
+ const owner=member.member_role==='owner';
  const colorMemberId=window.GamePlanColors?.accountMemberId?.(member)||String(member.legacy_member_id||'account:'+id);
- const options=(data.team||[]).filter(x=>x.project_id===activeProject&&(x.member_id===member.legacy_member_id||!assigned.has(x.member_id)))
-  .map(x=>({id:x.member_id,name:data.members.find(m=>m.member_id===x.member_id)?.display_name||x.member_id}));
  modal('Manage team member','<form id="gpManageTeamForm"><div class="fields">'+
  '<label class="wide">Display name<input name="name" maxlength="100" value="'+html(memberName(member))+'" required></label>'+
- '<label class="wide">Match older task assignments<select name="legacy"><option value="">No historical match</option>'+
- options.map(x=>'<option value="'+html(x.id)+'" '+(x.id===member.legacy_member_id?'selected':'')+'>'+html(x.name)+'</option>').join('')+
- '</select></label>'+
  (!owner?'<label>Permissions<select name="role"><option value="editor" '+(member.member_role==='editor'?'selected':'')+'>Editor · can make changes</option><option value="viewer" '+(member.member_role==='viewer'?'selected':'')+'>Viewer · read only</option></select></label>':'<p class="sub">Owner permissions cannot be changed here.</p>')+
  (window.GamePlanColors?.manageMarkup?.(colorMemberId)||'')+
- '</div><p class="sub">Matching an older assignee keeps their task and time-log IDs. It does not create a duplicate teammate.</p>'+
- '<div class="controls"><button type="button" class="button" id="gpTeamCancel">Cancel</button>'+
+ '</div><div class="controls"><button type="button" class="button" id="gpTeamCancel">Cancel</button>'+
  (!owner?'<button type="button" class="button danger" id="gpTeamRemove">Remove access</button>':'')+
  '<button type="submit" class="button main">Save changes</button></div></form>');
  $a('#gpTeamCancel').onclick=closeModal;
@@ -264,7 +261,9 @@ async function editTeamMember(id){
   const button=ev.currentTarget.querySelector('[type=submit]'),values=Object.fromEntries(new FormData(ev.currentTarget));
   button.disabled=true;
   try{
-   await window.GamePlanSync.setMemberDetails(id,values.name.trim(),values.legacy||null);
+   // Preserve the previously linked assignee identifier. The Manage dialog no
+   // longer exposes it, so renaming a teammate must never clear task links.
+   await window.GamePlanSync.setMemberDetails(id,values.name.trim(),member.legacy_member_id||null);
    if(!owner&&values.role!==member.member_role)await window.GamePlanSync.setMemberRole(id,values.role);
    await window.GamePlanSync.reloadTeam();
    const fresh=teamRows.find(m=>m.member_user_id===id)||member;
