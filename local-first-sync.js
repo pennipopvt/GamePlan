@@ -12,7 +12,7 @@ const KINDS=['milestones','features','tasks','logs','tags','templates','team','c
 const IDS={milestones:'milestone_id',features:'feature_id',tasks:'task_id',logs:'log_id',tags:'tag_id',templates:'template_id',team:'member_id'};
 let api=null,user=null,links=read(LINKS,{}),bases=read(BASE,{}),busy=false,loop=null,subscription=null,watched='',ready=false,blocked=false,inviteAttempted=false;
 let lastSyncError=null,lastSyncAt=0,remoteMissingCount=0,deletedIntents=read(DELETED,{}),copyMessageTimer=null;
-let activatedUserId='',activating=null,cloudProjectList=[],teamByProject={},teamUpgradeNeeded=false,appAccess={access:true,admin:false,installed:false};
+let activatedUserId='',activating=null,cloudProjectList=[],teamByProject={},teamUpgradeNeeded=false,appAccess={access:true,admin:false,installed:false},preAcceptedProjectId='',preAcceptedProjectToken='';
 let nameDirty=read(NAME_DIRTY,{}),knownNames=read(NAME_KNOWN,{}),nameConflictBusy=false;
 const unique=(kind,obj)=>kind==='team'?'member:'+obj.member_id:kind==='custom_tag_colors'?'color:'+obj.color:String(obj[IDS[kind]]||'');
 const key=(kind,id)=>kind+'\u0000'+id;
@@ -1043,7 +1043,10 @@ async function checkAppPermission(){
   // Claims are idempotent; the subsequent normal join flow still runs.
   await api.listProjects();
   const projectToken=sessionStorage.getItem(PENDING_INVITE);
-  if(projectToken)await api.acceptLinkInvite(projectToken);
+  if(projectToken&&!(preAcceptedProjectId&&preAcceptedProjectToken===projectToken)){
+   preAcceptedProjectId=await api.acceptLinkInvite(projectToken);
+   preAcceptedProjectToken=projectToken;
+  }
   if(appToken){
    await api.acceptAppInvite(appToken);
    sessionStorage.removeItem(PENDING_APP);
@@ -1094,9 +1097,14 @@ async function initialize(){
   if(token&&!inviteAttempted){
    inviteAttempted=true;
    try{
-    const inviteCloudId=await api.acceptLinkInvite(token);
+    // The app-level access check may have redeemed this project invite once
+    // already. Never consume it a second time: the link could now be full.
+    const inviteCloudId=preAcceptedProjectToken===token&&preAcceptedProjectId
+     ?preAcceptedProjectId
+     :await api.acceptLinkInvite(token);
     await joinShared(inviteCloudId);
     sessionStorage.removeItem(PENDING_INVITE);
+    preAcceptedProjectId='';preAcceptedProjectToken='';
     gpAlert('You joined the shared project! Your changes will sync with your teammates.');
     refreshStatus();return;
    }catch(err){
@@ -1152,7 +1160,7 @@ window.GamePlanSync={
  async signOut(){
   if(api)await api.signOut();
   window.GamePlanAvatars?.clear?.();
-  user=null;ready=false;activatedUserId='';teamByProject={};cloudProjectList=[];appAccess={access:true,admin:false,installed:false};
+  user=null;ready=false;activatedUserId='';teamByProject={};cloudProjectList=[];appAccess={access:true,admin:false,installed:false};preAcceptedProjectId='';preAcceptedProjectToken='';
   subscription?.();subscription=null;watched='';
   $s('#mainApp').hidden=true;
   window.GamePlanAccounts?.showLogin?.({configured:!!(config()?.url&&config()?.key)});
