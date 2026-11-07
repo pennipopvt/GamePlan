@@ -450,28 +450,6 @@ function gpEditTag(id=''){
   persist();closeModal();render();
  };
 }
-function gpEditTeamColor(memberId,displayName){
- if(!window.GamePlanAuth?.canEdit?.(activeProject)){gpAlert('Only project editors can change team colors.');return}
- const name=String(displayName||member(memberId)||'Team member');
- const selected=window.GamePlanColors?.getColor?.(memberId)||GP_COLORS[0].hex;
- modal('Team member color','<form id="actionForm"><div class="fields">'+
-  '<div class="wide"><strong>'+e(name)+'</strong><p class="sub">Choose this member’s color for Analytics.</p></div>'+
-  gpColorPaletteMarkup(selected,'Chart color')+
-  '<div class="wide gp-color-preview"><span class="sub">Preview</span><span id="gpPreviewMember" class="gp-team-preview-chip">'+e(name)+'</span></div></div>'+
-  '<div class="controls"><button type="button" class="button" id="gpCancel">Cancel</button><button type="submit" class="button main">Save color</button></div></form>');
- $('#gpCancel').onclick=closeModal;
- const form=$('#actionForm');
- const selectedColor=gpSetupColorPalette(form,selected,color=>$('#gpPreviewMember').style.setProperty('--gp-member-color',color));
- form.onsubmit=ev=>{
-  ev.preventDefault();
-  try{
-   const color=selectedColor();if(!color)return;
-   gpRememberPaletteColor(color);
-   if(window.GamePlanColors?.setColor?.(memberId,color))closeModal();
-  }catch(err){gpAlert('Could not save chart color: '+err.message)}
- };
-}
-
 async function gpDeleteTag(id){
  const tag=gpTags().find(t=>t.tag_id===id);if(!tag||!await gpConfirm('Delete '+tag.name+'? Tasks and templates will retain all other data.',{danger:true,confirmLabel:'Delete tag'}))return;
  data.tags=data.tags.filter(t=>t!==tag);
@@ -1020,7 +998,7 @@ function gpSetMemberColor(memberId,color){
 function gpAccountMemberId(row){
  return String(row.legacy_member_id||(row.member_role==='owner'?data.projects.find(p=>p.project_id===activeProject)?.project_manager_member_id:null)||'account:'+row.member_user_id);
 }
-window.GamePlanColors={getColor:gpMemberColor,setColor:gpSetMemberColor,accountMemberId:gpAccountMemberId,openPicker:gpEditTeamColor,manageMarkup:gpMemberManageColorMarkup,setupManage:gpSetupMemberManageColor,rememberPalette:gpRememberPaletteColor};
+window.GamePlanColors={getColor:gpMemberColor,setColor:gpSetMemberColor,accountMemberId:gpAccountMemberId,manageMarkup:gpMemberManageColorMarkup,setupManage:gpSetupMemberManageColor,rememberPalette:gpRememberPaletteColor};
 function gpAnalyticsDate(raw){
  const match=String(raw||'').match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T)/);
  if(!match)return '';
