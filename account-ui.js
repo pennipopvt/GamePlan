@@ -217,20 +217,12 @@ function renderTeamPage(){
  const unlinked=(data.team||[]).filter(x=>x.project_id===activeProject&&!reserved.has(x.member_id)&&
   !teamRows.some(m=>x.member_id==='account:'+m.member_user_id)&&
   !teamRows.some(m=>m.member_role==='owner'&&x.member_id===data.projects.find(p=>p.project_id===activeProject)?.project_manager_member_id));
- const canChangeColors=!!window.GamePlanAuth?.canEdit?.(activeProject);
- const colorRows=teamRows.map(m=>{
-  const name=memberName(m),id=window.GamePlanColors?.accountMemberId?.(m)||String(m.legacy_member_id||'account:'+m.member_user_id);
-  const color=window.GamePlanColors?.getColor?.(id)||'#98aab6';
-  return '<div class="gp-team-chart-color-row"><span class="gp-team-chart-color-name">'+html(name)+'</span>'+
-   '<button type="button" class="gp-team-color-trigger" data-gp-team-color="'+html(id)+'" data-gp-color-name="'+html(name)+'" aria-label="Change chart color for '+html(name)+'"'+(canChangeColors?'':' disabled')+'>'+
-   '<span class="gp-team-color-swatch" style="background:'+html(color)+'"></span> Change color</button></div>';
- }).join('');
- const colorsSection='<section class="gp-team-colors-settings"><h3>Chart colors</h3><p class="sub">These colors are used for team members in Analytics and sync with the project.</p>'+
-  '<div class="gp-team-colors-grid">'+colorRows+'</div></section>';
  const rowMarkup=teamRows.map(m=>{
   const name=memberName(m),isOwner=m.member_role==='owner';
+  const colorId=window.GamePlanColors?.accountMemberId?.(m)||String(m.legacy_member_id||'account:'+m.member_user_id);
+  const color=window.GamePlanColors?.getColor?.(colorId)||'#98aab6';
   return '<article class="gp-person-row"><div class="gp-person-avatar">'+html(initials(name))+'</div>'+
-   '<div class="gp-person-copy"><strong>'+html(name)+'</strong><span class="sub">'+html(m.account_name&&m.account_name!==name?'Discord / account name: '+m.account_name:'Linked account')+'</span></div>'+
+   '<div class="gp-person-copy"><strong><span class="gp-assignee-color-dot" style="--gp-member-color:'+html(color)+'"></span>'+html(name)+'</strong><span class="sub">'+html(m.account_name&&m.account_name!==name?'Discord / account name: '+m.account_name:'Linked account')+'</span></div>'+
    '<span class="gp-role-pill">'+html(isOwner?'Owner':m.member_role==='editor'?'Editor':'Viewer')+'</span>'+
    (owner?'<button type="button" class="button" data-gp-authmember="'+html(m.member_user_id)+'"'+(teamUpgradeNeeded?' disabled title="Complete the one-time Supabase team upgrade to manage members"':'')+'>'+(isOwner?'Rename':'Manage')+'</button>':'')+'</article>';
  }).join('');
@@ -240,19 +232,17 @@ function renderTeamPage(){
  '<div class="gp-team-people">'+(rowMarkup||'<p class="sub">No accounts loaded yet. Try Sync.</p>')+'</div>'+
  (owner&&unlinked.length?'<details class="gp-legacy-members"><summary>'+unlinked.length+' older assignee(s) not linked to an account</summary>'+
  '<p class="sub">These historical records are preserved to keep their tasks and hours. Match them to a signed-in teammate using Manage.</p>'+
- '<div>'+unlinked.map(x=>'<span class="gp-legacy-chip">'+html(data.members.find(m=>m.member_id===x.member_id)?.display_name||x.member_id)+'</span>').join('')+'</div></details>':'')+
- colorsSection;
+ '<div>'+unlinked.map(x=>'<span class="gp-legacy-chip">'+html(data.members.find(m=>m.member_id===x.member_id)?.display_name||x.member_id)+'</span>').join('')+'</div></details>':'');
  $a('#gpInviteTeam')?.addEventListener('click',()=>void window.GamePlanSync.shareCurrent());
  area.querySelectorAll('[data-gp-authmember]').forEach(b=>b.onclick=()=>void editTeamMember(b.dataset.gpAuthmember));
- area.querySelectorAll('button[data-gp-team-color]').forEach(button=>button.onclick=()=>{
-  window.GamePlanColors?.openPicker?.(button.dataset.gpTeamColor,button.dataset.gpColorName);
- });
+
 }
 async function editTeamMember(id){
  const member=teamRows.find(m=>m.member_user_id===id);
  if(!member||accountRole!=='owner')return;
  if(teamUpgradeNeeded){gpAlert('Run supabase/team-accounts.sql in your Supabase SQL Editor to enable renaming and permissions.');return}
  const owner=member.member_role==='owner',assigned=new Set(teamRows.map(m=>m.legacy_member_id).filter(Boolean));
+ const colorMemberId=window.GamePlanColors?.accountMemberId?.(member)||String(member.legacy_member_id||'account:'+id);
  const options=(data.team||[]).filter(x=>x.project_id===activeProject&&(x.member_id===member.legacy_member_id||!assigned.has(x.member_id)))
   .map(x=>({id:x.member_id,name:data.members.find(m=>m.member_id===x.member_id)?.display_name||x.member_id}));
  modal('Manage team member','<form id="gpManageTeamForm"><div class="fields">'+
@@ -261,18 +251,29 @@ async function editTeamMember(id){
  options.map(x=>'<option value="'+html(x.id)+'" '+(x.id===member.legacy_member_id?'selected':'')+'>'+html(x.name)+'</option>').join('')+
  '</select></label>'+
  (!owner?'<label>Permissions<select name="role"><option value="editor" '+(member.member_role==='editor'?'selected':'')+'>Editor · can make changes</option><option value="viewer" '+(member.member_role==='viewer'?'selected':'')+'>Viewer · read only</option></select></label>':'<p class="sub">Owner permissions cannot be changed here.</p>')+
+ (window.GamePlanColors?.manageMarkup?.(colorMemberId)||'')+
  '</div><p class="sub">Matching an older assignee keeps their task and time-log IDs. It does not create a duplicate teammate.</p>'+
  '<div class="controls"><button type="button" class="button" id="gpTeamCancel">Cancel</button>'+
  (!owner?'<button type="button" class="button danger" id="gpTeamRemove">Remove access</button>':'')+
  '<button type="submit" class="button main">Save changes</button></div></form>');
  $a('#gpTeamCancel').onclick=closeModal;
+ const colorSelection=window.GamePlanColors?.setupManage?.($a('#gpManageTeamForm'),colorMemberId);
  $a('#gpManageTeamForm').onsubmit=async ev=>{
-  ev.preventDefault();const button=ev.currentTarget.querySelector('[type=submit]'),values=Object.fromEntries(new FormData(ev.currentTarget));
+  ev.preventDefault();
+  const chosenColor=colorSelection?.()||null;if(!chosenColor)return;
+  const button=ev.currentTarget.querySelector('[type=submit]'),values=Object.fromEntries(new FormData(ev.currentTarget));
   button.disabled=true;
   try{
    await window.GamePlanSync.setMemberDetails(id,values.name.trim(),values.legacy||null);
    if(!owner&&values.role!==member.member_role)await window.GamePlanSync.setMemberRole(id,values.role);
-   closeModal();await window.GamePlanSync.reloadTeam();render();
+   await window.GamePlanSync.reloadTeam();
+   const fresh=teamRows.find(m=>m.member_user_id===id)||member;
+   const currentMemberId=window.GamePlanColors?.accountMemberId?.(fresh)||colorMemberId;
+   if(chosenColor!==window.GamePlanColors?.getColor?.(currentMemberId)){
+    window.GamePlanColors?.rememberPalette?.(chosenColor);
+    window.GamePlanColors?.setColor?.(currentMemberId,chosenColor);
+   }
+   closeModal();render();
   }catch(err){gpAlert('Could not update teammate: '+err.message);button.disabled=false}
  };
  $a('#gpTeamRemove')?.addEventListener('click',async()=>{
