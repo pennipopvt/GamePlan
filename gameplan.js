@@ -499,12 +499,20 @@ function gpOpenProjectDialog(){
 function gpTeamPage(){
  const memberships=(data.team||[]).filter(m=>m.project_id===activeProject);
  const roster=data.roster||data.members;
+ const canColor=!!window.GamePlanAuth?.canEdit?.(activeProject);
  $('#gpExtra').innerHTML='<div class="gp-flex"><div class="gp-page-card-spacer"></div><button id="gpAddMember" class="button main">+ Add member</button></div><div id="gpTeamRows" class="gp-list">'+memberships.map(m=>{
   const person=roster.find(p=>String(p.member_id)===String(m.member_id))||data.members.find(p=>String(p.member_id)===String(m.member_id));
-  return '<div class="gp-card gp-flex"><div><strong>'+e(person?.display_name||'Unknown')+'</strong><div class="sub">'+e(m.project_role||'Member')+(m.discipline?' · '+e(m.discipline):'')+'</div></div><button type="button" class="button" data-gp-member="'+e(m.member_id)+'">Edit</button></div>';
+  const name=person?.display_name||'Unknown',color=window.GamePlanColors?.getColor(m.member_id)||'#98aab6';
+  return '<div class="gp-card gp-flex"><div><strong>'+e(name)+'</strong><div class="sub">'+e(m.project_role||'Member')+(m.discipline?' · '+e(m.discipline):'')+'</div></div>'+
+  '<label class="gp-team-chart-color">Chart color <input type="color" data-gp-team-color="'+e(m.member_id)+'" aria-label="Chart color for '+e(name)+'" value="'+e(color)+'"'+(canColor?'':' disabled')+'></label>'+
+  '<button type="button" class="button" data-gp-member="'+e(m.member_id)+'">Edit</button></div>';
  }).join('')+'</div>';
  $('#gpAddMember').onclick=()=>quickCreate('member');
  $('#gpTeamRows').onclick=ev=>{const btn=ev.target.closest('[data-gp-member]');if(btn)editMember(btn.dataset.gpMember)};
+ $('#gpTeamRows').onchange=ev=>{
+  const input=ev.target.closest('[data-gp-team-color]');
+  if(input)window.GamePlanColors?.setColor(input.dataset.gpTeamColor,input.value);
+ };
 }
 const gpTrashSVG='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v7M14 10v7"/></svg>';
 function gpDecorateDeletes(){
@@ -872,9 +880,8 @@ function gpMemberColor(id){
  const m=data.team.find(t=>String(t.project_id)===String(activeProject)&&String(t.member_id)===String(id));
  if(gpSafeColor(m?.chart_color))return gpSafeColor(m.chart_color);
  // Stable palette assignment for teammates without an explicitly selected color.
- const ids=[...new Set(data.team.filter(t=>t.project_id===activeProject).map(t=>String(t.member_id)))].sort();
- const index=ids.indexOf(String(id));
- if(index>=0)return gpAnalyticsPalette[index%gpAnalyticsPalette.length];
+ // A deterministic fallback does not shift when new members join. Assign a
+ // custom color in Team settings to guarantee distinct chosen colors.
  let hash=0;for(const c of String(id))hash=(Math.imul(hash,31)+c.charCodeAt(0))>>>0;
  return gpAnalyticsPalette[hash%gpAnalyticsPalette.length];
 }
@@ -890,6 +897,12 @@ function gpSetMemberColor(memberId,color){
  // Convert a transient authenticated-team shadow into an ordinary synchronized
  // team row. Cloud item identity is the existing member_id.
  if(row.__gp_account_shadow)delete row.__gp_account_shadow;
+ if(!data.members.some(m=>String(m.member_id)===id)){
+  const name=member(id)||id;
+  const person={member_id:id,display_name:name,google_email:'',active:'Yes'};
+  data.members.push(person);
+  if(Array.isArray(data.roster))data.roster.push({...person});
+ }
  row.chart_color=value;
  persist();
  render();
