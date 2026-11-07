@@ -436,7 +436,7 @@ function gpFeatureCreate(preferredMilestoneId='',initialTemplateId=''){
     data.features.push({feature_id:fid,project_id:activeProject,milestone_id:mid,name,description:'',status:'To do'});
     for(const original of template.tasks){
      const h=Number(original.estimated_hours)||0;
-     data.tasks.push({task_id:uid(),project_id:activeProject,feature_id:fid,title:original.title,description:original.description||'',tag_ids:[...(original.tag_ids||[])],priority:original.priority||'Normal',assignee_member_id:'',status:'To do',estimated_hours:h,remaining_hours:h,created_by_member_id:'penni',updated_at:''});
+     data.tasks.push({task_id:uid(),project_id:activeProject,feature_id:fid,title:original.title,description:original.description||'',tag_ids:[...(original.tag_ids||[])],priority:original.priority||'Normal',assignee_member_id:'',status:'To do',estimated_hours:h,created_by_member_id:'penni',updated_at:''});
     }
     persist();
    }
@@ -927,7 +927,7 @@ function gpGroupedChartData(){
  }else{
   for(const t of tasks){
    const metric=gpChartSettings.metric;
-   const val=metric==='tasks'?1:metric==='done'?(t.status==='Done'?1:0):Math.max(0,Number(metric==='estimated'?t.estimated_hours:t.remaining_hours)||0);
+   const val=metric==='tasks'?1:metric==='done'?(t.status==='Done'?1:0):(metric==='estimated'?Math.max(0,Number(t.estimated_hours)||0):taskRemainingHours(t));
    add(groupName(t),val);
   }
  }

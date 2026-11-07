@@ -2014,8 +2014,8 @@ a:hover,.link:hover{color:#80115c}
 .gp-toast-dismiss{flex:none;padding:0 3px;border:0;background:transparent;color:#7b7080;font-size:21px;line-height:1;cursor:pointer}
 .gp-toast-dismiss:hover{color:#35203d}
 @media(max-width:650px){.gp-toast{top:66px;right:12px;left:12px;width:auto;max-width:none}}
-</style><link rel="stylesheet" href="account-ui.css?v=2026.11.05.68"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.05.68</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+</style><link rel="stylesheet" href="account-ui.css?v=2026.11.07.69"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div><div class="side-label">Your board</div><nav class="side-nav" id="viewNav"></nav><div class="side-label">Milestones</div><nav class="side-nav" id="milestoneNav"></nav></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.07.69</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><button type="button" class="button gp-my-filter" id="gpMyTasks" aria-pressed="false" title="Show only your unfinished assigned tasks">My tasks <span id="gpMyCount" class="gp-my-count">0</span></button><select id="assigneeFilter" hidden aria-hidden="true"><option value="">All assignees</option></select><div class="gp-filter-wrap"><button type="button" class="button gp-filter-trigger" id="gpFilterTrigger" aria-expanded="false" aria-controls="gpFilterPanel"><span aria-hidden="true">⚲</span> Filters <span id="gpFilterCount" class="gp-filter-count" hidden>0</span></button><div class="gp-filter-panel" id="gpFilterPanel" hidden></div></div><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div id="gpFilterChips" class="gp-filter-chips" hidden></div>
@@ -2025,7 +2025,7 @@ a:hover,.link:hover{color:#80115c}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.05.68';
+let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.07.69';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=[];
@@ -2084,7 +2084,10 @@ const feature=id=>find(data.features,id,'feature_id');
 const milestone=f=>find(data.milestones,f?.milestone_id,'milestone_id');
 const isPM=()=>window.GamePlanAuth?.canEdit?.(activeProject)??false;
 const canUpdate=t=>isPM()||String(t.assignee_member_id)===String(data.me.member_id);
-const taskHours=t=>data.logs.filter(x=>x.task_id===t.task_id).reduce((n,x)=>n+Number(x.hours||0),0);
+const taskHours=t=>data.logs.filter(x=>String(x.task_id)===String(t.task_id)).reduce((n,x)=>n+Number(x.hours||0),0);
+// Calculate remaining hours from the estimate and time logs for unfinished tasks.
+// The older stored remaining_hours value is no longer used for display or analytics.
+const taskRemainingHours=t=>t.status==='Done'?0:Math.max(0,Math.round((Math.max(0,Number(t.estimated_hours)||0)-taskHours(t))*60)/60);
 const featureHours=id=>data.tasks.filter(t=>String(t.feature_id)===String(id)).reduce((sum,t)=>sum+taskHours(t),0);
 // Feature status is derived from ALL of its tasks, never from a manual field.
 // Blocked takes precedence unless every task is done. Partial completion counts as in progress.
@@ -2157,11 +2160,11 @@ function rpc(op,p={}){
    return Promise.resolve({ok:true});
   }else if(op==='createTask'){
    const f=parent(data.features,'feature_id',p.feature_id);
-   data.tasks.push({task_id:uid(),project_id:projectId,feature_id:f.feature_id,title:required(p.title,'Task title'),description:p.description||'',assignee_member_id:p.assignee_member_id||'',status:p.status||'To do',priority:p.priority||'Normal',estimated_hours:hours(p.estimated_hours),remaining_hours:hours(p.remaining_hours),created_by_member_id:data.me.member_id,updated_at:new Date().toISOString()});
+   data.tasks.push({task_id:uid(),project_id:projectId,feature_id:f.feature_id,title:required(p.title,'Task title'),description:p.description||'',assignee_member_id:p.assignee_member_id||'',status:p.status||'To do',priority:p.priority||'Normal',estimated_hours:hours(p.estimated_hours),created_by_member_id:data.me.member_id,updated_at:new Date().toISOString()});
   }else if(op==='editTask'){
    if(!task)throw Error('Task not found');
    parent(data.features,'feature_id',p.feature_id);
-   Object.assign(task,{feature_id:p.feature_id,title:required(p.title,'Task title'),description:p.description||'',assignee_member_id:p.assignee_member_id||'',status:p.status,priority:p.priority,estimated_hours:hours(p.estimated_hours),remaining_hours:hours(p.remaining_hours),updated_at:new Date().toISOString()});
+   Object.assign(task,{feature_id:p.feature_id,title:required(p.title,'Task title'),description:p.description||'',assignee_member_id:p.assignee_member_id||'',status:p.status,priority:p.priority,estimated_hours:hours(p.estimated_hours),updated_at:new Date().toISOString()});
   }else if(op==='setStatus'){
    if(!task)throw Error('Task not found');task.status=p.status;task.updated_at=new Date().toISOString();
   }else if(op==='deleteTask'){
@@ -2272,7 +2275,7 @@ function taskRow(t){
  const logs=taskHours(t);
  const statusClass=({'To do':'status-todo','In progress':'status-progress','Blocked':'status-blocked','Done':'status-done'})[t.status]||'status-todo';
  const isMine=gpTaskIsMine(t);
- return `<div class="task-entry ${statusClass}"><div><button class="task-title ${t.status==='Done'?'task-done':''}" data-detail="${e(t.task_id)}">${e(t.title)}</button><div class="sub">${e(t.priority)} · ${formatHours(t.estimated_hours)} estimated · ${formatHours(logs)} logged</div></div><div class="meta-person sub">${isMine?'<span class="gp-mine-tag" title="Assigned to you">You</span>':e(member(t.assignee_member_id))}</div><select class="status-select ${statusClass}" data-status="${e(t.task_id)}" aria-label="Status for ${e(t.title)}">${ST.map(status=>`<option value="${e(status)}" ${t.status===status?'selected':''}>${e(status)}</option>`).join('')}</select><div class="actions"><button data-clock-in="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Start working: ${e(t.title)}" title="Start working">▶</button><button data-log="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Manage time: ${e(t.title)}" title="Manage time"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button><button class="icon-edit" data-edit="${e(t.task_id)}" type="button" aria-label="Edit task: ${e(t.title)}" title="Edit task"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></div>`;
+ return `<div class="task-entry ${statusClass}"><div><button class="task-title ${t.status==='Done'?'task-done':''}" data-detail="${e(t.task_id)}">${e(t.title)}</button><div class="sub">${e(t.priority)} · ${formatHours(t.estimated_hours)} estimated · ${formatHours(logs)} logged · ${formatHours(taskRemainingHours(t))} remaining</div></div><div class="meta-person sub">${isMine?'<span class="gp-mine-tag" title="Assigned to you">You</span>':e(member(t.assignee_member_id))}</div><select class="status-select ${statusClass}" data-status="${e(t.task_id)}" aria-label="Status for ${e(t.title)}">${ST.map(status=>`<option value="${e(status)}" ${t.status===status?'selected':''}>${e(status)}</option>`).join('')}</select><div class="actions"><button data-clock-in="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Start working: ${e(t.title)}" title="Start working">▶</button><button data-log="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Manage time: ${e(t.title)}" title="Manage time"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button><button class="icon-edit" data-edit="${e(t.task_id)}" type="button" aria-label="Edit task: ${e(t.title)}" title="Edit task"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></div>`;
 }
 function renderMilestones(){
  const filtered=visibleTasks(),project=projectTasks(),isFiltered=gpMyOnly||activeView==='open'||activeView==='done'||!!$('#assigneeFilter').value||!!$('#searchTasks').value||(typeof gpHasFacetFilters==='function'&&gpHasFacetFilters());
@@ -2287,11 +2290,11 @@ function renderMilestones(){
   if(isFiltered&&!shown.length)return '';
   const percent=allForMilestone.length?100*allForMilestone.filter(t=>t.status==='Done').length/allForMilestone.length:0;
   const open=!collapsedMilestones.has(String(m.milestone_id));
-  return `<details class="milestone-section" data-ms="${e(m.milestone_id)}" ${open?'open':''}><summary class="milestone-summary"><span class="chevron">▸</span><div class="title-stack"><div class="gp-milestone-title-row"><strong>${e(m.name)}</strong><span class="gp-milestone-time" title="Total logged time across this milestone">${formatHours(allForMilestone.reduce((sum,t)=>sum+taskHours(t),0))} logged</span>${m.target_date?`<span class="gp-milestone-target">Target ${e(m.target_date)}</span>`:''}</div><div class="sub gp-milestone-description">${e(m.description||'')}</div><div class="gp-milestone-progress-row"><span class="gp-milestone-ratio">${allForMilestone.filter(t=>t.status==='Done').length}/${allForMilestone.length} tasks</span><div class="progress-line" role="progressbar" aria-label="Milestone tasks completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(percent)}"><span style="width:${percent}%"></span></div></div></div><div class="milestone-tools"><button class="icon-edit" type="button" data-add-feature="${e(m.milestone_id)}" title="Add feature" aria-label="Add feature to ${e(m.name)}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M13 3v5h5"/><path d="M16 5h6M19 2v6"/></svg></button><button class="icon-edit" type="button" data-milestone="${e(m.milestone_id)}" aria-label="Edit milestone: ${e(m.name)}" title="Edit milestone"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></summary>${fs.map(f=>{
+  return `<details class="milestone-section" data-ms="${e(m.milestone_id)}" ${open?'open':''}><summary class="milestone-summary"><span class="chevron">▸</span><div class="title-stack"><div class="gp-milestone-title-row"><strong>${e(m.name)}</strong><span class="gp-milestone-time" title="Total logged time across this milestone">${formatHours(allForMilestone.reduce((sum,t)=>sum+taskHours(t),0))} logged · ${formatHours(allForMilestone.reduce((sum,t)=>sum+taskRemainingHours(t),0))} remaining</span>${m.target_date?`<span class="gp-milestone-target">Target ${e(m.target_date)}</span>`:''}</div><div class="sub gp-milestone-description">${e(m.description||'')}</div><div class="gp-milestone-progress-row"><span class="gp-milestone-ratio">${allForMilestone.filter(t=>t.status==='Done').length}/${allForMilestone.length} tasks</span><div class="progress-line" role="progressbar" aria-label="Milestone tasks completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(percent)}"><span style="width:${percent}%"></span></div></div></div><div class="milestone-tools"><button class="icon-edit" type="button" data-add-feature="${e(m.milestone_id)}" title="Add feature" aria-label="Add feature to ${e(m.name)}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M13 3v5h5"/><path d="M16 5h6M19 2v6"/></svg></button><button class="icon-edit" type="button" data-milestone="${e(m.milestone_id)}" aria-label="Edit milestone: ${e(m.name)}" title="Edit milestone"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></summary>${fs.map(f=>{
    const tasks=shown.filter(t=>t.feature_id===f.feature_id);
    if(isFiltered&&!tasks.length)return '';
    const all=project.filter(t=>t.feature_id===f.feature_id),expanded=!collapsedFeatures.has(String(f.feature_id)),derivedStatus=featureStatus(f.feature_id);
-   return `<details class="feature-section ${statusClass(derivedStatus)}" data-feat="${e(f.feature_id)}" ${expanded?'open':''}><summary class="feature-summary"><span class="chevron">▸</span><div class="title-stack"><strong>${e(f.name)} <span class="feature-hours" title="Total logged time across this feature">${formatHours(featureHours(f.feature_id))}</span></strong><div class="sub">${all.filter(t=>t.status==='Done').length}/${all.length} tasks complete · <span class="feature-status-label">${e(derivedStatus)}</span></div></div><div class="feature-heading-actions"><button class="icon-edit" type="button" data-add-task="${e(f.feature_id)}" aria-label="Add task to ${e(f.name)}" title="Add task"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M13 3v5h5"/><path d="M16 5h6M19 2v6"/></svg></button><button class="icon-edit" type="button" data-feature="${e(f.feature_id)}" aria-label="Edit feature: ${e(f.name)}" title="Edit feature"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></summary>${tasks.map(taskRow).join('')||'<div class="empty-hierarchy">No tasks here yet.</div>'}</details>`;
+   return `<details class="feature-section ${statusClass(derivedStatus)}" data-feat="${e(f.feature_id)}" ${expanded?'open':''}><summary class="feature-summary"><span class="chevron">▸</span><div class="title-stack"><strong>${e(f.name)} <span class="feature-hours" title="Total logged time across this feature">${formatHours(featureHours(f.feature_id))} logged · ${formatHours(all.reduce((n,t)=>n+taskRemainingHours(t),0))} remaining</span></strong><div class="sub">${all.filter(t=>t.status==='Done').length}/${all.length} tasks complete · <span class="feature-status-label">${e(derivedStatus)}</span></div></div><div class="feature-heading-actions"><button class="icon-edit" type="button" data-add-task="${e(f.feature_id)}" aria-label="Add task to ${e(f.name)}" title="Add task"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M13 3v5h5"/><path d="M16 5h6M19 2v6"/></svg></button><button class="icon-edit" type="button" data-feature="${e(f.feature_id)}" aria-label="Edit feature: ${e(f.name)}" title="Edit feature"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></summary>${tasks.map(taskRow).join('')||'<div class="empty-hierarchy">No tasks here yet.</div>'}</details>`;
   }).join('')||'<div class="empty-hierarchy">No features here yet.</div>'}</details>`;
  }).join('')||'<div class="empty-hierarchy">Nothing matches this view. Try another filter, or create a milestone and feature.</div>';
  const root=$('#milestoneList');
@@ -2383,7 +2386,7 @@ function details(id){
  <div class="gp-detail-meta">
   <div><span class="gp-detail-meta-label">Assigned to</span><strong>${e(member(t.assignee_member_id))}</strong></div>
   <div><span class="gp-detail-meta-label">Status</span><strong class="gp-detail-status gp-detail-${statusTone}">${e(t.status)}</strong></div>
-  <div><span class="gp-detail-meta-label">Remaining</span><strong>${formatHours(t.remaining_hours)}</strong></div>
+  <div><span class="gp-detail-meta-label">Remaining</span><strong>${formatHours(taskRemainingHours(t))}</strong></div>
  </div>
  <section class="gp-detail-section gp-detail-logs">
   <h3>Time Entries</h3>
@@ -2415,7 +2418,35 @@ async function deleteLog(taskId,logId,onDone=null){
  if(!await gpConfirm('Delete this '+formatHours(log.hours)+' time entry? This cannot be undone.',{danger:true,confirmLabel:'Delete time entry'}))return;
  try{await rpc('deleteLog',{task_id:taskId,log_id:logId});await refresh();if(onDone)onDone();else details(taskId)}catch(err){gpAlert(err.message)}
 }
-function taskForm(t,preferredFeatureId=''){const fs=projectFeatures(),who=projectMembers(),f=fs.find(x=>String(x.feature_id)===String(t?.feature_id||preferredFeatureId));modal(t?'Edit task':'New task',`<form id="actionForm"><div class="fields">${field('title','Task title',t?.title||'','text',true)}<label class="wide">Description<textarea name="description">${e(t?.description||'')}</textarea></label>${select('feature_id','Feature',opts(fs,'feature_id'),f?.feature_id||fs[0]?.feature_id)}${select('assignee_member_id','Assigned to',opts(who,'member_id','display_name'),t?.assignee_member_id||who[0]?.member_id)}${select('status','Status',ST.map(x=>({value:x,label:x})),t?.status||'To do')}${select('priority','Priority',PRI.map(x=>({value:x,label:x})),t?.priority||'Normal')}${field('estimated_hours','Estimated hours',t?.estimated_hours||0,'number')}${field('remaining_hours','Remaining hours',t?.remaining_hours||0,'number')}</div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button>${t?'<button class="button danger" type="button" id="deleteTask">Delete task</button>':''}<button class="button main" type="submit">Save task</button></div></form>`);$('#cancel').onclick=closeModal;if(t)$('#deleteTask').onclick=()=>deleteItem('task',t.task_id,t.title);$('#actionForm').onsubmit=async ev=>{ev.preventDefault();const p=Object.fromEntries(new FormData(ev.currentTarget).entries());p.project_id=activeProject;if(t)p.task_id=t.task_id;await submit(t?'editTask':'createTask',p)}}
+function taskForm(t,preferredFeatureId=''){
+ const fs=projectFeatures(),who=projectMembers(),f=fs.find(x=>String(x.feature_id)===String(t?.feature_id||preferredFeatureId));
+ const minutes=Math.max(0,Math.round(Number(t?.estimated_hours||0)*60));
+ modal(t?'Edit task':'New task',`<form id="actionForm"><div class="fields">
+ ${field('title','Task title',t?.title||'','text',true)}
+ <label class="wide">Description<textarea name="description">${e(t?.description||'')}</textarea></label>
+ ${select('feature_id','Feature',opts(fs,'feature_id'),f?.feature_id||fs[0]?.feature_id)}
+ ${select('assignee_member_id','Assigned to',opts(who,'member_id','display_name'),t?.assignee_member_id||who[0]?.member_id)}
+ ${select('status','Status',ST.map(x=>({value:x,label:x})),t?.status||'To do')}
+ ${select('priority','Priority',PRI.map(x=>({value:x,label:x})),t?.priority||'Normal')}
+ <label>Estimated hours<input name="estimate_hours" type="number" min="0" step="1" value="${Math.floor(minutes/60)}" required></label>
+ <label>Estimated minutes<input name="estimate_minutes" type="number" min="0" max="59" step="1" value="${minutes%60}" required></label>
+ <div class="wide sub">Remaining time is calculated from the estimate minus logged time for unfinished tasks${t?': '+formatHours(taskRemainingHours(t)):''}.</div>
+ </div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button>${t?'<button class="button danger" type="button" id="deleteTask">Delete task</button>':''}<button class="button main" type="submit">Save task</button></div></form>`);
+ $('#cancel').onclick=closeModal;
+ if(t)$('#deleteTask').onclick=()=>deleteItem('task',t.task_id,t.title);
+ $('#actionForm').onsubmit=async ev=>{
+  ev.preventDefault();
+  try{
+   const form=new FormData(ev.currentTarget),h=Number(form.get('estimate_hours')),m=Number(form.get('estimate_minutes'));
+   if(!Number.isSafeInteger(h)||h<0||!Number.isSafeInteger(m)||m<0||m>59)throw Error('Enter valid estimated hours and minutes (0–59).');
+   const p=Object.fromEntries(form.entries());
+   delete p.estimate_hours;delete p.estimate_minutes;
+   p.estimated_hours=(h*60+m)/60;p.project_id=activeProject;
+   if(t)p.task_id=t.task_id;
+   await submit(t?'editTask':'createTask',p);
+  }catch(err){gpAlert(err.message)}
+ };
+}
 function editTask(id){const t=find(data.tasks,id,'task_id');if(t&&isPM())taskForm(t)}
 async function gpSubmitTime(op,taskId,form,logId){try{const fields=new FormData(form),minutes=gpGetMinutes(fields);await submit(op,{task_id:taskId,...(logId?{log_id:logId}:{}),minutes,work_date:fields.get('work_date'),note:fields.get('note')})}catch(err){gpAlert(err.message)}}
 function logHours(id){
@@ -2500,14 +2531,16 @@ $('#inviteMember').onclick=ev=>{ev.preventDefault();ev.stopPropagation();quickCr
 $('#newTask').onclick=()=>taskForm(null);$('#project').onchange=ev=>{activeProject=ev.target.value;activeView='all';saveProject();render()};$('#assigneeFilter').onchange=render;$('#searchTasks').oninput=render;$('#gpMyTasks').onclick=()=>{gpMyOnly=!gpMyOnly;activeView='all';render()};$('#menuToggle').onclick=()=>$('#sidebar').classList.toggle('visible');$('#reload').onclick=()=>{const url=new URL(location.href);url.searchParams.set('v',APP_VERSION);location.assign(url.toString())};
 
 function downloadBackup(){
- const blob=new Blob([JSON.stringify({version:2,exported_at:new Date().toISOString(),...data},null,2)],{type:'application/json'});
+ const blob=new Blob([JSON.stringify({version:2,exported_at:new Date().toISOString(),...data,tasks:data.tasks.map(t=>({...t,remaining_hours:taskRemainingHours(t)}))},null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob),a=document.createElement('a');
  a.href=url;a.download='project-planner-local-'+new Date().toISOString().slice(0,10)+'.json';a.click();
  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 $('#export').onclick=downloadBackup;
 
-/* Milestone imports are additive. No existing projects, task logs or features are replaced. */
+/* Milestone imports are additive and never replace existing work.
+   Compact files can nest tasks within features, use estimated_minutes,
+   assignee display names and named tags. Full backups are still supported. */
 async function milestoneFromImport(source){
  if(Array.isArray(source.projects)&&Array.isArray(source.milestones)){
   const list=source.milestones;
@@ -2523,39 +2556,55 @@ async function milestoneFromImport(source){
   const features=(source.features||[]).filter(f=>String(f.milestone_id)===String(chosen.milestone_id));
   const fids=new Set(features.map(f=>String(f.feature_id)));
   const tasks=(source.tasks||[]).filter(t=>fids.has(String(t.feature_id)));
-  const logs=(source.logs||[]).filter(l=>tasks.some(t=>String(t.task_id)===String(l.task_id)));
-  return {milestone:chosen,features,tasks,logs,members:source.members||[]};
+  const taskIds=new Set(tasks.map(t=>String(t.task_id)));
+  const logs=(source.logs||[]).filter(l=>taskIds.has(String(l.task_id)));
+  return {milestone:chosen,features,tasks,logs,members:source.members||[],tags:source.tags||[]};
  }
  if(source.milestone&&typeof source.milestone==='object'){
-  const features=source.features||source.milestone.features||[];
-  const tasks=source.tasks||features.flatMap(f=>(f.tasks||[]).map(t=>({...t,feature_id:t.feature_id||f.feature_id||f.id||f.name})));
-  return {milestone:source.milestone,features,tasks,logs:source.logs||[],members:source.members||[]};
+  const sourceFeatures=source.features||source.milestone.features||[];
+  if(!Array.isArray(sourceFeatures))throw Error('Features must be an array');
+  const features=sourceFeatures.map((f,i)=>({...f,feature_id:String(f.feature_id||f.id||'feature-'+(i+1))}));
+  const tasks=Array.isArray(source.tasks)
+   ?source.tasks.map((t,i)=>{
+     const ref=String(t.feature_id||t.featureId||t.feature||'');
+     const parent=features.find(f=>String(f.feature_id)===ref||String(f.name)===ref);
+     return {...t,feature_id:parent?.feature_id||ref,task_id:String(t.task_id||t.id||'task-'+(i+1))};
+    })
+   :features.flatMap((f,i)=>(f.tasks||[]).map((t,j)=>({...t,feature_id:f.feature_id,task_id:String(t.task_id||t.id||'task-'+(i+1)+'-'+(j+1))})));
+  return {milestone:source.milestone,features,tasks,logs:source.logs||[],members:source.members||[],tags:source.tags||[]};
  }
  throw Error('Expected a milestone file or a full GamePlan backup');
 }
 async function importOneMilestone(source){
  const parsed=await milestoneFromImport(source);
  if(!parsed)return false;
- const {milestone,features,tasks,logs,members}=parsed;
- if(!Array.isArray(features)||!Array.isArray(tasks)||!Array.isArray(logs))throw Error('Malformed milestone contents');
+ const {milestone,features,tasks,logs,members,tags}=parsed;
+ if(!Array.isArray(features)||!Array.isArray(tasks)||!Array.isArray(logs)||!Array.isArray(tags))throw Error('Malformed milestone contents');
  const name=String(milestone.name||milestone.title||'').trim();
  if(!name)throw Error('Milestone needs a name');
  const fkey=f=>String(f.feature_id||f.id||f.name||'');
  const tkey=t=>String(t.task_id||t.id||t.title||t.name||'');
  if(features.some(f=>!fkey(f)||!String(f.name||'').trim()))throw Error('Every feature needs a name and identifier');
  if(tasks.some(t=>!tkey(t)||!String(t.title||t.name||'').trim()))throw Error('Every task needs a title and identifier');
- const featureKeys=features.map(fkey);
+ const featureKeys=features.map(fkey),taskKeys=tasks.map(tkey);
  if(new Set(featureKeys).size!==featureKeys.length)throw Error('Feature identifiers must be unique');
- const taskKeys=tasks.map(tkey);
  if(new Set(taskKeys).size!==taskKeys.length)throw Error('Task identifiers must be unique');
  if(tasks.some(t=>!featureKeys.includes(String(t.feature_id||t.featureId||''))))throw Error('A task refers to a missing feature');
  const loggedIds=new Set(taskKeys);
  if(logs.some(l=>!loggedIds.has(String(l.task_id))))throw Error('A time log refers to a missing task');
- const message=`Add milestone “${name}” with ${features.length} features and ${tasks.length} tasks to the current project? Existing board data will be kept.`;
+ const estimateOf=t=>{
+  const minutes=t.estimated_minutes??t.estimate_minutes;
+  const value=minutes!==undefined&&minutes!==null?Number(minutes)/60:Number(t.estimated_hours??t.estimate??0);
+  if(!Number.isFinite(value)||value<0)throw Error('Invalid estimated time for '+String(t.title||t.name));
+  return Math.round(value*60)/60;
+ };
+ const estimatedTotal=tasks.reduce((sum,t)=>sum+estimateOf(t),0);
+ const message=`Add milestone “${name}” with ${features.length} features and ${tasks.length} tasks (${formatHours(estimatedTotal)} estimated) to the current project? Tags, assignees and time logs will be imported. Existing board data will be kept.`;
  if(!await gpConfirm(message,{confirmLabel:'Import milestone'}))return false;
  const next=structuredClone(data),newMilestoneId=uid();
+ next.tags=Array.isArray(next.tags)?next.tags:[];
  const memberById=id=>members.find(m=>String(m.member_id||m.id)===String(id))?.display_name;
- const memberByName=name=>next.members.find(m=>m.display_name.toLowerCase()===String(name).toLowerCase());
+ const memberByName=name=>next.members.find(m=>String(m.display_name).toLowerCase()===String(name).toLowerCase());
  const resolveMember=t=>{
   const name=t.assignee||t.assignee_name||t.assignee_display_name||memberById(t.assignee_member_id);
   let existing=name?memberByName(name):next.members.find(m=>String(m.member_id)===String(t.assignee_member_id));
@@ -2567,6 +2616,32 @@ async function importOneMilestone(source){
    next.team.push({project_id:activeProject,member_id:existing.member_id,project_role:'Member',discipline:'',membership_status:'Active'});
   return existing?.member_id||'';
  };
+ const sourceTagsById=new Map(tags.filter(t=>t&&typeof t==='object'&&(t.tag_id||t.id)).map(t=>[String(t.tag_id||t.id),t]));
+ const sourceTagsByName=new Map(tags.filter(t=>t&&typeof t==='object'&&t.name).map(t=>[String(t.name).toLowerCase(),t]));
+ const resolveTags=t=>{
+  const inputs=[];
+  for(const id of (Array.isArray(t.tag_ids)?t.tag_ids:[])){
+   const fromSource=sourceTagsById.get(String(id));
+   const local=next.tags.find(tag=>tag.project_id===activeProject&&String(tag.tag_id)===String(id));
+   if(!fromSource&&!local)throw Error('No tag definition found for imported tag ID '+String(id));
+   inputs.push(fromSource||local);
+  }
+  for(const value of [...(Array.isArray(t.tags)?t.tags:[]),...(Array.isArray(t.tag_names)?t.tag_names:[])])
+   inputs.push(typeof value==='string'?(sourceTagsByName.get(value.toLowerCase())||{name:value}):value);
+  const result=[];
+  for(const tag of inputs){
+   const tagName=String(tag?.name||'').trim();
+   if(!tagName)throw Error('Imported task has a tag without a name');
+   let existing=next.tags.find(x=>x.project_id===activeProject&&String(x.name).toLowerCase()===tagName.toLowerCase());
+   if(!existing){
+    const color=String(tag.color||'#98aab6');
+    existing={tag_id:uid(),project_id:activeProject,name:tagName,color:/^#[a-f0-9]{6}$/i.test(color)?color:'#98aab6'};
+    next.tags.push(existing);
+   }
+   if(!result.includes(existing.tag_id))result.push(existing.tag_id);
+  }
+  return result;
+ };
  next.milestones.push({milestone_id:newMilestoneId,project_id:activeProject,name,description:milestone.description||'',status:milestone.status||'To do',target_date:milestone.target_date||''});
  const mappedFeatures=new Map(),mappedTasks=new Map();
  for(const f of features){
@@ -2575,15 +2650,20 @@ async function importOneMilestone(source){
  }
  for(const t of tasks){
   const id=uid();mappedTasks.set(tkey(t),id);
-  next.tasks.push({task_id:id,project_id:activeProject,feature_id:mappedFeatures.get(String(t.feature_id||t.featureId)),title:String(t.title||t.name),description:t.description||'',assignee_member_id:resolveMember(t),status:t.status||'To do',priority:t.priority||'Normal',estimated_hours:Number(t.estimated_hours??t.estimate??1)||0,remaining_hours:Number(t.remaining_hours??t.estimated_hours??t.estimate??1)||0,created_by_member_id:'penni',updated_at:new Date().toISOString()});
+  next.tasks.push({
+   task_id:id,project_id:activeProject,feature_id:mappedFeatures.get(String(t.feature_id||t.featureId)),
+   title:String(t.title||t.name),description:t.description||'',assignee_member_id:resolveMember(t),
+   tag_ids:resolveTags(t),status:ST.includes(t.status)?t.status:'To do',
+   priority:PRI.includes(t.priority)?t.priority:'Normal',estimated_hours:estimateOf(t),
+   created_by_member_id:data.me.member_id||'penni',updated_at:new Date().toISOString()
+  });
  }
  for(const l of logs){
-  const importedTask=tasks.find(t=>tkey(t)===String(l.task_id));
   const importedTaskId=mappedTasks.get(String(l.task_id));
   const newTask=next.tasks.find(t=>t.task_id===importedTaskId);
-  next.logs.push({log_id:uid(),task_id:importedTaskId,member_id:newTask?.assignee_member_id||'penni',hours:Number(l.hours)||0,work_date:l.work_date||l.date||'',note:l.note||'',created_at:l.created_at||''});
+  next.logs.push({log_id:uid(),task_id:importedTaskId,member_id:newTask?.assignee_member_id||data.me.member_id||'penni',hours:Number(l.hours)||0,work_date:l.work_date||l.date||'',note:l.note||'',created_at:l.created_at||''});
  }
- // Keep current board untouched if persistence fails.
+ // Keep current board untouched if validation or persistence fails.
  const oldData=data;data=next;
  try{persist()}catch(err){data=oldData;throw err}
  activeView='m:'+newMilestoneId;saveProject();render();return true;
@@ -2609,4 +2689,4 @@ $('#fileInput').onchange=async ev=>{
 };
 
 init();
-</script><script src="gameplan.js?v=2026.11.05.68"></script><script src="local-first-sync.js?v=2026.11.05.68"></script><script src="account-ui.js?v=2026.11.05.68"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
+</script><script src="gameplan.js?v=2026.11.07.69"></script><script src="local-first-sync.js?v=2026.11.07.69"></script><script src="account-ui.js?v=2026.11.07.69"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
