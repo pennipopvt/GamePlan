@@ -7,8 +7,10 @@
 -- color-bordered initials (the signed-in user may show their own avatar).
 --
 -- Only signed-in users who belong to a project can fetch profile pictures
--- of other members in that same project. Return only a public Discord CDN
--- avatar URL, not private OAuth metadata, emails, tokens or Discord IDs.
+-- of other members in that same project. Read linked auth.identities first
+-- so users signed in with Google but linked to Discord still get Discord PFPs.
+-- Return only a public Discord CDN avatar URL, never private OAuth metadata,
+-- emails, tokens or Discord IDs.
 
 create or replace function public.gp_project_team_avatars(p_project uuid)
 returns table (
@@ -26,15 +28,30 @@ begin
  end if;
  return query
  select m.user_id,
-  case
-   when coalesce(u.raw_user_meta_data->>'avatar_url','')
-     ~* '^https://(cdn\.discordapp\.com|media\.discordapp\.net)/'
-    then nullif(u.raw_user_meta_data->>'avatar_url','')
-   when coalesce(u.raw_user_meta_data->>'picture','')
-     ~* '^https://(cdn\.discordapp\.com|media\.discordapp\.net)/'
-    then nullif(u.raw_user_meta_data->>'picture','')
-   else null
-  end::text
+  coalesce(
+   -- Linked Discord identity wins, even if the primary account uses Google
+   -- or email sign-in. OAuth identity data is stored separately.
+   (
+    select v.avatar_url
+    from auth.identities i
+    cross join lateral (values
+      (1, i.identity_data->>'avatar_url'),
+      (2, i.identity_data->>'picture')
+    ) as v(priority, avatar_url)
+    where i.user_id=m.user_id
+      and i.provider='discord'
+      and v.avatar_url ~* '^https://(cdn\.discordapp\.com|media\.discordapp\.net)/(avatars|embed/avatars)/'
+    order by i.last_sign_in_at desc nulls last, v.priority asc
+    limit 1
+   ),
+   -- Older Discord-only logins may only have their avatar in user metadata.
+   case when (u.raw_user_meta_data->>'avatar_url')
+     ~* '^https://(cdn\.discordapp\.com|media\.discordapp\.net)/(avatars|embed/avatars)/'
+    then u.raw_user_meta_data->>'avatar_url' end,
+   case when (u.raw_user_meta_data->>'picture')
+     ~* '^https://(cdn\.discordapp\.com|media\.discordapp\.net)/(avatars|embed/avatars)/'
+    then u.raw_user_meta_data->>'picture' end
+  )::text
  from public.gp_members m
  join auth.users u on u.id=m.user_id
  where m.project_id=p_project;
