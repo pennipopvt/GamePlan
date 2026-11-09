@@ -14,7 +14,7 @@ const IDS={milestones:'milestone_id',features:'feature_id',tasks:'task_id',logs:
 let api=null,user=null,links=read(LINKS,{}),bases=read(BASE,{}),busy=false,loop=null,subscription=null,watched='',ready=false,blocked=false,inviteAttempted=false;
 let lastSyncError=null,lastSyncAt=0,remoteMissingCount=0,deletedIntents=read(DELETED,{}),copyMessageTimer=null;
 let activatedUserId='',activating=null,cloudProjectList=[],teamByProject={},teamUpgradeNeeded=false,appAccess={access:true,admin:false,installed:false},preAcceptedProjectId='',preAcceptedProjectToken='';
-let nameDirty=read(NAME_DIRTY,{}),knownNames=read(NAME_KNOWN,{}),nameConflictBusy=false;
+let nameDirty=read(NAME_DIRTY,{}),knownNames=read(NAME_KNOWN,{}),nameConflictBusy=false,privateSyncError='';
 const unique=(kind,obj)=>kind==='team'?'member:'+obj.member_id:kind==='custom_tag_colors'?'color:'+obj.color:String(obj[IDS[kind]]||'');
 const key=(kind,id)=>kind+'\u0000'+id;
 // PostgreSQL JSONB may reorder object keys without changing record values.
@@ -136,7 +136,7 @@ async function reconcilePrivate(pid,cloudId){
  const pending=changesSince(base,local);
  // Receive changes from other devices, but never replace edits made since
  // this browser's last successful sync.
- mergeRemote(pid,remote,base,local);
+ mergeRemote(pid,remote,base,local,new Set(),true);
  const after=privateRows(pid);
  const changed=changesSince(remote,after);
  for(const [id,row] of Object.entries(changed)){
@@ -214,6 +214,7 @@ function refreshStatus(){
  else if(!api||!user)status('Saved on this device');
  else if(!linked)status('Local · not shared');
  else if(busy)status('Syncing…');
+ else if(privateSyncError)status('Private drafts not synced · '+privateSyncError,true);
  else if(lastSyncError)status('Sync failed · '+lastSyncError,true);
  else if(remoteMissingCount)status(remoteMissingCount+' items missing remotely · saved locally',true);
  else status(pending?pending+' changes pending':'Cloud synced');
@@ -513,7 +514,7 @@ window.GamePlanAuth={canEdit:pid=>user&&activatedUserId===user.id&&['owner','edi
 function makeLocalRow(record,pid){
  return {...clone(record.payload),project_id:pid};
 }
-function mergeRemote(pid,remote,base,local,confirmedLegacyDeletes=new Set()){
+function mergeRemote(pid,remote,base,local,confirmedLegacyDeletes=new Set(),privateMode=false){
  const pending=pendingChanges(pid,base,local),toApply=[];
  for(const k of new Set([...Object.keys(base),...Object.keys(remote)])){
   if(Object.prototype.hasOwnProperty.call(pending,k))continue;
@@ -531,6 +532,7 @@ function mergeRemote(pid,remote,base,local,confirmedLegacyDeletes=new Set()){
     ?true:String(x.project_id)===String(pid)));
   if(op.record){
    const row=makeLocalRow(op.record,pid);
+   if(privateMode&&findIndex>=0&&!arr[findIndex].__gp_private)continue;
    if(findIndex>=0)arr[findIndex]=row;else arr.push(row);
    if(op.kind==='team'){
     const member=draft.members.find(m=>String(m.member_id)===String(row.member_id));
@@ -544,6 +546,7 @@ function mergeRemote(pid,remote,base,local,confirmedLegacyDeletes=new Set()){
     }
    }
    }else if(findIndex>=0){
+   if(privateMode&&!arr[findIndex].__gp_private)continue;
    // A tombstone is a confirmed intentional deletion, unlike a missing row.
    if(op.explicitDelete)arr.splice(findIndex,1);
    else continue;
@@ -579,7 +582,8 @@ async function reconcile(pid,{allowWrites=true}={}){
   const visible=await api.listProjects();
   if(!visible.some(p=>p.id===cloudId))throw Error('Cloud project is not accessible. Local data is safe.');
   await syncProjectName(pid,visible);
-  await reconcilePrivate(pid,cloudId);
+  try{await reconcilePrivate(pid,cloudId);privateSyncError=''}
+  catch(err){privateSyncError=String(err?.message||err);console.warn('[GamePlan private drafts]',err)}
    const remote=await remoteSnapshot(cloudId,pid);
   // First linked sync may not run until a baseline is saved by link/share flow.
   if(!Object.prototype.hasOwnProperty.call(bases,pid))throw Error('Project is not initialized for syncing. Reconnect from Account.');
