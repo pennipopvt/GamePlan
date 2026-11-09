@@ -7,6 +7,7 @@
 'use strict';
 const $s=q=>document.querySelector(q);
 const CFG='gameplan-cloud-config-v1',LAST='gp-sync-backup-import-v1',PENDING_INVITE='gp-pending-link-invite',PENDING_APP='gp-pending-app-access-invite';
+let PRIVATE_BASE='gp-account-private-baselines-v1',privateBases={};
 let LINKS='gp-sync-links-v1',BASE='gp-sync-baselines-v1',DELETED='gp-sync-deleted-v1',NAME_DIRTY='gp-sync-name-dirty-v1',NAME_KNOWN='gp-sync-name-known-v1';
 const KINDS=['milestones','features','tasks','logs','tags','templates','team','custom_tag_colors'];
 const IDS={milestones:'milestone_id',features:'feature_id',tasks:'task_id',logs:'log_id',tags:'tag_id',templates:'template_id',team:'member_id'};
@@ -94,6 +95,64 @@ function projectRows(pid,source=data){
   }
  }
  return out;
+}
+// An entirely separate owner-only snapshot. Never put these records in gp_items.
+function privateRows(pid,source=data){
+ const milestones=new Set((source.milestones||[]).filter(m=>String(m.project_id)===String(pid)&&m.__gp_private).map(m=>String(m.milestone_id)));
+ const features=new Set((source.features||[]).filter(f=>String(f.project_id)===String(pid)&&(f.__gp_private||milestones.has(String(f.milestone_id)))).map(f=>String(f.feature_id)));
+ const tasks=new Set((source.tasks||[]).filter(t=>String(t.project_id)===String(pid)&&(t.__gp_private||features.has(String(t.feature_id)))).map(t=>String(t.task_id)));
+ const result={};
+ for(const kind of ['milestones','features','tasks','logs']){
+  const arr=(source[kind]||[]).filter(x=>
+   kind==='milestones'?milestones.has(String(x.milestone_id)):
+   kind==='features'?features.has(String(x.feature_id)):
+   kind==='tasks'?tasks.has(String(x.task_id)):
+   tasks.has(String(x.task_id)));
+  for(const [sort_order,obj] of arr.entries()){
+   const id=unique(kind,obj);if(!id)continue;
+   result[key(kind,id)]={kind,item_id:id,sort_order,
+    payload:{...clone(obj),project_id:pid,__gp_private:true}};
+  }
+ }
+ return result;
+}
+function savePrivateBaseline(pid,snapshot){
+ privateBases[pid]=snapshot;store(PRIVATE_BASE,privateBases);
+}
+async function reconcilePrivate(pid,cloudId){
+ // No fallback to the shared item table: a missing migration must fail closed.
+ if(roleFor(pid)!=='owner')return;
+ const {data:rows,error}=await api.client.from('gp_private_items')
+  .select('kind,item_id,payload,sort_order').eq('project_id',cloudId).eq('user_id',user.id);
+ if(error)throw Error('Private draft sync unavailable (install supabase/private-drafts.sql): '+error.message);
+ const remote={};
+ for(const row of rows||[]){
+  if(!['milestones','features','tasks','logs'].includes(row.kind))continue;
+  const id=key(row.kind,row.item_id);
+  remote[id]={kind:row.kind,item_id:row.item_id,sort_order:row.sort_order,
+   payload:{...row.payload,project_id:pid}};
+ }
+ const base=privateBases[pid]||{},local=privateRows(pid);
+ const pending=changesSince(base,local);
+ // Receive changes from other devices, but never replace edits made since
+ // this browser's last successful sync.
+ mergeRemote(pid,remote,base,local);
+ const after=privateRows(pid);
+ const changed=changesSince(remote,after);
+ for(const [id,row] of Object.entries(changed)){
+  // Only upload local changes that differ from the last successful baseline.
+  if(!Object.prototype.hasOwnProperty.call(pending,id))continue;
+  const previous=remote[id]||base[id];
+  const next=row||deletedMarker(previous,pid);
+  const {error:saveError}=await api.client.from('gp_private_items').upsert({
+   user_id:user.id,project_id:cloudId,kind:next.kind,item_id:next.item_id,
+   payload:{...next.payload,project_id:cloudId},
+   sort_order:next.sort_order,updated_at:new Date().toISOString()
+  },{onConflict:'user_id,project_id,kind,item_id'});
+  if(saveError)throw saveError;
+  remote[id]=next;
+ }
+ savePrivateBaseline(pid,remote);
 }
 function remoteRows(items,pid){
  const out={};
@@ -224,6 +283,7 @@ async function activateAccount(){
   const linksKey='gp-account-links-v1:'+id;
   const baseKey='gp-account-baselines-v1:'+id;
   const deletedKey='gp-account-deletes-v1:'+id;
+   PRIVATE_BASE='gp-account-private-baselines-v1:'+id;
   const nameDirtyKey='gp-account-name-dirty-v1:'+id;
   const knownNameKey='gp-account-name-known-v1:'+id;
   let saved=read(accountKey,null);
@@ -260,7 +320,7 @@ async function activateAccount(){
   }
   LOCAL_KEY=accountKey;PROJECT_KEY=projectKey;
   LINKS=linksKey;BASE=baseKey;DELETED=deletedKey;NAME_DIRTY=nameDirtyKey;NAME_KNOWN=knownNameKey;
-  links=read(LINKS,{});bases=read(BASE,{});deletedIntents=read(DELETED,{});
+  links=read(LINKS,{});bases=read(BASE,{});privateBases=read(PRIVATE_BASE,{});deletedIntents=read(DELETED,{});
   nameDirty=read(NAME_DIRTY,{});knownNames=read(NAME_KNOWN,{});
   data=loadLocal();
   gpMyOnly=false;
@@ -519,7 +579,8 @@ async function reconcile(pid,{allowWrites=true}={}){
   const visible=await api.listProjects();
   if(!visible.some(p=>p.id===cloudId))throw Error('Cloud project is not accessible. Local data is safe.');
   await syncProjectName(pid,visible);
-  const remote=await remoteSnapshot(cloudId,pid);
+  await reconcilePrivate(pid,cloudId);
+   const remote=await remoteSnapshot(cloudId,pid);
   // First linked sync may not run until a baseline is saved by link/share flow.
   if(!Object.prototype.hasOwnProperty.call(bases,pid))throw Error('Project is not initialized for syncing. Reconnect from Account.');
   // Re-read the local board after network I/O so edits saved during the
