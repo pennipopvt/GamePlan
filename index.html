@@ -1870,6 +1870,26 @@ a:hover,.link:hover{color:#80115c}
 #milestoneList .feature-section.gp-feature-drop-target>.feature-summary{background:#fce5f5}
 #milestoneList .gp-task-drag-handle:hover{color:#a81578;background:#fce5f5}
 
+/* Milestone feature ordering (drag or arrow keys); completed features are kept last. */
+#milestoneList .gp-feature-drag-handle{
+ display:inline-flex;align-items:center;justify-content:center;flex:0 0 27px;
+ width:27px;height:30px;margin-right:6px;border-radius:7px;
+ color:#918996;cursor:grab;user-select:none;
+}
+#milestoneList .gp-feature-drag-handle:hover,
+#milestoneList .gp-feature-drag-handle:focus-visible{color:#a81578;background:#fce5f5;outline-offset:2px}
+#milestoneList .gp-feature-drag-handle:active{cursor:grabbing}
+#milestoneList .feature-section.gp-feature-sort-dragging{opacity:.53}
+#milestoneList .feature-section.gp-feature-sort-before>.feature-summary,
+#milestoneList .feature-section.gp-feature-sort-after>.feature-summary{position:relative}
+#milestoneList .feature-section.gp-feature-sort-before>.feature-summary::before,
+#milestoneList .feature-section.gp-feature-sort-after>.feature-summary::after{
+ content:"";position:absolute;left:9px;right:9px;height:3px;
+ background:var(--gp-accent,#ff3cc7);border-radius:3px;z-index:11;pointer-events:none;
+}
+#milestoneList .feature-section.gp-feature-sort-before>.feature-summary::before{top:-2px}
+#milestoneList .feature-section.gp-feature-sort-after>.feature-summary::after{bottom:-2px}
+
 /* Confirmation/prompt dialogs: centered modal, never an inline page element. */
 .gp-dialog-backdrop{
  position:fixed;inset:0;z-index:2200;
@@ -2613,7 +2633,8 @@ function renderMilestones(){
  const autoNumbers=new Map(allMilestones.map((m,i)=>[String(m.milestone_id),allMilestones.length-i]));
  const ms=allMilestones.filter(m=>!gpMilestoneSelection||String(m.milestone_id)===gpMilestoneSelection);
  $('#milestoneList').innerHTML=ms.map(m=>{
-  const fs=data.features.filter(f=>f.project_id===activeProject&&f.milestone_id===m.milestone_id);
+  const fs=data.features.filter(f=>f.project_id===activeProject&&f.milestone_id===m.milestone_id)
+    .sort((a,b)=>Number(featureStatus(a.feature_id)==='Done')-Number(featureStatus(b.feature_id)==='Done'));
   const allForMilestone=project.filter(t=>fs.some(f=>f.feature_id===t.feature_id));
   const shown=filtered.filter(t=>fs.some(f=>f.feature_id===t.feature_id));
   if(isFiltered&&!shown.length)return '';
@@ -3043,4 +3064,4 @@ $('#fileInput').onchange=async ev=>{
 
 init();
 </script><script src="supabase/public-config.js?v=2026.11.07.82"></script>
-<script src="gameplan.js?v=2026.11.07.82"></script><script src="local-first-sync.js?v=2026.11.09.83"></script><script src="account-ui.js?v=2026.11.07.82"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
+<script src="gameplan.js?v=2026.11.09.84"></script><script src="local-first-sync.js?v=2026.11.09.83"></script><script src="account-ui.js?v=2026.11.07.82"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
