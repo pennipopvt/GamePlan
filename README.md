@@ -5,7 +5,7 @@ A lightweight task-and-project board, published from this repository with GitHub
 ## Working rules for future development chats
 
 1. **Inspect the current `main` branch before editing.** Do not assume a previous chat's code or versions are current. Keep existing design language and make focused changes rather than redesigning unrelated screens.
-2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.07.84**.
+2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.10.85**.
 3. **Refresh the offline cache identifier** in `service-worker.js` when changing front-end assets, so older clients do not keep a stale shell. This is separate from the human-readable app version.
 4. **Publish by committing to `main`.** Check the GitHub Pages build/deployment state and confirm the public URL serves the new version. If `main` is protected, create a feature branch and PR, then merge when checks permit. Never claim a successful deployment from a successful commit alone.
 5. **If the page looks stale:** hard-refresh, verify the live HTML version and asset query strings, inspect Actions/Pages deployment status, and inspect the service worker/cache. Don't blindly repeat commits. See `.github/workflows/recover-pages.yml` for a *manual recovery workflow specific to a previously stale deployment*; don't run or alter it without confirming it still applies.
@@ -134,7 +134,7 @@ The Board’s milestone headers use the approved **Editorial / Design A** previe
 
 **Private drafts — device-local initial release.** A project owner can tick **Save as private draft** when creating a milestone or task. Draft milestones, their features/tasks, and private tasks' time logs are excluded entirely from the ordinary team-visible `gp_items` Supabase sync. The owner sees labeled drafts in their Board and may **Publish** a private milestone (including its children), private feature, or private task. Publishing adds the records to normal shared sync, where everyone on the project can see them. Features created under an unpublished milestone, including template-based ones, inherit privacy. The owner controls drafts; Editors and Viewers do not see drafts or receive them through project sync.
 
-**Important limitation:** Until publishing, draft contents are stored **only in the owner's current signed-in browser account cache**. They are NOT copied to a private Supabase table, available on a different device, or recoverable after clearing browser data. Export a backup before clearing the site cache or changing browsers. Existing public tasks cannot be made retrospectively secret: the setting is offered when *creating* new work, not on already published items. The published project data is unchanged until the owner publishes drafts.
+**Important limitation:** Until publishing, draft contents are stored **only in the owner's current signed-in browser account cache**. With the private-drafts SQL migration installed, they sync to the owner's own account-private table rather than team-visible gp_items. Export a backup before clearing the site cache or changing browsers. Existing public tasks cannot be made retrospectively secret: the setting is offered when *creating* new work, not on already published items. The published project data is unchanged until the owner publishes drafts.
 
 ## Editable privacy on existing milestones, features and tasks (v2026.11.07.83)
 
@@ -154,3 +154,9 @@ Data is never removed from the owner's private board during the transition; mile
 - Authentication callback URLs (Discord, Google, email sign-in and linked identity) now derive from the site's current document base path instead of hardcoding `/ProjectPlanner/`. The original GitHub Pages address behaves the same, and a future custom domain at the site root can use `/supabase/discord.html`.
 
 **Future custom domain:** No `CNAME` file, GitHub Pages setting or DNS records are changed in this release. When a domain has been registered by the project owner, add it under **GitHub repository → Settings → Pages → Custom domain**, point DNS at GitHub Pages, and turn on HTTPS. Add the new `https://YOUR-DOMAIN/supabase/discord.html` to **Supabase Authentication → URL Configuration → Redirect URLs** before testing Discord/Google/email authentication. Keep the old GitHub Pages callback temporarily while moving existing users/invite links. The `gameplan.com` name is already used by another education platform, so choose and verify a different available domain before purchasing.
+
+
+## Release 2026.11.10.85
+
+- Merge account-private draft synchronization (requires `supabase/private-drafts.sql` migration), editable private draft controls, published-record unpublishing, and milestone feature reordering.
+- Fully completed features sort to the bottom while preserving manual order.
