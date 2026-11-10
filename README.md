@@ -5,7 +5,7 @@ A lightweight task-and-project board, published from this repository with GitHub
 ## Working rules for future development chats
 
 1. **Inspect the current `main` branch before editing.** Do not assume a previous chat's code or versions are current. Keep existing design language and make focused changes rather than redesigning unrelated screens.
-2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.10.88**.
+2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.10.89**.
 3. **Refresh the offline cache identifier** in `service-worker.js` when changing front-end assets, so older clients do not keep a stale shell. This is separate from the human-readable app version.
 4. **Publish by committing to `main`.** Check the GitHub Pages build/deployment state and confirm the public URL serves the new version. If `main` is protected, create a feature branch and PR, then merge when checks permit. Never claim a successful deployment from a successful commit alone.
 5. **If the page looks stale:** hard-refresh, verify the live HTML version and asset query strings, inspect Actions/Pages deployment status, and inspect the service worker/cache. Don't blindly repeat commits. See `.github/workflows/recover-pages.yml` for a *manual recovery workflow specific to a previously stale deployment*; don't run or alter it without confirming it still applies.
@@ -172,3 +172,12 @@ Data is never removed from the owner's private board during the transition; mile
 - Relative labels use the viewer's browser-local calendar date, compare calendar days without DST drift, and do not change a task's status. Template tasks intentionally do not copy a specific dated deadline into newly instantiated tasks.
 
 - v2026.11.10.88 compatibility: older task updates that omit `due_date` keep the existing deadline rather than clearing it. Invalid legacy due-date strings are rendered as unset instead of breaking the Board view.
+
+## Shared task cards and task-linked work (v2026.11.10.89)
+
+- **All Tasks** now invokes the existing shared `taskRow(t)` renderer and applies the same Board task CSS. No parallel task-card implementation. Only its ordering and project-wide filtering differ. The hierarchy-only drag handle is removed from the flat view, since that view is sorted.
+- The same clickable title, status selector, tags, quick tag picker, time logging, stopwatch and edit action work in both views. Priority and due date are editable in the task editor; the flat list retains priority/due sorting and upcoming/overdue counts.
+- Tasks support `resources: [{"title":"Original internship posting","url":"https://..."}]` and `deliverables: [{"title":"Resume PDF","url":""}]`. Both sections appear in task details and in the task editor with add/remove rows. A deliverable can have no URL until the document is ready.
+- Supported links use HTTP(S) and open in a new tab with `noopener noreferrer`. This is for links to documents in Drive, GitHub, etc., **not binary uploads or Base64 file storage**. The links persist on the task and travel with existing local-first/cloud task JSON.
+- Compact project/milestone imports preserve these fields. Existing tasks without resources or deliverables continue to work unchanged. Feature templates also preserve and copy link attachments; due dates are intentionally not copied into newly generated tasks from templates.
+- To refresh a project from an import, import the new JSON as a second project and verify it before manually deleting the older project. The importer never overwrites existing projects.
