@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GamePlan</title><link rel="icon" type="image/svg+xml" href="gameplan-mark.svg?v=2026.11.10.86">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GamePlan</title><link rel="icon" type="image/svg+xml" href="gameplan-mark.svg?v=2026.11.10.87">
 <style>
 :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;color:#273c43;background:#f7f8f5;font-size:14px}*{box-sizing:border-box}body{margin:0}button,input,textarea,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #4c9b97;outline-offset:2px}.app{min-height:100vh;max-width:1220px;margin:auto;padding:30px 22px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center}.brand{font:700 29px Georgia,serif;letter-spacing:-.7px}.brand span{color:#31847c}.sub{color:#778987;font-size:12px}.top-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.button{border:1px solid #c9d8d4;padding:10px 15px;border-radius:9px;background:white;color:#355951;font-weight:600}.button.main{background:#317d73;color:white;border-color:#317d73}.button:hover{filter:brightness(.96)}.button.danger{color:#9d3030;border-color:#e6bebe;background:#fff7f7}.card{background:white;border:1px solid #e0e7e3;border-radius:15px;padding:22px;box-shadow:0 5px 22px #152b2107}.banner{margin:22px 0}.muted{color:#758680}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:21px 0}.stat b{font-size:27px;display:block;margin-top:8px}.head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}.filters{display:flex;gap:9px;flex-wrap:wrap}select,input,textarea{border:1px solid #cbd9d5;background:white;border-radius:8px;padding:9px 11px;color:inherit;min-width:0}textarea{min-height:110px;resize:vertical}label{display:flex;flex-direction:column;gap:5px;color:#4d6563;font-size:12px;font-weight:650}.table-wrap{overflow-x:auto;margin-top:15px}table{border-collapse:collapse;width:100%;min-width:750px}th{text-align:left;background:#eef4f1;color:#56726c;font-size:11px;text-transform:uppercase;letter-spacing:.6px}td,th{padding:13px 11px;border-bottom:1px solid #ebefed;vertical-align:middle}.task-title{border:0;background:none;padding:0;text-align:left;color:#204e50;font-weight:700}.tag{font-size:11px;border-radius:50px;background:#eaf3ef;padding:4px 9px;display:inline-block}.actions{display:flex;gap:6px;flex-wrap:wrap}.actions .button{padding:6px 9px;font-size:12px}.empty{text-align:center;padding:50px 20px;color:#84918d}.modal-back{position:fixed;inset:0;background:#132d3199;display:none;align-items:center;justify-content:center;padding:20px;z-index:3}.modal-back.show{display:flex}.modal{background:white;border-radius:16px;width:min(620px,100%);max-height:90vh;overflow:auto;padding:25px}.modal h2{margin:0 0 12px;font:700 25px Georgia,serif}.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:15px 0}.fields .wide{grid-column:1/-1}.fields input,.fields textarea,.fields select{width:100%}.desc{white-space:pre-wrap;line-height:1.7;padding:10px 0;min-height:40px}.note{padding:9px 0;border-bottom:1px solid #e9efed}.controls{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:15px}.error{color:#ad3939}.success{color:#28796b}#connectFrame{display:none;width:1px;height:1px;border:0;position:absolute;pointer-events:none}.link{color:#287d73;text-decoration:none}.link:hover{text-decoration:underline}@media(max-width:700px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.fields{grid-template-columns:1fr}.fields .wide{grid-column:1}.app{padding:18px 12px}}
 
@@ -2301,8 +2301,51 @@ a:hover,.link:hover{color:#80115c}
   }
 }
 
-</style><link rel="stylesheet" href="account-ui.css?v=2026.11.10.86"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.10.86" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.10.86</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">+ Import project</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+
+/* Due dates and the flat task list share the current GamePlan visual language. */
+.gp-task-due{display:inline-block;margin-left:8px;font-size:11px;font-weight:650;white-space:nowrap;color:#667584}
+.gp-due-overdue{color:#bc3754!important}.gp-due-today,.gp-due-soon{color:#ad5e0c!important}
+.gp-due-scheduled{color:#397b74!important}.gp-due-done{color:#82919b!important}
+.gp-all-tasks{display:grid;gap:16px}
+.gp-all-tasks-toolbar{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px}
+.gp-all-tasks-toolbar .gp-flat-tools{display:flex;flex-wrap:wrap;align-items:end;gap:10px}
+.gp-flat-filter{display:grid;gap:4px;font-size:12px;color:#6e7281;font-weight:600}
+.gp-flat-filter input,.gp-flat-filter select{font:inherit;font-size:13px;color:#24303a;height:34px;padding:5px 9px;border:1px solid #d9dbe5;border-radius:7px;background:#fff}
+.gp-flat-filter input[type=search]{width:min(260px,80vw)}
+.gp-flat-check{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding-bottom:7px;color:#454a5e}
+.gp-flat-summary{display:flex;flex-wrap:wrap;align-items:center;gap:16px;color:#5c6173;font-size:13px}
+.gp-flat-summary strong{color:#252b40;font-size:16px;margin-right:3px}
+.gp-flat-task-list{border:1px solid #e4e3e9;border-radius:9px;overflow:hidden}
+.gp-flat-task-row,.gp-flat-task-head{display:grid;grid-template-columns:minmax(220px,2.6fr) minmax(100px,.8fr) minmax(175px,1.2fr) minmax(126px,1fr) minmax(125px,.9fr) 34px;gap:12px;align-items:center;padding:11px 14px}
+.gp-flat-task-head{background:#f4f5f8;color:#778090;font-size:11px;font-weight:700;letter-spacing:.045em;text-transform:uppercase}
+.gp-flat-task-row{border-top:1px solid #e8e7ed;background:#fff;min-height:62px}
+.gp-flat-task-row:hover{background:#fcf9fc}.gp-flat-complete{opacity:.64}
+.gp-flat-title{border:0;background:none;padding:0;color:#202a40;font-weight:650;text-align:left;font:inherit;cursor:pointer}
+.gp-flat-title:hover{color:#d01283;text-decoration:underline}.gp-flat-title.gp-flat-finished{text-decoration:line-through}
+.gp-flat-detail{font-size:11px;color:#87919e;margin-top:4px}
+.gp-flat-task-row select,.gp-flat-task-row input[type=date]{box-sizing:border-box;width:100%;min-width:0;border:1px solid #e1dfe7;border-radius:6px;background:#fff;padding:6px;font-size:12px;color:#333b4b}
+.gp-flat-task-row select:disabled,.gp-flat-task-row input:disabled{background:#f7f7f8;color:#777}
+.gp-flat-deadline{display:grid;gap:3px}.gp-flat-due-status{font-size:11px;min-height:15px}
+.gp-flat-assignee{display:flex;align-items:center;gap:6px;font-size:12px;min-width:0}
+.gp-flat-assignee .gp-assignee-label{min-width:0}
+.gp-flat-edit{border:0;background:transparent;color:#6c7183;cursor:pointer;font-size:17px;border-radius:6px;padding:4px}
+.gp-flat-edit:hover{color:#c0187e;background:#f8e5f0}
+.gp-flat-priority-urgent{color:#ac2851!important;font-weight:700}.gp-flat-priority-high{color:#ba6626!important;font-weight:650}
+.gp-flat-priority-normal{color:#50698e!important}.gp-flat-priority-low{color:#74828e!important}
+.gp-flat-empty{padding:35px 16px;text-align:center;color:#81889b}
+@media(max-width:1040px){.gp-flat-task-row,.gp-flat-task-head{grid-template-columns:minmax(200px,2fr) 100px 160px 130px 130px 30px;gap:8px}.gp-flat-task-list{overflow-x:auto}}
+@media(max-width:700px){
+ .gp-flat-task-head{display:none}
+ .gp-flat-task-row{grid-template-columns:minmax(0,1fr) 1fr;gap:10px;padding:13px}
+ .gp-flat-task-row .gp-flat-name{grid-column:1 / -1}
+ .gp-flat-task-row .gp-flat-edit{justify-self:end}
+ .gp-flat-task-list{overflow:visible}
+ .gp-flat-filter input[type=search]{width:100%}
+ .gp-all-tasks-toolbar .gp-flat-tools{width:100%}
+}
+
+</style><link rel="stylesheet" href="account-ui.css?v=2026.11.10.87"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.10.87" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.10.87</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">+ Import project</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><button type="button" class="button gp-my-filter" id="gpMyTasks" aria-pressed="false" title="Show only your unfinished assigned tasks">My tasks <span id="gpMyCount" class="gp-my-count">0</span></button><select id="gpMilestoneFilter" aria-label="Filter board by milestone" title="Filter by milestone"><option value="">All milestones</option></select><select id="assigneeFilter" hidden aria-hidden="true"><option value="">All assignees</option></select><div class="gp-filter-wrap"><button type="button" class="button gp-filter-trigger" id="gpFilterTrigger" aria-expanded="false" aria-controls="gpFilterPanel"><span aria-hidden="true">⚲</span> Filters <span id="gpFilterCount" class="gp-filter-count" hidden>0</span></button><div class="gp-filter-panel" id="gpFilterPanel" hidden></div></div><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div id="gpFilterChips" class="gp-filter-chips" hidden></div>
@@ -2313,7 +2356,7 @@ a:hover,.link:hover{color:#80115c}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.10.86';
+let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.10.87';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=[];
@@ -2554,14 +2597,21 @@ function rpc(op,p={}){
   }else if(op==='createTask'){
    const f=parent(data.features,'feature_id',p.feature_id);
    if(p.private_draft&&!gpDraftOwner())throw Error('Only the project owner can create private drafts.');
-   data.tasks.push({task_id:uid(),project_id:projectId,feature_id:f.feature_id,title:required(p.title,'Task title'),description:p.description||'',assignee_member_id:p.assignee_member_id||'',status:p.status||'To do',priority:p.priority||'Normal',estimated_hours:hours(p.estimated_hours),created_by_member_id:data.me.member_id,updated_at:new Date().toISOString(),...(p.private_draft||gpDraftFeature(f)?{__gp_private:true}:{})});
+   data.tasks.push({task_id:uid(),project_id:projectId,feature_id:f.feature_id,title:required(p.title,'Task title'),description:p.description||'',assignee_member_id:p.assignee_member_id||'',status:p.status||'To do',priority:p.priority||'Normal',due_date:gpValidDueDate(p.due_date),estimated_hours:hours(p.estimated_hours),created_by_member_id:data.me.member_id,updated_at:new Date().toISOString(),...(p.private_draft||gpDraftFeature(f)?{__gp_private:true}:{})});
   }else if(op==='editTask'){
    if(!task)throw Error('Task not found');
    const destination=parent(data.features,'feature_id',p.feature_id);
    if(p.private_draft!==undefined)ensureDraftOwner();
    if(gpDraftFeature(destination)||p.private_draft===true)task.__gp_private=true;
    else if(p.private_draft===false)delete task.__gp_private;
-   Object.assign(task,{feature_id:p.feature_id,title:required(p.title,'Task title'),description:p.description||'',assignee_member_id:p.assignee_member_id||'',status:p.status,priority:p.priority,estimated_hours:hours(p.estimated_hours),updated_at:new Date().toISOString()});
+   Object.assign(task,{feature_id:p.feature_id,title:required(p.title,'Task title'),description:p.description||'',assignee_member_id:p.assignee_member_id||'',status:p.status,priority:p.priority,due_date:gpValidDueDate(p.due_date),estimated_hours:hours(p.estimated_hours),updated_at:new Date().toISOString()});
+  }else if(op==='setDueDate'){
+   if(!task)throw Error('Task not found');if(!canUpdate(task))throw Error('You cannot edit this task.');
+   task.due_date=gpValidDueDate(p.due_date);task.updated_at=new Date().toISOString();
+  }else if(op==='setPriority'){
+   if(!task)throw Error('Task not found');if(!canUpdate(task))throw Error('You cannot edit this task.');
+   if(!PRI.includes(p.priority))throw Error('Unknown priority.');
+   task.priority=p.priority;task.updated_at=new Date().toISOString();
   }else if(op==='setStatus'){
    if(!task)throw Error('Task not found');task.status=p.status;task.updated_at=new Date().toISOString();
   }else if(op==='deleteTask'){
@@ -2682,13 +2732,45 @@ function gpAssigneeAvatar(memberId,name){
  const color=window.GamePlanColors?.getColor?.(memberId)||'#98aab6';
  return '<span class="gp-member-avatar gp-member-avatar-board" style="--gp-member-color:'+e(color)+'" title="'+e(name)+'"><span class="gp-member-avatar-initial">'+e(initial)+'</span></span>';
 }
+
+/* Task due dates are calendar days (YYYY-MM-DD), never UTC timestamps. */
+function gpValidDueDate(value){
+ const d=String(value||'').trim();
+ if(!d)return '';
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(d))throw Error('Use a valid due date (YYYY-MM-DD).');
+ const y=+d.slice(0,4),m=+d.slice(5,7),day=+d.slice(8,10);
+ if(y<1000||m<1||m>12||day<1||day>31||new Date(Date.UTC(y,m-1,day)).toISOString().slice(0,10)!==d)
+  throw Error('Use a valid calendar date.');
+ return d;
+}
+function gpLocalToday(){
+ const d=new Date();
+ return [String(d.getFullYear()).padStart(4,'0'),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+}
+function gpDueDayNumber(s){return Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10))/86400000}
+function gpDueInfo(t){
+ const raw=String(t?.due_date||'');
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(raw))return {date:'',days:null,tone:'none',label:'No due date',short:'No date'};
+ const today=gpLocalToday(),days=gpDueDayNumber(raw)-gpDueDayNumber(today);
+ const stamp=new Date(raw+'T12:00:00Z');
+ const formatted=new Intl.DateTimeFormat(undefined,{month:'short',day:'numeric',...(today.slice(0,4)!==raw.slice(0,4)?{year:'numeric'}:{}),timeZone:'UTC'}).format(stamp);
+ if(t.status==='Done')return {date:raw,days,tone:'done',label:'Due '+formatted,short:formatted};
+ if(days<0)return {date:raw,days,tone:'overdue',label:'Overdue · '+formatted,short:'Overdue · '+formatted};
+ if(days===0)return {date:raw,days,tone:'today',label:'Due today · '+formatted,short:'Today · '+formatted};
+ if(days<=7)return {date:raw,days,tone:'soon',label:'Due in '+days+' day'+(days===1?'':'s')+' · '+formatted,short:'In '+days+'d · '+formatted};
+ return {date:raw,days,tone:'scheduled',label:'Due '+formatted,short:formatted};
+}
+function gpDueBadge(t){
+ const d=gpDueInfo(t);return d.date?'<span class="gp-task-due gp-due-'+e(d.tone)+'" title="'+e(d.label)+'">'+e(d.label)+'</span>':'';
+}
+
 function taskRow(t){
  const logs=taskHours(t);
  const statusClass=({'To do':'status-todo','In progress':'status-progress','Blocked':'status-blocked','Done':'status-done'})[t.status]||'status-todo';
  const isMine=gpTaskIsMine(t);
  const assigneeName=isMine?'<span class="gp-mine-tag" title="Assigned to you">You</span>':e(member(t.assignee_member_id));
  const assignedHTML='<span class="gp-assignee-label">'+gpAssigneeAvatar(t.assignee_member_id,member(t.assignee_member_id))+assigneeName+'</span>';
- return `<div class="task-entry ${statusClass}"><div><button class="task-title ${t.status==='Done'?'task-done':''}" data-detail="${e(t.task_id)}">${e(t.title)}</button>${gpDraftTask(t)?'<span class="gp-draft-indicator gp-task-draft-tag">DRAFT</span>':''}<div class="sub">${e(t.priority)} · ${formatHours(t.estimated_hours)} estimated · ${formatHours(logs)} logged · ${formatHours(taskRemainingHours(t))} remaining</div></div><div class="meta-person sub">${assignedHTML}</div><select class="status-select ${statusClass}" data-status="${e(t.task_id)}" aria-label="Status for ${e(t.title)}">${ST.map(status=>`<option value="${e(status)}" ${t.status===status?'selected':''}>${e(status)}</option>`).join('')}</select><div class="actions"><button data-clock-in="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Start working: ${e(t.title)}" title="Start working">▶</button><button data-log="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Manage time: ${e(t.title)}" title="Manage time"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button><button class="icon-edit" data-edit="${e(t.task_id)}" type="button" aria-label="Edit task: ${e(t.title)}" title="Edit task"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></div>`;
+ return `<div class="task-entry ${statusClass}"><div><button class="task-title ${t.status==='Done'?'task-done':''}" data-detail="${e(t.task_id)}">${e(t.title)}</button>${gpDraftTask(t)?'<span class="gp-draft-indicator gp-task-draft-tag">DRAFT</span>':''}<div class="sub">${e(t.priority)} · ${formatHours(t.estimated_hours)} estimated · ${formatHours(logs)} logged · ${formatHours(taskRemainingHours(t))} remaining ${gpDueBadge(t)}</div></div><div class="meta-person sub">${assignedHTML}</div><select class="status-select ${statusClass}" data-status="${e(t.task_id)}" aria-label="Status for ${e(t.title)}">${ST.map(status=>`<option value="${e(status)}" ${t.status===status?'selected':''}>${e(status)}</option>`).join('')}</select><div class="actions"><button data-clock-in="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Start working: ${e(t.title)}" title="Start working">▶</button><button data-log="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Manage time: ${e(t.title)}" title="Manage time"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button><button class="icon-edit" data-edit="${e(t.task_id)}" type="button" aria-label="Edit task: ${e(t.title)}" title="Edit task"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></div>`;
 }
 function renderMilestones(){
  const filtered=visibleTasks(),project=projectTasks(),isFiltered=gpMyOnly||!!$('#assigneeFilter').value||!!$('#searchTasks').value||(typeof gpHasFacetFilters==='function'&&gpHasFacetFilters());
@@ -2814,6 +2896,8 @@ function details(id){
   <div><span class="gp-detail-meta-label">Assigned to</span><strong class="gp-assignee-label">${gpAssigneeAvatar(t.assignee_member_id,member(t.assignee_member_id))}${e(member(t.assignee_member_id))}</strong></div>
   <div><span class="gp-detail-meta-label">Status</span><strong class="gp-detail-status gp-detail-${statusTone}">${e(t.status)}</strong></div>
   <div><span class="gp-detail-meta-label">Remaining</span><strong>${formatHours(taskRemainingHours(t))}</strong></div>
+  <div><span class="gp-detail-meta-label">Priority</span><strong>${e(t.priority||'Normal')}</strong></div>
+  <div><span class="gp-detail-meta-label">Due date</span><strong class="gp-due-${e(gpDueInfo(t).tone)}">${e(gpDueInfo(t).date?gpDueInfo(t).label:'Not set')}</strong></div>
  </div>
  <section class="gp-detail-section gp-detail-logs">
   <h3>Time Entries</h3>
@@ -2856,6 +2940,7 @@ function taskForm(t,preferredFeatureId=''){
  ${select('assignee_member_id','Assigned to',opts(who,'member_id','display_name'),t?.assignee_member_id||who[0]?.member_id)}
  ${select('status','Status',ST.map(x=>({value:x,label:x})),t?.status||'To do')}
  ${select('priority','Priority',PRI.map(x=>({value:x,label:x})),t?.priority||'Normal')}
+ ${field('due_date','Due date (optional)',t?.due_date||'','date')}
  <label>Estimated hours<input name="estimate_hours" type="number" min="0" step="1" value="${Math.floor(minutes/60)}" required></label>
  <label>Estimated minutes<input name="estimate_minutes" type="number" min="0" max="59" step="1" value="${minutes%60}" required></label>
  <div class="wide sub">Remaining time is calculated from the estimate minus logged time for unfinished tasks${t?': '+formatHours(taskRemainingHours(t)):''}.</div>
@@ -3125,7 +3210,7 @@ async function importOneMilestone(source,options={}){
    task_id:id,project_id:targetProject,feature_id:mappedFeatures.get(String(t.feature_id||t.featureId)),
    title:String(t.title||t.name),description:t.description||'',assignee_member_id:resolveMember(t),
    tag_ids:resolveTags(t),status:ST.includes(t.status)?t.status:'To do',
-   priority:PRI.includes(t.priority)?t.priority:'Normal',estimated_hours:estimateOf(t),
+   priority:PRI.includes(t.priority)?t.priority:'Normal',due_date:gpValidDueDate(t.due_date),estimated_hours:estimateOf(t),
    created_by_member_id:data.me.member_id||'penni',updated_at:new Date().toISOString()
   });
  }
@@ -3274,5 +3359,5 @@ $('#fileInput').onchange=async ev=>{
  finally{ev.target.value=''}
 };
 init();
-</script><script src="supabase/public-config.js?v=2026.11.10.86"></script>
-<script src="gameplan.js?v=2026.11.10.86"></script><script src="local-first-sync.js?v=2026.11.10.86"></script><script src="account-ui.js?v=2026.11.10.86"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
+</script><script src="supabase/public-config.js?v=2026.11.10.87"></script>
+<script src="gameplan.js?v=2026.11.10.87"></script><script src="local-first-sync.js?v=2026.11.10.87"></script><script src="account-ui.js?v=2026.11.10.87"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
