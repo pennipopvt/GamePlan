@@ -415,21 +415,14 @@ function gpFlatItems(){
   return [t.title,t.description,member(t.assignee_member_id),f?.name,m?.name].join(' ').toLowerCase().includes(q);
  }).sort(gpFlatCompare);
 }
+
+/* Reuse the SAME shared taskRow() markup used inside Board milestones.
+   Flat sorting changes only the order, not the task UI or underlying data. */
 function gpFlatTaskHTML(t){
- const due=gpDueInfo(t),editable=isPM(),priority=String(t.priority||'Normal');
- const opts=(values,current)=>values.map(v=>'<option value="'+e(v)+'"'+(v===current?' selected':'')+'>'+e(v)+'</option>').join('');
- const name=gpTaskIsMine(t)?'<span class="gp-mine-tag" title="Assigned to you">You</span>':e(member(t.assignee_member_id));
- const person='<span class="gp-assignee-label">'+gpAssigneeAvatar(t.assignee_member_id,member(t.assignee_member_id))+name+'</span>';
- const disabled=editable?'':' disabled';
- return '<div class="gp-flat-task-row'+(t.status==='Done'?' gp-flat-complete':'')+'" data-gp-flat-id="'+e(t.task_id)+'">'+
-  '<div class="gp-flat-name"><button type="button" class="gp-flat-title'+(t.status==='Done'?' gp-flat-finished':'')+'" data-flat-open="'+e(t.task_id)+'">'+e(t.title)+'</button>'+
-  (gpDraftTask(t)?'<span class="gp-draft-indicator gp-task-draft-tag">DRAFT</span>':'')+
-  '<div class="gp-flat-detail">'+formatHours(t.estimated_hours)+' estimated · '+formatHours(taskRemainingHours(t))+' remaining</div></div>'+
-  '<div><select class="gp-flat-priority-'+e(priority.toLowerCase())+'" data-flat-priority="'+e(t.task_id)+'" aria-label="Priority for '+e(t.title)+'"'+disabled+'>'+opts([...PRI].reverse(),priority)+'</select></div>'+
-  '<div class="gp-flat-deadline"><input type="date" value="'+e(due.date)+'" data-flat-due="'+e(t.task_id)+'" aria-label="Due date for '+e(t.title)+'"'+disabled+'><span class="gp-flat-due-status gp-due-'+e(due.tone)+'">'+e(due.date?due.short:'No due date')+'</span></div>'+
-  '<div class="gp-flat-assignee">'+person+'</div>'+
-  '<div class="gp-flat-status"><select class="status-select" data-flat-status="'+e(t.task_id)+'" aria-label="Status for '+e(t.title)+'"'+disabled+'>'+opts(ST,t.status)+'</select></div>'+
-  '<button class="gp-flat-edit" data-flat-edit="'+e(t.task_id)+'" type="button" aria-label="Open task '+e(t.title)+'" title="Edit task"'+disabled+'>✎</button></div>';
+ let html=taskRow(t);
+ // Dragging to reorder is a hierarchy-only action; it cannot change a
+ // priority-sorted list, so hide just the drag handle in this view.
+ return html.replace(/<span class="gp-task-drag-handle"[\s\S]*?<\/span>/,'');
 }
 function gpPaintFlatTasks(){
  if(gpPage!=='tasks')return;
@@ -443,7 +436,7 @@ function gpRenderAllTasks(){
  const overdue=open.filter(t=>gpDueInfo(t).days<0).length;
  const soon=open.filter(t=>{const d=gpDueInfo(t).days;return d!==null&&d>=0&&d<=7}).length;
  $('#gpExtra').innerHTML='<div class="gp-all-tasks">'+
-  '<div class="gp-all-tasks-toolbar"><div><h2 style="margin:0 0 4px">All Tasks</h2><p class="sub" style="margin:0">A flat list of every task in this project. Set priorities and due dates right here.</p></div>'+
+  '<div class="gp-all-tasks-toolbar"><div><h2 style="margin:0 0 4px">All Tasks</h2><p class="sub" style="margin:0">Every task, using the same cards as the Board. Open any task to edit its due date, resources, or deliverables.</p></div>'+
   '<div class="gp-flat-tools"><label class="gp-flat-filter">Search<input type="search" id="gpFlatSearch" placeholder="Find a task…" value="'+e(gpFlatSearch)+'"></label>'+
   '<label class="gp-flat-filter">Sort by<select id="gpFlatSort"><option value="priority"'+(gpFlatOrder==='priority'?' selected':'')+'>Priority, then due date</option><option value="due"'+(gpFlatOrder==='due'?' selected':'')+'>Due date, then priority</option></select></label>'+
   '<label class="gp-flat-check"><input type="checkbox" id="gpFlatMine"'+(gpFlatMine?' checked':'')+'> My tasks</label>'+
@@ -454,8 +447,7 @@ function gpRenderAllTasks(){
   '<span class="gp-due-overdue"><strong>'+overdue+'</strong> overdue</span>'+
   '<span class="gp-due-soon"><strong>'+soon+'</strong> due within 7 days</span>'+
   '<span id="gpFlatCount"></span></div>'+
-  '<div class="gp-flat-task-list"><div class="gp-flat-task-head"><span>Task</span><span>Priority</span><span>Due date</span><span>Assigned to</span><span>Status</span><span></span></div>'+
-  '<div id="gpFlatRows"></div></div></div>';
+  '<div class="gp-flat-task-list gp-flat-card-list" id="gpFlatRows"></div></div>';
  gpPaintFlatTasks();
 }
 function gpFlatHandleInput(ev){
@@ -464,10 +456,30 @@ function gpFlatHandleInput(ev){
 }
 function gpFlatHandleClick(ev){
  if(gpPage!=='tasks')return;
- const open=ev.target.closest('[data-flat-open]'),edit=ev.target.closest('[data-flat-edit]');
- if(open){details(open.dataset.flatOpen);return}
- if(edit){editTask(edit.dataset.flatEdit);return}
- if(ev.target.closest('#gpFlatNewTask'))taskForm(null);
+ const target=ev.target;
+ if(target.closest('#gpFlatNewTask')){taskForm(null);return}
+ const tag=target.closest('[data-gp-tag-add]');
+ if(tag){ev.preventDefault();gpOpenQuickTags(tag.dataset.gpTagAdd);return}
+ const peek=target.closest('.gp-tag-peek');
+ if(peek){
+  ev.preventDefault();
+  const row=peek.closest('.task-entry'),open=!row?.classList.contains('gp-tags-open');
+  $('#gpFlatRows')?.querySelectorAll('.gp-tags-open').forEach(item=>{
+   item.classList.remove('gp-tags-open');
+   item.querySelector('.gp-tag-peek')?.setAttribute('aria-expanded','false');
+  });
+  row?.classList.toggle('gp-tags-open',open);
+  peek.setAttribute('aria-expanded',String(open));
+  return;
+ }
+ const item=target.closest('[data-detail],[data-edit],[data-log],[data-clock-in]');
+ if(!item)return;
+ const id=item.dataset.detail||item.dataset.edit||item.dataset.log||item.dataset.clockIn;
+ if(!data.tasks.some(t=>String(t.task_id)===String(id)&&t.project_id===activeProject))return;
+ if(item.dataset.detail)details(id);
+ else if(item.dataset.edit)editTask(id);
+ else if(item.dataset.log)logHours(id);
+ else if(item.dataset.clockIn)gpClockIn(id);
 }
 async function gpFlatHandleChange(ev){
  if(gpPage!=='tasks')return;
@@ -475,15 +487,13 @@ async function gpFlatHandleChange(ev){
  if(el.id==='gpFlatSort'){gpFlatOrder=el.value==='due'?'due':'priority';gpPaintFlatTasks();return}
  if(el.id==='gpFlatMine'){gpFlatMine=el.checked;gpPaintFlatTasks();return}
  if(el.id==='gpFlatDone'){gpFlatShowDone=el.checked;gpPaintFlatTasks();return}
- const kind=el.dataset.flatDue?'setDueDate':el.dataset.flatPriority?'setPriority':el.dataset.flatStatus?'setStatus':null;
- if(!kind)return;
- const taskId=el.dataset.flatDue||el.dataset.flatPriority||el.dataset.flatStatus;
- if(!data.tasks.some(t=>String(t.task_id)===String(taskId)&&t.project_id===activeProject))return;
+ const taskId=el.dataset.status;
+ if(!taskId)return;
+ const task=data.tasks.find(t=>String(t.task_id)===String(taskId)&&t.project_id===activeProject);
+ if(!task)return;
  el.disabled=true;
- try{
-  await rpc(kind,{task_id:taskId,...(kind==='setDueDate'?{due_date:el.value}:kind==='setPriority'?{priority:el.value}:{status:el.value})});
-  render();
- }catch(err){gpAlert('Could not update task: '+err.message);render()}
+ try{await rpc('setStatus',{task_id:taskId,status:el.value});render()}
+ catch(err){gpAlert('Could not update task status: '+err.message);render()}
 }
 
 function gpSettings(){
