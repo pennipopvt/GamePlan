@@ -689,7 +689,7 @@ async function gpSaveTemplate(){
  const unfinished=selected.filter(t=>t.status!=='Done');
  if(unfinished.length&&!await gpConfirm(unfinished.length+' selected tasks are unfinished. Use their existing estimates instead of their logged time?',{confirmLabel:'Use existing estimates'}))return;
  const name=await gpPrompt('Template name');if(!name?.trim())return;
- const tasks=selected.map(t=>({title:t.title,description:t.description||'',priority:t.priority||'Normal',tag_ids:[...(t.tag_ids||[])],estimated_hours:t.status==='Done'?Math.ceil(Math.round(taskHours(t)*60)/10)*10/60:Number(t.estimated_hours||0)}));
+ const tasks=selected.map(t=>({title:t.title,description:t.description||'',priority:t.priority||'Normal',tag_ids:[...(t.tag_ids||[])],resources:structuredClone(t.resources||[]),deliverables:structuredClone(t.deliverables||[]),estimated_hours:t.status==='Done'?Math.ceil(Math.round(taskHours(t)*60)/10)*10/60:Number(t.estimated_hours||0)}));
  data.templates.push({template_id:uid(),project_id:activeProject,name:name.trim(),tasks});persist();gpNavigate('templates');
 }
 function gpTemplatesPage(){
@@ -698,7 +698,7 @@ function gpTemplatesPage(){
  $('#gpTemplateList').onclick=async ev=>{const a=ev.target.closest('[data-t-edit]'),b=ev.target.closest('[data-t-delete]'),c=ev.target.closest('[data-t-use]');if(a)gpEditTemplate(a.dataset.tEdit);if(b){const t=gpTemplates().find(x=>x.template_id===b.dataset.tDelete);if(t&&await gpConfirm('Delete '+t.name+'?',{danger:true,confirmLabel:'Delete template'})){data.templates=data.templates.filter(x=>x!==t);persist();render()}}if(c)gpUseTemplate(c.dataset.tUse)};
 }
 function gpTaskEditRow(task){
- return '<div class="gp-template-task"><label>Task title<input name="task_title" required value="'+e(task.title||'')+'"></label><label>Description<textarea name="task_description">'+e(task.description||'')+'</textarea></label><label>Estimate (minutes)<input type="number" min="0" step="1" name="task_minutes" value="'+Math.round(Number(task.estimated_hours||0)*60)+'"></label><label>Priority<select name="task_priority">'+PRI.map(x=>'<option '+(x===(task.priority||'Normal')?'selected':'')+'>'+x+'</option>').join('')+'</select></label><label>Tags<select name="task_tags" multiple size="3">'+gpTags().map(t=>'<option value="'+e(t.tag_id)+'" '+((task.tag_ids||[]).includes(t.tag_id)?'selected':'')+'>'+e(t.name)+'</option>').join('')+'</select></label><button class="button danger" type="button" data-remove-template-task>Remove task</button></div>';
+ return '<div class="gp-template-task"><input type="hidden" name="task_resources" value="'+e(JSON.stringify(task.resources||[]))+'"><input type="hidden" name="task_deliverables" value="'+e(JSON.stringify(task.deliverables||[]))+'"><label>Task title<input name="task_title" required value="'+e(task.title||'')+'"></label><label>Description<textarea name="task_description">'+e(task.description||'')+'</textarea></label><label>Estimate (minutes)<input type="number" min="0" step="1" name="task_minutes" value="'+Math.round(Number(task.estimated_hours||0)*60)+'"></label><label>Priority<select name="task_priority">'+PRI.map(x=>'<option '+(x===(task.priority||'Normal')?'selected':'')+'>'+x+'</option>').join('')+'</select></label><label>Tags<select name="task_tags" multiple size="3">'+gpTags().map(t=>'<option value="'+e(t.tag_id)+'" '+((task.tag_ids||[]).includes(t.tag_id)?'selected':'')+'>'+e(t.name)+'</option>').join('')+'</select></label><button class="button danger" type="button" data-remove-template-task>Remove task</button></div>';
 }
 function gpEditTemplate(id){
  const t=gpTemplates().find(x=>x.template_id===id);if(!t)return;
@@ -706,7 +706,7 @@ function gpEditTemplate(id){
  $('#gpCancel').onclick=closeModal;$('#gpAddTemplateTask').onclick=()=>$('#gpTemplateRows').insertAdjacentHTML('beforeend',gpTaskEditRow({}));
  $('#gpTemplateRows').onclick=ev=>{if(ev.target.closest('[data-remove-template-task]'))ev.target.closest('.gp-template-task').remove()};
  $('#actionForm').onsubmit=ev=>{ev.preventDefault();const name=ev.currentTarget.elements.name.value.trim();if(!name)return;
- const rows=[...$('#gpTemplateRows').querySelectorAll('.gp-template-task')],tasks=rows.map(row=>({title:row.querySelector('[name=task_title]').value.trim(),description:row.querySelector('[name=task_description]').value,priority:row.querySelector('[name=task_priority]').value,estimated_hours:Math.max(0,Number(row.querySelector('[name=task_minutes]').value)||0)/60,tag_ids:[...row.querySelector('[name=task_tags]').selectedOptions].map(o=>o.value)}));
+ const rows=[...$('#gpTemplateRows').querySelectorAll('.gp-template-task')],tasks=rows.map(row=>({title:row.querySelector('[name=task_title]').value.trim(),description:row.querySelector('[name=task_description]').value,priority:row.querySelector('[name=task_priority]').value,estimated_hours:Math.max(0,Number(row.querySelector('[name=task_minutes]').value)||0)/60,tag_ids:[...row.querySelector('[name=task_tags]').selectedOptions].map(o=>o.value),resources:gpNormalizeTaskLinks(JSON.parse(row.querySelector('[name=task_resources]').value||'[]'),'resource'),deliverables:gpNormalizeTaskLinks(JSON.parse(row.querySelector('[name=task_deliverables]').value||'[]'),'deliverable')}));
  if(tasks.some(task=>!task.title)){gpAlert('Task titles cannot be blank.');return}t.name=name;t.tasks=tasks;persist();closeModal();render()};
 }
 function gpFeatureCreate(preferredMilestoneId='',initialTemplateId=''){
@@ -738,7 +738,7 @@ function gpFeatureCreate(preferredMilestoneId='',initialTemplateId=''){
     data.features.push({feature_id:fid,project_id:activeProject,milestone_id:mid,name,description:'',status:'To do',...(gpDraftMilestone(mid)?{__gp_private:true}:{})});
     for(const original of template.tasks){
      const h=Number(original.estimated_hours)||0;
-     data.tasks.push({task_id:uid(),project_id:activeProject,feature_id:fid,title:original.title,description:original.description||'',tag_ids:[...(original.tag_ids||[])],priority:original.priority||'Normal',assignee_member_id:'',status:'To do',estimated_hours:h,created_by_member_id:data.me.member_id,updated_at:'',...(gpDraftMilestone(mid)?{__gp_private:true}:{})});
+     data.tasks.push({task_id:uid(),project_id:activeProject,feature_id:fid,title:original.title,description:original.description||'',tag_ids:[...(original.tag_ids||[])],resources:structuredClone(original.resources||[]),deliverables:structuredClone(original.deliverables||[]),priority:original.priority||'Normal',assignee_member_id:'',status:'To do',estimated_hours:h,created_by_member_id:data.me.member_id,updated_at:'',...(gpDraftMilestone(mid)?{__gp_private:true}:{})});
     }
     persist();
    }
