@@ -56,3 +56,5 @@ Use **… More → Import milestone** from the project you want to add work to. 
 - **Remaining hours is not an import field.** For each unfinished task, GamePlan calculates `max(0, estimated - logged)`; tasks marked Done have zero remaining. Reopening a task recalculates it from its estimate and logs.
 
 **Safety:** **Import milestone** adds work to the currently selected project. **Import project** creates one new project without replacing any existing project; full-workspace replacement is intentionally unavailable.
+
+Task-level `resources` and `deliverables` arrays also import with each task and sync through existing task JSON. Resource links require HTTP(S); deliverable links can start blank as placeholders. Files themselves are not stored in GamePlan.
