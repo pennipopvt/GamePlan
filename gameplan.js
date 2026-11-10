@@ -28,6 +28,7 @@ function gpPrompt(message,initialValue=''){return gpDialog(message,{title:messag
 
 const GP_COLORS=[{name:'Blue',hex:'#729fd6'},{name:'Pink',hex:'#db8bac'},{name:'Purple',hex:'#ac91d6'},{name:'Yellow',hex:'#d8b56b'},{name:'Green',hex:'#68a992'},{name:'Orange',hex:'#e18b71'},{name:'Gray',hex:'#98aab6'}];
 let gpPage='board',gpSelecting=false;
+let gpFlatSearch='',gpFlatOrder='priority',gpFlatShowDone=false,gpFlatMine=false;
 const gpSelected=new Set();
 const gpTags=()=>data.tags.filter(x=>x.project_id===activeProject);
 const gpTemplates=()=>data.templates.filter(x=>x.project_id===activeProject);
@@ -284,14 +285,15 @@ function gpNavigate(page){
 }
 function gpAddShell(){
  const sidebar=$('#sidebar');
- sidebar.querySelector('.sidebar-brand').innerHTML='<img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.04.24" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span>';
+ sidebar.querySelector('.sidebar-brand').innerHTML='<img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.10.87" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span>';
  const nav=document.createElement('nav');nav.id='gpPrimary';nav.className='side-nav';
  const gpBoardIcon='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>';
+ const gpTasksIcon='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M3 6h.01M3 12h.01M3 18h.01"/></svg>';
  const gpGraphIcon='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m6 16 5-6 4 3 5-7"/></svg>';
  const gpBlueprintIcon='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="15" height="18" rx="1.5"/><path d="M6 7h9M6 10h6M6 13h4M6 16h3"/><path d="m13 17 6.5-6.5 2 2L15 19l-3 1z"/></svg>';
  const gpTeamIcon='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6M17 14a5 5 0 0 1 4 5v1"/></svg>';
  const gpSettingsIcon='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M10 2h4l.6 2.2 1.8.8 2-.9 2.8 2.8-.9 2 .8 1.8L23 11v4l-2.2.6-.8 1.8.9 2-2.8 2.8-2-.9-1.8.8L14 24h-4l-.6-2.2-1.8-.8-2 .9-2.8-2.8.9-2-.8-1.8L1 15v-4l2.2-.6.8-1.8-.9-2L5.9 3.8l2 .9 1.8-.8L10 2Z" transform="translate(1,1) scale(.9)"/></svg>';
- nav.innerHTML=[['board',gpBoardIcon,'Board'],['analytics',gpGraphIcon,'Analytics'],['templates',gpBlueprintIcon,'Templates'],['team',gpTeamIcon,'Team'],['settings',gpSettingsIcon,'Project Settings']].map(([v,icon,label])=>'<button class="gp-nav" data-page="'+v+'" title="'+label+'"><span class="gp-icon">'+icon+'</span><span class="gp-text">'+label+'</span></button>').join('');
+ nav.innerHTML=[['board',gpBoardIcon,'Board'],['tasks',gpTasksIcon,'All Tasks'],['analytics',gpGraphIcon,'Analytics'],['templates',gpBlueprintIcon,'Templates'],['team',gpTeamIcon,'Team'],['settings',gpSettingsIcon,'Project Settings']].map(([v,icon,label])=>'<button class="gp-nav" data-page="'+v+'" title="'+label+'"><span class="gp-icon">'+icon+'</span><span class="gp-text">'+label+'</span></button>').join('');
  const sidebarToggle=document.createElement('button');
  sidebarToggle.id='gpSidebarToggle';sidebarToggle.type='button';sidebarToggle.className='gp-sidebar-toggle';
  sidebarToggle.innerHTML='<span aria-hidden="true">☰</span><span class="gp-toggle-text">Collapse sidebar</span>';
@@ -322,6 +324,9 @@ const main=$('#mainApp');const board=document.createElement('div');board.id='gpB
  pageHeader.innerHTML='<h1 id="gpSecondaryPageTitle"></h1>';
  pageHeader.hidden=true;main.append(pageHeader);
  const extra=document.createElement('section');extra.id='gpExtra';extra.className='card';main.append(extra);
+ extra.addEventListener('click',gpFlatHandleClick);
+ extra.addEventListener('change',ev=>{void gpFlatHandleChange(ev)});
+ extra.addEventListener('input',gpFlatHandleInput);
  const headerActions=document.createElement('div');headerActions.className='gp-header-actions';
  headerActions.setAttribute('aria-label','Import and export');
  for(const id of ['export','import','importMilestone','fileInput','milestoneFileInput']){
@@ -379,14 +384,108 @@ function gpRenderPage(){
  $('#gpExtra').hidden=gpPage==='board';
  const secondaryHeader=$('#gpSecondaryPageHeader');
  secondaryHeader.hidden=gpPage==='board';
- if(gpPage!=='board')$('#gpSecondaryPageTitle').textContent=({analytics:'Analytics',templates:'Feature Templates',team:'Project Team',settings:'Project Settings'})[gpPage]||'';
+ if(gpPage!=='board')$('#gpSecondaryPageTitle').textContent=({tasks:'All Tasks',analytics:'Analytics',templates:'Feature Templates',team:'Project Team',settings:'Project Settings'})[gpPage]||'';
 document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===gpPage));
  gpSelectionBar();
+ if(gpPage==='tasks')gpRenderAllTasks();
  if(gpPage==='settings')gpSettings();
  if(gpPage==='analytics')gpAnalytics();
  if(gpPage==='templates')gpTemplatesPage();
  if(gpPage==='team')gpTeamPage();
 }
+
+/* A single flat view over projectTasks(). No duplicate task storage. Priority
+   is explicit; deadline sorting and overdue indicators never alter it. */
+const GP_FLAT_PRIORITY_ORDER={Urgent:0,High:1,Normal:2,Low:3};
+function gpFlatCompare(a,b){
+ if((a.status==='Done')!==(b.status==='Done'))return a.status==='Done'?1:-1;
+ const ap=GP_FLAT_PRIORITY_ORDER[a.priority]??2,bp=GP_FLAT_PRIORITY_ORDER[b.priority]??2;
+ const ad=a.due_date||'9999-12-31',bd=b.due_date||'9999-12-31';
+ if(gpFlatOrder==='due'){if(ad!==bd)return ad.localeCompare(bd);if(ap!==bp)return ap-bp}
+ else{if(ap!==bp)return ap-bp;if(ad!==bd)return ad.localeCompare(bd)}
+ return String(a.title||'').localeCompare(String(b.title||''),undefined,{sensitivity:'base'});
+}
+function gpFlatItems(){
+ const q=gpFlatSearch.trim().toLowerCase();
+ return projectTasks().filter(t=>{
+  if(!gpFlatShowDone&&t.status==='Done')return false;
+  if(gpFlatMine&&!gpTaskIsMine(t))return false;
+  if(!q)return true;
+  const f=feature(t.feature_id),m=milestone(f);
+  return [t.title,t.description,member(t.assignee_member_id),f?.name,m?.name].join(' ').toLowerCase().includes(q);
+ }).sort(gpFlatCompare);
+}
+function gpFlatTaskHTML(t){
+ const due=gpDueInfo(t),editable=isPM(),priority=String(t.priority||'Normal');
+ const opts=(values,current)=>values.map(v=>'<option value="'+e(v)+'"'+(v===current?' selected':'')+'>'+e(v)+'</option>').join('');
+ const name=gpTaskIsMine(t)?'<span class="gp-mine-tag" title="Assigned to you">You</span>':e(member(t.assignee_member_id));
+ const person='<span class="gp-assignee-label">'+gpAssigneeAvatar(t.assignee_member_id,member(t.assignee_member_id))+name+'</span>';
+ const disabled=editable?'':' disabled';
+ return '<div class="gp-flat-task-row'+(t.status==='Done'?' gp-flat-complete':'')+'" data-gp-flat-id="'+e(t.task_id)+'">'+
+  '<div class="gp-flat-name"><button type="button" class="gp-flat-title'+(t.status==='Done'?' gp-flat-finished':'')+'" data-flat-open="'+e(t.task_id)+'">'+e(t.title)+'</button>'+
+  (gpDraftTask(t)?'<span class="gp-draft-indicator gp-task-draft-tag">DRAFT</span>':'')+
+  '<div class="gp-flat-detail">'+formatHours(t.estimated_hours)+' estimated · '+formatHours(taskRemainingHours(t))+' remaining</div></div>'+
+  '<div><select class="gp-flat-priority-'+e(priority.toLowerCase())+'" data-flat-priority="'+e(t.task_id)+'" aria-label="Priority for '+e(t.title)+'"'+disabled+'>'+opts([...PRI].reverse(),priority)+'</select></div>'+
+  '<div class="gp-flat-deadline"><input type="date" value="'+e(due.date)+'" data-flat-due="'+e(t.task_id)+'" aria-label="Due date for '+e(t.title)+'"'+disabled+'><span class="gp-flat-due-status gp-due-'+e(due.tone)+'">'+e(due.date?due.short:'No due date')+'</span></div>'+
+  '<div class="gp-flat-assignee">'+person+'</div>'+
+  '<div class="gp-flat-status"><select class="status-select" data-flat-status="'+e(t.task_id)+'" aria-label="Status for '+e(t.title)+'"'+disabled+'>'+opts(ST,t.status)+'</select></div>'+
+  '<button class="gp-flat-edit" data-flat-edit="'+e(t.task_id)+'" type="button" aria-label="Open task '+e(t.title)+'" title="Edit task"'+disabled+'>✎</button></div>';
+}
+function gpPaintFlatTasks(){
+ if(gpPage!=='tasks')return;
+ const list=$('#gpFlatRows');if(!list)return;
+ const items=gpFlatItems();
+ const count=$('#gpFlatCount');if(count)count.textContent=items.length+' shown';
+ list.innerHTML=items.length?items.map(gpFlatTaskHTML).join(''):'<div class="gp-flat-empty">No tasks match these filters.</div>';
+}
+function gpRenderAllTasks(){
+ const tasks=projectTasks(),open=tasks.filter(t=>t.status!=='Done');
+ const overdue=open.filter(t=>gpDueInfo(t).days<0).length;
+ const soon=open.filter(t=>{const d=gpDueInfo(t).days;return d!==null&&d>=0&&d<=7}).length;
+ $('#gpExtra').innerHTML='<div class="gp-all-tasks">'+
+  '<div class="gp-all-tasks-toolbar"><div><h2 style="margin:0 0 4px">All Tasks</h2><p class="sub" style="margin:0">A flat list of every task in this project. Set priorities and due dates right here.</p></div>'+
+  '<div class="gp-flat-tools"><label class="gp-flat-filter">Search<input type="search" id="gpFlatSearch" placeholder="Find a task…" value="'+e(gpFlatSearch)+'"></label>'+
+  '<label class="gp-flat-filter">Sort by<select id="gpFlatSort"><option value="priority"'+(gpFlatOrder==='priority'?' selected':'')+'>Priority, then due date</option><option value="due"'+(gpFlatOrder==='due'?' selected':'')+'>Due date, then priority</option></select></label>'+
+  '<label class="gp-flat-check"><input type="checkbox" id="gpFlatMine"'+(gpFlatMine?' checked':'')+'> My tasks</label>'+
+  '<label class="gp-flat-check"><input type="checkbox" id="gpFlatDone"'+(gpFlatShowDone?' checked':'')+'> Show completed</label>'+
+  (projectFeatures().length&&isPM()?'<button type="button" class="button main" id="gpFlatNewTask">+ Task</button>':'')+
+  '</div></div>'+
+  '<div class="gp-flat-summary"><span><strong>'+open.length+'</strong> open</span>'+
+  '<span class="gp-due-overdue"><strong>'+overdue+'</strong> overdue</span>'+
+  '<span class="gp-due-soon"><strong>'+soon+'</strong> due within 7 days</span>'+
+  '<span id="gpFlatCount"></span></div>'+
+  '<div class="gp-flat-task-list"><div class="gp-flat-task-head"><span>Task</span><span>Priority</span><span>Due date</span><span>Assigned to</span><span>Status</span><span></span></div>'+
+  '<div id="gpFlatRows"></div></div></div>';
+ gpPaintFlatTasks();
+}
+function gpFlatHandleInput(ev){
+ if(gpPage!=='tasks'||ev.target.id!=='gpFlatSearch')return;
+ gpFlatSearch=ev.target.value;gpPaintFlatTasks();
+}
+function gpFlatHandleClick(ev){
+ if(gpPage!=='tasks')return;
+ const open=ev.target.closest('[data-flat-open]'),edit=ev.target.closest('[data-flat-edit]');
+ if(open){details(open.dataset.flatOpen);return}
+ if(edit){editTask(edit.dataset.flatEdit);return}
+ if(ev.target.closest('#gpFlatNewTask'))taskForm(null);
+}
+async function gpFlatHandleChange(ev){
+ if(gpPage!=='tasks')return;
+ const el=ev.target;
+ if(el.id==='gpFlatSort'){gpFlatOrder=el.value==='due'?'due':'priority';gpPaintFlatTasks();return}
+ if(el.id==='gpFlatMine'){gpFlatMine=el.checked;gpPaintFlatTasks();return}
+ if(el.id==='gpFlatDone'){gpFlatShowDone=el.checked;gpPaintFlatTasks();return}
+ const kind=el.dataset.flatDue?'setDueDate':el.dataset.flatPriority?'setPriority':el.dataset.flatStatus?'setStatus':null;
+ if(!kind)return;
+ const taskId=el.dataset.flatDue||el.dataset.flatPriority||el.dataset.flatStatus;
+ if(!data.tasks.some(t=>String(t.task_id)===String(taskId)&&t.project_id===activeProject))return;
+ el.disabled=true;
+ try{
+  await rpc(kind,{task_id:taskId,...(kind==='setDueDate'?{due_date:el.value}:kind==='setPriority'?{priority:el.value}:{status:el.value})});
+  render();
+ }catch(err){gpAlert('Could not update task: '+err.message);render()}
+}
+
 function gpSettings(){
  const project=find(data.projects,activeProject,'project_id');
  $('#gpExtra').innerHTML='<div class="gp-flex"><div class="gp-page-card-spacer"></div><button class="button" id="gpRename">Edit project name</button></div><h2>Project Tags</h2><p class="sub">Tags can be assigned to multiple tasks. For analytics, the first tag receives the logged time so hours are not counted twice.</p><div class="gp-list" id="gpTags">'+gpTags().map(t=>'<div class="gp-card gp-flex"><span class="gp-tag" style="--tc:'+e(t.color)+'">'+e(t.name)+'</span><div class="actions"><button class="button" data-tag-edit="'+e(t.tag_id)+'">Edit</button><button class="button danger" data-tag-delete="'+e(t.tag_id)+'">Delete</button></div></div>').join('')+'</div><p><button class="button main" id="gpAddTag">+ Add tag</button></p><section class="gp-danger-zone"><h2>Danger Zone</h2><p class="sub">Permanently delete this project, including its milestones, features, tasks, time logs, tags, templates and team memberships. Other projects will stay intact.</p><button type="button" class="button danger" id="gpDeleteProject">Delete project</button></section>';
