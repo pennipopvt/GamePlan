@@ -5,7 +5,7 @@ A lightweight task-and-project board, published from this repository with GitHub
 ## Working rules for future development chats
 
 1. **Inspect the current `main` branch before editing.** Do not assume a previous chat's code or versions are current. Keep existing design language and make focused changes rather than redesigning unrelated screens.
-2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.10.86**.
+2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.10.87**.
 3. **Refresh the offline cache identifier** in `service-worker.js` when changing front-end assets, so older clients do not keep a stale shell. This is separate from the human-readable app version.
 4. **Publish by committing to `main`.** Check the GitHub Pages build/deployment state and confirm the public URL serves the new version. If `main` is protected, create a feature branch and PR, then merge when checks permit. Never claim a successful deployment from a successful commit alone.
 5. **If the page looks stale:** hard-refresh, verify the live HTML version and asset query strings, inspect Actions/Pages deployment status, and inspect the service worker/cache. Don't blindly repeat commits. See `.github/workflows/recover-pages.yml` for a *manual recovery workflow specific to a previously stale deployment*; don't run or alter it without confirming it still applies.
@@ -161,3 +161,12 @@ Data is never removed from the owner's private board during the transition; mile
 
 - Merge account-private draft synchronization (requires `supabase/private-drafts.sql` migration), editable private draft controls, published-record unpublishing, and milestone feature reordering.
 - Fully completed features sort to the bottom while preserving manual order.
+
+## All Tasks view and due dates (v2026.11.10.87)
+
+- **All Tasks** is a sidebar page that displays every task in the selected project in a single flat list, without grouping by feature or milestone. The original Board hierarchy is unchanged.
+- Default sort places unfinished tasks first, then manual priority (Urgent → High → Normal → Low), then earliest due date, with undated tasks last within the same priority. A separate Due date sort is available. Done tasks stay at the bottom when shown.
+- Search, **My tasks**, and **Show completed** controls are local view filters. Search supports titles, descriptions, assigned people, and feature/milestone names even though the latter are not displayed as headings.
+- Owners/editors can change priority, due date, and status directly in All Tasks, or in the task editor. Task details and the Board view display deadlines, with overdue and near-term indicators. Overdue never rewrites a task's manually assigned priority.
+- `due_date` is an optional ISO local calendar date `YYYY-MM-DD` stored on the existing task object. The local-first/cloud sync already transfers task JSON properties; no Supabase schema migration is needed. Existing tasks with no `due_date` remain valid. Project and milestone JSON imports preserve `due_date` when present.
+- Relative labels use the viewer's browser-local calendar date, compare calendar days without DST drift, and do not change a task's status. Template tasks intentionally do not copy a specific dated deadline into newly instantiated tasks.
