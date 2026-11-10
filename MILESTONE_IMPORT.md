@@ -55,4 +55,4 @@ Use **… More → Import milestone** from the project you want to add work to. 
 - Invalid feature references, missing tag-ID definitions, negative estimates, and duplicate IDs stop the import before it saves the board.
 - **Remaining hours is not an import field.** For each unfinished task, GamePlan calculates `max(0, estimated - logged)`; tasks marked Done have zero remaining. Reopening a task recalculates it from its estimate and logs.
 
-**Safety:** Only use the milestone importer for this format. **Import full board** replaces local project data and should be reserved for restoring a backup.
+**Safety:** **Import milestone** adds work to the currently selected project. **Import project** creates one new project without replacing any existing project; full-workspace replacement is intentionally unavailable.
