@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GamePlan</title><link rel="icon" type="image/svg+xml" href="gameplan-mark.svg?v=2026.11.10.89">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GamePlan</title><link rel="icon" type="image/svg+xml" href="gameplan-mark.svg?v=2026.11.10.90">
 <style>
 :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;color:#273c43;background:#f7f8f5;font-size:14px}*{box-sizing:border-box}body{margin:0}button,input,textarea,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #4c9b97;outline-offset:2px}.app{min-height:100vh;max-width:1220px;margin:auto;padding:30px 22px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center}.brand{font:700 29px Georgia,serif;letter-spacing:-.7px}.brand span{color:#31847c}.sub{color:#778987;font-size:12px}.top-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.button{border:1px solid #c9d8d4;padding:10px 15px;border-radius:9px;background:white;color:#355951;font-weight:600}.button.main{background:#317d73;color:white;border-color:#317d73}.button:hover{filter:brightness(.96)}.button.danger{color:#9d3030;border-color:#e6bebe;background:#fff7f7}.card{background:white;border:1px solid #e0e7e3;border-radius:15px;padding:22px;box-shadow:0 5px 22px #152b2107}.banner{margin:22px 0}.muted{color:#758680}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:21px 0}.stat b{font-size:27px;display:block;margin-top:8px}.head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}.filters{display:flex;gap:9px;flex-wrap:wrap}select,input,textarea{border:1px solid #cbd9d5;background:white;border-radius:8px;padding:9px 11px;color:inherit;min-width:0}textarea{min-height:110px;resize:vertical}label{display:flex;flex-direction:column;gap:5px;color:#4d6563;font-size:12px;font-weight:650}.table-wrap{overflow-x:auto;margin-top:15px}table{border-collapse:collapse;width:100%;min-width:750px}th{text-align:left;background:#eef4f1;color:#56726c;font-size:11px;text-transform:uppercase;letter-spacing:.6px}td,th{padding:13px 11px;border-bottom:1px solid #ebefed;vertical-align:middle}.task-title{border:0;background:none;padding:0;text-align:left;color:#204e50;font-weight:700}.tag{font-size:11px;border-radius:50px;background:#eaf3ef;padding:4px 9px;display:inline-block}.actions{display:flex;gap:6px;flex-wrap:wrap}.actions .button{padding:6px 9px;font-size:12px}.empty{text-align:center;padding:50px 20px;color:#84918d}.modal-back{position:fixed;inset:0;background:#132d3199;display:none;align-items:center;justify-content:center;padding:20px;z-index:3}.modal-back.show{display:flex}.modal{background:white;border-radius:16px;width:min(620px,100%);max-height:90vh;overflow:auto;padding:25px}.modal h2{margin:0 0 12px;font:700 25px Georgia,serif}.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:15px 0}.fields .wide{grid-column:1/-1}.fields input,.fields textarea,.fields select{width:100%}.desc{white-space:pre-wrap;line-height:1.7;padding:10px 0;min-height:40px}.note{padding:9px 0;border-bottom:1px solid #e9efed}.controls{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:15px}.error{color:#ad3939}.success{color:#28796b}#connectFrame{display:none;width:1px;height:1px;border:0;position:absolute;pointer-events:none}.link{color:#287d73;text-decoration:none}.link:hover{text-decoration:underline}@media(max-width:700px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.fields{grid-template-columns:1fr}.fields .wide{grid-column:1}.app{padding:18px 12px}}
 
@@ -2371,8 +2371,8 @@ a:hover,.link:hover{color:#80115c}
 .gp-flat-card-list .gp-task-drag-handle{display:none}
 @media(max-width:1040px){.gp-flat-task-list.gp-flat-card-list{overflow:visible}}
 
-</style><link rel="stylesheet" href="account-ui.css?v=2026.11.10.89"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.10.89" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.10.89</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">+ Import project</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+</style><link rel="stylesheet" href="account-ui.css?v=2026.11.10.90"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.10.90" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.10.90</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">+ Import project</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><button type="button" class="button gp-my-filter" id="gpMyTasks" aria-pressed="false" title="Show only your unfinished assigned tasks">My tasks <span id="gpMyCount" class="gp-my-count">0</span></button><select id="gpMilestoneFilter" aria-label="Filter board by milestone" title="Filter by milestone"><option value="">All milestones</option></select><select id="assigneeFilter" hidden aria-hidden="true"><option value="">All assignees</option></select><div class="gp-filter-wrap"><button type="button" class="button gp-filter-trigger" id="gpFilterTrigger" aria-expanded="false" aria-controls="gpFilterPanel"><span aria-hidden="true">⚲</span> Filters <span id="gpFilterCount" class="gp-filter-count" hidden>0</span></button><div class="gp-filter-panel" id="gpFilterPanel" hidden></div></div><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div id="gpFilterChips" class="gp-filter-chips" hidden></div>
@@ -2383,7 +2383,7 @@ a:hover,.link:hover{color:#80115c}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.10.89';
+let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.10.90';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=[];
@@ -2548,6 +2548,12 @@ function gpPublishDraft(kind,id){
  catch(err){data=old;render();gpAlert('Could not publish draft: '+err.message)}
 }
 
+function gpMarkTaskInProgress(task){
+ // Preserve explicitly Blocked or Done tasks. Status is saved together with
+ // the time entry, so teammates see both changes in the same sync.
+ if(task?.status!=='To do')return false;
+ task.status='In progress';task.updated_at=new Date().toISOString();return true;
+}
 function rpc(op,p={}){
  try{
   if(op==='load')return Promise.resolve(data);
@@ -2649,6 +2655,7 @@ function rpc(op,p={}){
    const minutes=Number(p.minutes);if(!Number.isSafeInteger(minutes)||minutes<=0)throw Error('Enter a positive whole number of minutes');
    const h=minutes/60;
    data.logs.push({log_id:uid(),task_id:task.task_id,member_id:task.assignee_member_id||data.me.member_id,hours:h,work_date:p.work_date||new Date().toISOString().slice(0,10),note:p.note||'',created_at:new Date().toISOString()});
+   gpMarkTaskInProgress(task);
   }else if(op==='editLog'){
    if(!task)throw Error('Task not found');
    const log=get(data.logs,'log_id',p.log_id);
@@ -2656,6 +2663,7 @@ function rpc(op,p={}){
    const minutes=Number(p.minutes);
    if(!Number.isSafeInteger(minutes)||minutes<=0)throw Error('Enter a positive whole number of minutes');
    Object.assign(log,{hours:minutes/60,work_date:p.work_date||log.work_date,note:p.note||''});
+   gpMarkTaskInProgress(task);
   }else if(op==='deleteLog'){
    if(!task)throw Error('Task not found');
    const log=get(data.logs,'log_id',p.log_id);
@@ -3155,11 +3163,20 @@ function gpRenderClock(){
  el.innerHTML='<span class="gp-clock-label">Working on <strong>'+e(t.title)+'</strong></span><span class="gp-clock-elapsed">'+[h,m,sec].map(v=>String(v).padStart(2,'0')).join(':')+'</span><button type="button" class="button main" id="gpClockOut">■ Stop working</button>';
  el.querySelector('#gpClockOut').onclick=gpClockOut;
 }
-function gpClockIn(id){
- const task=find(data.tasks,id,'task_id');if(!task||!canUpdate(task)){gpAlert('You cannot track time on this task.');return}
- if(gpClockRead()){gpAlert('Stop working of your current task before starting another.');return}
- localStorage.setItem(GP_CLOCK_KEY,JSON.stringify({user:String(data.me.member_id||''),taskId:String(id),start:Date.now()}));
- closeModal();gpRenderClock();
+async function gpClockIn(id){
+ const task=find(data.tasks,id,'task_id');
+ if(!task||!canUpdate(task)){gpAlert('You cannot track time on this task.');return}
+ if(gpClockRead()){gpAlert('Stop working on your current task before starting another.');return}
+ // A started timer counts as started work, even before it is stopped and logged.
+ // Only To do transitions; Blocked and Done remain as explicitly set.
+ try{
+  if(task.status==='To do'){
+   await rpc('setStatus',{project_id:task.project_id,task_id:id,status:'In progress'});
+   render();
+  }
+  localStorage.setItem(GP_CLOCK_KEY,JSON.stringify({user:String(data.me.member_id||''),taskId:String(id),start:Date.now()}));
+  closeModal();gpRenderClock();
+ }catch(err){gpAlert('Could not start working: '+err.message);gpRenderClock()}
 }
 async function gpClockOut(){
  const a=gpClockRead();if(!a)return;
@@ -3462,5 +3479,5 @@ $('#fileInput').onchange=async ev=>{
  finally{ev.target.value=''}
 };
 init();
-</script><script src="supabase/public-config.js?v=2026.11.10.89"></script>
-<script src="gameplan.js?v=2026.11.10.89"></script><script src="local-first-sync.js?v=2026.11.10.89"></script><script src="account-ui.js?v=2026.11.10.89"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
+</script><script src="supabase/public-config.js?v=2026.11.10.90"></script>
+<script src="gameplan.js?v=2026.11.10.90"></script><script src="local-first-sync.js?v=2026.11.10.90"></script><script src="account-ui.js?v=2026.11.10.90"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
