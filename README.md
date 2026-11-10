@@ -5,7 +5,7 @@ A lightweight task-and-project board, published from this repository with GitHub
 ## Working rules for future development chats
 
 1. **Inspect the current `main` branch before editing.** Do not assume a previous chat's code or versions are current. Keep existing design language and make focused changes rather than redesigning unrelated screens.
-2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.10.89**.
+2. **Bump the app version for every shipped change.** Find the `APP_VERSION` constant, visible `#appVersion` label, and the cache-busting `?v=` query strings in `index.html`. Update them together. Current release: **v2026.11.10.90**.
 3. **Refresh the offline cache identifier** in `service-worker.js` when changing front-end assets, so older clients do not keep a stale shell. This is separate from the human-readable app version.
 4. **Publish by committing to `main`.** Check the GitHub Pages build/deployment state and confirm the public URL serves the new version. If `main` is protected, create a feature branch and PR, then merge when checks permit. Never claim a successful deployment from a successful commit alone.
 5. **If the page looks stale:** hard-refresh, verify the live HTML version and asset query strings, inspect Actions/Pages deployment status, and inspect the service worker/cache. Don't blindly repeat commits. See `.github/workflows/recover-pages.yml` for a *manual recovery workflow specific to a previously stale deployment*; don't run or alter it without confirming it still applies.
@@ -181,3 +181,10 @@ Data is never removed from the owner's private board during the transition; mile
 - Supported links use HTTP(S) and open in a new tab with `noopener noreferrer`. This is for links to documents in Drive, GitHub, etc., **not binary uploads or Base64 file storage**. The links persist on the task and travel with existing local-first/cloud task JSON.
 - Compact project/milestone imports preserve these fields. Existing tasks without resources or deliverables continue to work unchanged. Feature templates also preserve and copy link attachments; due dates are intentionally not copied into newly generated tasks from templates.
 - To refresh a project from an import, import the new JSON as a second project and verify it before manually deleting the older project. The importer never overwrites existing projects.
+
+## Automatic In progress status (v2026.11.10.90)
+
+- Starting a task's **Start working** timer changes its status from **To do** to **In progress** immediately, even before time is logged. If the status save fails, the timer is not started.
+- Adding a new time log or editing an existing entry changes a **To do** task to **In progress** in the same save operation as the log update.
+- Tasks already **In progress**, **Blocked**, or **Done** keep their status; past logs are not bulk-migrated to avoid unexpectedly changing historic project boards. Deleting time entries does not reset status, nor does stopping the timer revert it.
+- The same task-status field is shared between the Board and All Tasks and synchronized through the existing local-first/cloud sync.
