@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GamePlan</title><link rel="icon" type="image/svg+xml" href="gameplan-mark.svg?v=2026.11.10.88">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GamePlan</title><link rel="icon" type="image/svg+xml" href="gameplan-mark.svg?v=2026.11.10.89">
 <style>
 :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;color:#273c43;background:#f7f8f5;font-size:14px}*{box-sizing:border-box}body{margin:0}button,input,textarea,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #4c9b97;outline-offset:2px}.app{min-height:100vh;max-width:1220px;margin:auto;padding:30px 22px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center}.brand{font:700 29px Georgia,serif;letter-spacing:-.7px}.brand span{color:#31847c}.sub{color:#778987;font-size:12px}.top-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.button{border:1px solid #c9d8d4;padding:10px 15px;border-radius:9px;background:white;color:#355951;font-weight:600}.button.main{background:#317d73;color:white;border-color:#317d73}.button:hover{filter:brightness(.96)}.button.danger{color:#9d3030;border-color:#e6bebe;background:#fff7f7}.card{background:white;border:1px solid #e0e7e3;border-radius:15px;padding:22px;box-shadow:0 5px 22px #152b2107}.banner{margin:22px 0}.muted{color:#758680}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:21px 0}.stat b{font-size:27px;display:block;margin-top:8px}.head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}.filters{display:flex;gap:9px;flex-wrap:wrap}select,input,textarea{border:1px solid #cbd9d5;background:white;border-radius:8px;padding:9px 11px;color:inherit;min-width:0}textarea{min-height:110px;resize:vertical}label{display:flex;flex-direction:column;gap:5px;color:#4d6563;font-size:12px;font-weight:650}.table-wrap{overflow-x:auto;margin-top:15px}table{border-collapse:collapse;width:100%;min-width:750px}th{text-align:left;background:#eef4f1;color:#56726c;font-size:11px;text-transform:uppercase;letter-spacing:.6px}td,th{padding:13px 11px;border-bottom:1px solid #ebefed;vertical-align:middle}.task-title{border:0;background:none;padding:0;text-align:left;color:#204e50;font-weight:700}.tag{font-size:11px;border-radius:50px;background:#eaf3ef;padding:4px 9px;display:inline-block}.actions{display:flex;gap:6px;flex-wrap:wrap}.actions .button{padding:6px 9px;font-size:12px}.empty{text-align:center;padding:50px 20px;color:#84918d}.modal-back{position:fixed;inset:0;background:#132d3199;display:none;align-items:center;justify-content:center;padding:20px;z-index:3}.modal-back.show{display:flex}.modal{background:white;border-radius:16px;width:min(620px,100%);max-height:90vh;overflow:auto;padding:25px}.modal h2{margin:0 0 12px;font:700 25px Georgia,serif}.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:15px 0}.fields .wide{grid-column:1/-1}.fields input,.fields textarea,.fields select{width:100%}.desc{white-space:pre-wrap;line-height:1.7;padding:10px 0;min-height:40px}.note{padding:9px 0;border-bottom:1px solid #e9efed}.controls{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:15px}.error{color:#ad3939}.success{color:#28796b}#connectFrame{display:none;width:1px;height:1px;border:0;position:absolute;pointer-events:none}.link{color:#287d73;text-decoration:none}.link:hover{text-decoration:underline}@media(max-width:700px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.fields{grid-template-columns:1fr}.fields .wide{grid-column:1}.app{padding:18px 12px}}
 
@@ -2344,8 +2344,28 @@ a:hover,.link:hover{color:#80115c}
  .gp-all-tasks-toolbar .gp-flat-tools{width:100%}
 }
 
-</style><link rel="stylesheet" href="account-ui.css?v=2026.11.10.88"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.10.88" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.10.88</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">+ Import project</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+
+/* Task linked references and linked deliverables. */
+.gp-task-link-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.gp-task-link-section-head h3{margin:0}
+.gp-task-link-list{display:grid;gap:7px;margin-top:10px}
+.gp-task-link-item{display:flex;align-items:center;gap:11px;border:1px solid #e8e4ea;background:#faf9fb;border-radius:8px;padding:10px}
+.gp-task-link-icon{color:#b92388;font-size:18px;min-width:18px;text-align:center}
+.gp-task-link-copy{display:grid;gap:4px;min-width:0;overflow-wrap:anywhere}
+.gp-task-link-copy a{color:#ba2481;font-weight:650;text-decoration:none}
+.gp-task-link-copy a:hover{text-decoration:underline}
+.gp-task-link-copy strong{font-size:13px;color:#42485a}
+.gp-link-edit-section{display:grid;gap:9px;margin-top:7px;padding:11px;border:1px solid #e9e3ea;border-radius:8px}
+.gp-link-edit-head{display:grid;gap:4px}
+.gp-link-edit-rows{display:grid;gap:10px}
+.gp-link-edit-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) auto;gap:8px;align-items:end}
+.gp-link-edit-row label{min-width:0}
+.gp-link-remove{min-height:34px}
+.gp-link-add{justify-self:start}
+@media(max-width:700px){.gp-link-edit-row{grid-template-columns:1fr 1fr}.gp-link-remove{grid-column:1 / -1;justify-self:end}}
+
+</style><link rel="stylesheet" href="account-ui.css?v=2026.11.10.89"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.10.89" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.10.89</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">+ Import project</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><button type="button" class="button gp-my-filter" id="gpMyTasks" aria-pressed="false" title="Show only your unfinished assigned tasks">My tasks <span id="gpMyCount" class="gp-my-count">0</span></button><select id="gpMilestoneFilter" aria-label="Filter board by milestone" title="Filter by milestone"><option value="">All milestones</option></select><select id="assigneeFilter" hidden aria-hidden="true"><option value="">All assignees</option></select><div class="gp-filter-wrap"><button type="button" class="button gp-filter-trigger" id="gpFilterTrigger" aria-expanded="false" aria-controls="gpFilterPanel"><span aria-hidden="true">⚲</span> Filters <span id="gpFilterCount" class="gp-filter-count" hidden>0</span></button><div class="gp-filter-panel" id="gpFilterPanel" hidden></div></div><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div id="gpFilterChips" class="gp-filter-chips" hidden></div>
@@ -2356,7 +2376,7 @@ a:hover,.link:hover{color:#80115c}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.10.88';
+let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.10.89';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=[];
@@ -2597,14 +2617,14 @@ function rpc(op,p={}){
   }else if(op==='createTask'){
    const f=parent(data.features,'feature_id',p.feature_id);
    if(p.private_draft&&!gpDraftOwner())throw Error('Only the project owner can create private drafts.');
-   data.tasks.push({task_id:uid(),project_id:projectId,feature_id:f.feature_id,title:required(p.title,'Task title'),description:p.description||'',assignee_member_id:p.assignee_member_id||'',status:p.status||'To do',priority:p.priority||'Normal',due_date:gpValidDueDate(p.due_date),estimated_hours:hours(p.estimated_hours),created_by_member_id:data.me.member_id,updated_at:new Date().toISOString(),...(p.private_draft||gpDraftFeature(f)?{__gp_private:true}:{})});
+   data.tasks.push({task_id:uid(),project_id:projectId,feature_id:f.feature_id,title:required(p.title,'Task title'),description:p.description||'',assignee_member_id:p.assignee_member_id||'',status:p.status||'To do',priority:p.priority||'Normal',due_date:gpValidDueDate(p.due_date),resources:gpNormalizeTaskLinks(p.resources,'resource'),deliverables:gpNormalizeTaskLinks(p.deliverables,'deliverable'),estimated_hours:hours(p.estimated_hours),created_by_member_id:data.me.member_id,updated_at:new Date().toISOString(),...(p.private_draft||gpDraftFeature(f)?{__gp_private:true}:{})});
   }else if(op==='editTask'){
    if(!task)throw Error('Task not found');
    const destination=parent(data.features,'feature_id',p.feature_id);
    if(p.private_draft!==undefined)ensureDraftOwner();
    if(gpDraftFeature(destination)||p.private_draft===true)task.__gp_private=true;
    else if(p.private_draft===false)delete task.__gp_private;
-   Object.assign(task,{feature_id:p.feature_id,title:required(p.title,'Task title'),description:p.description||'',assignee_member_id:p.assignee_member_id||'',status:p.status,priority:p.priority,due_date:p.due_date===undefined?(task.due_date||''):gpValidDueDate(p.due_date),estimated_hours:hours(p.estimated_hours),updated_at:new Date().toISOString()});
+   Object.assign(task,{feature_id:p.feature_id,title:required(p.title,'Task title'),description:p.description||'',assignee_member_id:p.assignee_member_id||'',status:p.status,priority:p.priority,due_date:p.due_date===undefined?(task.due_date||''):gpValidDueDate(p.due_date),resources:p.resources===undefined?(task.resources||[]):gpNormalizeTaskLinks(p.resources,'resource'),deliverables:p.deliverables===undefined?(task.deliverables||[]):gpNormalizeTaskLinks(p.deliverables,'deliverable'),estimated_hours:hours(p.estimated_hours),updated_at:new Date().toISOString()});
   }else if(op==='setDueDate'){
    if(!task)throw Error('Task not found');if(!canUpdate(task))throw Error('You cannot edit this task.');
    task.due_date=gpValidDueDate(p.due_date);task.updated_at=new Date().toISOString();
@@ -2883,6 +2903,68 @@ async function removeMember(id,name){
  try{await rpc('removeMember',{project_id:activeProject,member_id:id});closeModal();await refresh()}catch(err){gpAlert(err.message)}
 }
 
+
+/* Resources link to external references; deliverables may be planned before a
+   file/link exists. Binary files are not stored in task JSON or cloud sync. */
+function gpNormalizeTaskLinks(value,kind){
+ if(value===undefined||value===null)return [];
+ if(!Array.isArray(value)||value.length>30)throw Error('Too many '+kind+' links');
+ return value.map((item,i)=>{
+  if(!item||typeof item!=='object')throw Error('Invalid '+kind+' item');
+  const title=String(item.title||item.label||'').trim(),url=String(item.url||'').trim();
+  if(!title||title.length>160)throw Error('Give each '+kind+' a title (up to 160 characters)');
+  if(kind==='resource'&&!url)throw Error('Resources need a URL');
+  if(url){
+   let parsed;try{parsed=new URL(url)}catch{throw Error('Invalid link: '+title)}
+   if(!['https:','http:'].includes(parsed.protocol)||!parsed.hostname)
+    throw Error('Only HTTP(S) links are supported: '+title);
+   if(url.length>2048)throw Error('Link is too long: '+title);
+  }
+  return {title,url};
+ });
+}
+function gpTaskLinksMarkup(t,field,title,empty){
+ const links=Array.isArray(t[field])?t[field]:[];
+ return '<section class="gp-detail-section gp-task-link-section"><div class="gp-task-link-section-head"><h3>'+e(title)+'</h3><span class="sub">'+links.length+' item'+(links.length===1?'':'s')+'</span></div>'+
+ (links.length?'<div class="gp-task-link-list">'+links.map(a=>{
+  const name=e(a.title||'Untitled'),url=String(a.url||'');
+  return '<div class="gp-task-link-item"><span class="gp-task-link-icon" aria-hidden="true">'+(field==='resources'?'↗':'▤')+'</span><div class="gp-task-link-copy">'+
+   (url&&/^https?:\/\//i.test(url)?'<a href="'+e(url)+'" target="_blank" rel="noopener noreferrer">'+name+'</a>':'<strong>'+name+'</strong>')+
+   '<span class="sub">'+(url?(field==='resources'?'Reference link':'Linked file / document'):'Not linked yet')+'</span></div></div>';
+ }).join('')+'</div>':'<p class="sub">'+e(empty)+'</p>')+'</section>';
+}
+function gpLinkFormRow(kind,entry={}){
+ return '<div class="gp-link-edit-row" data-gp-link-kind="'+e(kind)+'">'+
+  '<label>Title<input type="text" name="gp_'+e(kind)+'_title" maxlength="160" value="'+e(entry.title||'')+'" placeholder="'+(kind==='resource'?'Internship posting':'Resume PDF / portfolio')+'"></label>'+
+  '<label>Link '+(kind==='deliverable'?'(optional)':'')+'<input type="url" name="gp_'+e(kind)+'_url" maxlength="2048" value="'+e(entry.url||'')+'" placeholder="https://…"></label>'+
+  '<button type="button" class="button gp-link-remove" data-gp-link-remove aria-label="Remove '+e(kind)+'">×</button></div>';
+}
+function gpLinkEditorMarkup(kind,entries=[]){
+ return '<section class="gp-link-edit-section wide" data-gp-link-section="'+e(kind)+'"><div class="gp-link-edit-head"><strong>'+
+  (kind==='resource'?'Resources':'Deliverables')+'</strong><span class="sub">'+
+  (kind==='resource'?'Useful links and internship postings':'Expected files or links to completed work')+'</span></div>'+
+  '<div class="gp-link-edit-rows">'+(Array.isArray(entries)?entries:[]).map(a=>gpLinkFormRow(kind,a)).join('')+
+  '</div><button type="button" class="button gp-link-add" data-gp-link-add="'+e(kind)+'">+ Add '+(kind==='resource'?'resource':'deliverable')+'</button></section>';
+}
+function gpWireLinkEditor(form){
+ form.addEventListener('click',ev=>{
+  const remove=ev.target.closest('[data-gp-link-remove]'),add=ev.target.closest('[data-gp-link-add]');
+  if(remove){remove.closest('.gp-link-edit-row')?.remove();return}
+  if(add){
+   const kind=add.dataset.gpLinkAdd,section=form.querySelector('[data-gp-link-section="'+kind+'"]');
+   if(section&&section.querySelectorAll('.gp-link-edit-row').length<30)section.querySelector('.gp-link-edit-rows').insertAdjacentHTML('beforeend',gpLinkFormRow(kind));
+  }
+ });
+}
+function gpReadLinkEditor(form,kind){
+ const section=form.querySelector('[data-gp-link-section="'+kind+'"]');if(!section)return [];
+ const entries=[...section.querySelectorAll('.gp-link-edit-row')].map(row=>({
+  title:row.querySelector('[name="gp_'+kind+'_title"]').value.trim(),
+  url:row.querySelector('[name="gp_'+kind+'_url"]').value.trim()
+ })).filter(item=>item.title||item.url);
+ return gpNormalizeTaskLinks(entries,kind);
+}
+
 function details(id){
  const t=find(data.tasks,id,'task_id');if(!t)return;
  const f=feature(t.feature_id),m=milestone(f),logs=data.logs.filter(x=>String(x.task_id)===String(id));
@@ -2899,6 +2981,8 @@ function details(id){
   <div><span class="gp-detail-meta-label">Priority</span><strong>${e(t.priority||'Normal')}</strong></div>
   <div><span class="gp-detail-meta-label">Due date</span><strong class="gp-due-${e(gpDueInfo(t).tone)}">${e(gpDueInfo(t).date?gpDueInfo(t).label:'Not set')}</strong></div>
  </div>
+ ${gpTaskLinksMarkup(t,'resources','Resources','No reference links yet.')}
+ ${gpTaskLinksMarkup(t,'deliverables','Deliverables','No deliverables listed yet.')}
  <section class="gp-detail-section gp-detail-logs">
   <h3>Time Entries</h3>
   ${logs.length?logs.map(l=>`<div class="note"><div class="head"><div><strong>${e(member(l.member_id))}</strong><span class="gp-detail-log-meta">${e(l.work_date)} · ${formatHours(l.hours)}</span></div>${canUpdate(t)?`<div class="actions"><button class="button" type="button" data-edit-log="${e(l.log_id)}">Edit</button><button class="button danger" type="button" data-delete-log="${e(l.log_id)}">Delete</button></div>`:''}</div><div class="sub">${e(l.note)}</div></div>`).join(''):'<p class="muted">No time logged yet.</p>'}
@@ -2941,12 +3025,15 @@ function taskForm(t,preferredFeatureId=''){
  ${select('status','Status',ST.map(x=>({value:x,label:x})),t?.status||'To do')}
  ${select('priority','Priority',PRI.map(x=>({value:x,label:x})),t?.priority||'Normal')}
  ${field('due_date','Due date (optional)',t?.due_date||'','date')}
+ ${gpLinkEditorMarkup('resource',t?.resources)}
+ ${gpLinkEditorMarkup('deliverable',t?.deliverables)}
  <label>Estimated hours<input name="estimate_hours" type="number" min="0" step="1" value="${Math.floor(minutes/60)}" required></label>
  <label>Estimated minutes<input name="estimate_minutes" type="number" min="0" max="59" step="1" value="${minutes%60}" required></label>
  <div class="wide sub">Remaining time is calculated from the estimate minus logged time for unfinished tasks${t?': '+formatHours(taskRemainingHours(t)):''}.</div>
  ${gpDraftOwner()?'<label class="wide gp-draft-choice"><input type="checkbox" name="private_draft" value="true" '+(t&&gpDraftTask(t)?'checked':'')+' '+(t&&gpDraftFeature(f)?'disabled':'')+'> Private draft</label>'+(t?'<div class="wide sub">'+(gpDraftFeature(f)?'This task inherits privacy from its unpublished feature or milestone.':'Turning an already shared task private removes it from the shared board, but cannot erase previously downloaded copies.')+'</div>':''):''}
  </div><div class="controls"><button type="button" class="button" id="cancel">Cancel</button>${t?'<button class="button danger" type="button" id="deleteTask">Delete task</button>':''}<button class="button main" type="submit">Save task</button></div></form>`);
  $('#cancel').onclick=closeModal;
+ gpWireLinkEditor($('#actionForm'));
  if(t)$('#deleteTask').onclick=()=>deleteItem('task',t.task_id,t.title);
  $('#actionForm').onsubmit=async ev=>{
   ev.preventDefault();
@@ -2955,6 +3042,8 @@ function taskForm(t,preferredFeatureId=''){
    if(!Number.isSafeInteger(h)||h<0||!Number.isSafeInteger(m)||m<0||m>59)throw Error('Enter valid estimated hours and minutes (0–59).');
    const p=Object.fromEntries(form.entries());
    delete p.estimate_hours;delete p.estimate_minutes;
+   p.resources=gpReadLinkEditor(ev.currentTarget,'resource');
+   p.deliverables=gpReadLinkEditor(ev.currentTarget,'deliverable');
    p.estimated_hours=(h*60+m)/60;p.project_id=activeProject;
    if(t)p.task_id=t.task_id;
    await submit(t?'editTask':'createTask',p);
@@ -3210,7 +3299,7 @@ async function importOneMilestone(source,options={}){
    task_id:id,project_id:targetProject,feature_id:mappedFeatures.get(String(t.feature_id||t.featureId)),
    title:String(t.title||t.name),description:t.description||'',assignee_member_id:resolveMember(t),
    tag_ids:resolveTags(t),status:ST.includes(t.status)?t.status:'To do',
-   priority:PRI.includes(t.priority)?t.priority:'Normal',due_date:gpValidDueDate(t.due_date),estimated_hours:estimateOf(t),
+   priority:PRI.includes(t.priority)?t.priority:'Normal',due_date:gpValidDueDate(t.due_date),resources:gpNormalizeTaskLinks(t.resources,'resource'),deliverables:gpNormalizeTaskLinks(t.deliverables,'deliverable'),estimated_hours:estimateOf(t),
    created_by_member_id:data.me.member_id||'penni',updated_at:new Date().toISOString()
   });
  }
@@ -3359,5 +3448,5 @@ $('#fileInput').onchange=async ev=>{
  finally{ev.target.value=''}
 };
 init();
-</script><script src="supabase/public-config.js?v=2026.11.10.88"></script>
-<script src="gameplan.js?v=2026.11.10.88"></script><script src="local-first-sync.js?v=2026.11.10.88"></script><script src="account-ui.js?v=2026.11.10.88"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
+</script><script src="supabase/public-config.js?v=2026.11.10.89"></script>
+<script src="gameplan.js?v=2026.11.10.89"></script><script src="local-first-sync.js?v=2026.11.10.89"></script><script src="account-ui.js?v=2026.11.10.89"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
