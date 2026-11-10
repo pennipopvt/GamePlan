@@ -482,20 +482,20 @@ button,input,textarea,select{font-family:inherit}
 }
 #milestoneList .feature-summary .title-stack strong{font-family:inherit;font-size:12px;font-weight:550;color:#486557}
 #milestoneList .feature-summary .title-stack strong::before{content:none}
-#milestoneList .task-entry,
-#milestoneList .task-entry.status-todo,
-#milestoneList .task-entry.status-progress,
-#milestoneList .task-entry.status-blocked,
-#milestoneList .task-entry.status-done{
+:is(#milestoneList,#gpFlatRows) .task-entry,
+:is(#milestoneList,#gpFlatRows) .task-entry.status-todo,
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress,
+:is(#milestoneList,#gpFlatRows) .task-entry.status-blocked,
+:is(#milestoneList,#gpFlatRows) .task-entry.status-done{
  background:#fff;border-left:0;border-top:1px solid #eff2ee;gap:12px;min-height:47px;
  padding-top:9px;padding-bottom:9px
 }
-#milestoneList .task-entry:hover{background:#f9fbf9}
-#milestoneList .task-entry:has(.gp-task-drag-handle){padding-left:40px}
-#milestoneList .task-entry .task-title{font-family:inherit;font-size:12px;font-weight:500;color:#526b5e}
-#milestoneList .task-entry .sub{font-size:10px;color:#9aa99f}
-#milestoneList .task-entry .status-select{font-size:11px;font-weight:500;border-radius:6px;padding:6px 8px}
-#milestoneList .task-entry .icon-edit{width:30px;height:30px}
+:is(#milestoneList,#gpFlatRows) .task-entry:hover{background:#f9fbf9}
+:is(#milestoneList,#gpFlatRows) .task-entry:has(.gp-task-drag-handle){padding-left:40px}
+:is(#milestoneList,#gpFlatRows) .task-entry .task-title{font-family:inherit;font-size:12px;font-weight:500;color:#526b5e}
+:is(#milestoneList,#gpFlatRows) .task-entry .sub{font-size:10px;color:#9aa99f}
+:is(#milestoneList,#gpFlatRows) .task-entry .status-select{font-size:11px;font-weight:500;border-radius:6px;padding:6px 8px}
+:is(#milestoneList,#gpFlatRows) .task-entry .icon-edit{width:30px;height:30px}
 #milestoneList .milestone-tools .tag{background:#edf4ef;color:#698777;font-weight:500}
 #milestoneList .chevron{
  font-size:0!important;display:inline-flex;align-items:center;justify-content:center;
@@ -532,7 +532,7 @@ button,input,textarea,select{font-family:inherit}
  #milestoneList .feature-section{margin:9px 7px 10px 12px}
  #milestoneList .milestone-summary{padding:12px;min-height:60px}
  #milestoneList .feature-summary{padding:10px 11px;min-height:49px}
- #milestoneList .task-entry:has(.gp-task-drag-handle){padding-left:40px}
+ :is(#milestoneList,#gpFlatRows) .task-entry:has(.gp-task-drag-handle){padding-left:40px}
 }
 
 /* Consistent lightweight type in overlays and utility links. */
@@ -553,22 +553,22 @@ button,input,textarea,select{font-family:inherit}
 #gpPrimary>.gp-nav{font-size:14px}
 #milestoneList .milestone-summary .title-stack strong{font-size:16px}
 #milestoneList .feature-summary .title-stack strong{font-size:14px}
-#milestoneList .task-entry .task-title{font-size:14px}
-#milestoneList .task-entry .sub{font-size:12px}
-#milestoneList .task-entry .meta-person{font-size:12px}
-#milestoneList .task-entry .status-select{font-size:12px}
+:is(#milestoneList,#gpFlatRows) .task-entry .task-title{font-size:14px}
+:is(#milestoneList,#gpFlatRows) .task-entry .sub{font-size:12px}
+:is(#milestoneList,#gpFlatRows) .task-entry .meta-person{font-size:12px}
+:is(#milestoneList,#gpFlatRows) .task-entry .status-select{font-size:12px}
 #milestoneList .milestone-summary .sub,#milestoneList .feature-summary .sub{font-size:12px}
 .stat .muted{font-size:12px}
 .gp-header-actions .button{font-size:12px}
-#milestoneList .task-entry,
-#milestoneList .task-entry.status-todo,
-#milestoneList .task-entry.status-progress,
-#milestoneList .task-entry.status-blocked,
-#milestoneList .task-entry.status-done{border-left-width:4px;border-left-style:solid}
-#milestoneList .task-entry.status-todo{border-left-color:#b5c5c1}
-#milestoneList .task-entry.status-progress{border-left-color:#639bd7}
-#milestoneList .task-entry.status-blocked{border-left-color:#d88d76}
-#milestoneList .task-entry.status-done{border-left-color:#5ba68c}
+:is(#milestoneList,#gpFlatRows) .task-entry,
+:is(#milestoneList,#gpFlatRows) .task-entry.status-todo,
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress,
+:is(#milestoneList,#gpFlatRows) .task-entry.status-blocked,
+:is(#milestoneList,#gpFlatRows) .task-entry.status-done{border-left-width:4px;border-left-style:solid}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-todo{border-left-color:#b5c5c1}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress{border-left-color:#639bd7}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-blocked{border-left-color:#d88d76}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-done{border-left-color:#5ba68c}
 /* Vertical expansion uses measured height for stable cross-browser animation. */
 #milestoneList details.gp-details-animating{overflow:hidden;will-change:height}
 /* Overview is the only section title; milestones are the standalone cards. */
@@ -600,23 +600,23 @@ button,input,textarea,select{font-family:inherit}
 #milestoneList .feature-section.status-blocked>.feature-summary{background:#fae9e2}
 #milestoneList .feature-section.status-done>.feature-summary{background:#e1f1e6}
 #milestoneList .feature-summary .title-stack strong{color:#335e4d}
-#milestoneList .task-entry,
-#milestoneList .task-entry.status-todo,
-#milestoneList .task-entry.status-progress,
-#milestoneList .task-entry.status-blocked,
-#milestoneList .task-entry.status-done{padding-top:15px;padding-bottom:15px;min-height:66px;border-top-color:#e0eae3}
-#milestoneList .task-entry.status-todo{background:#f1f5f2;border-left-color:#97b6a7}
-#milestoneList .task-entry.status-progress{background:#eaf3fd;border-left-color:#5796d9}
-#milestoneList .task-entry.status-blocked{background:#fceee9;border-left-color:#d58268}
-#milestoneList .task-entry.status-done{background:#e8f5ed;border-left-color:#4d9f79}
-#milestoneList .task-entry.status-todo:hover{background:#e6efea}
-#milestoneList .task-entry.status-progress:hover{background:#dcebf9}
-#milestoneList .task-entry.status-blocked:hover{background:#f8e2d9}
-#milestoneList .task-entry.status-done:hover{background:#d9eee1}
-#milestoneList .task-entry:has(.gp-task-drag-handle){padding-left:47px}
+:is(#milestoneList,#gpFlatRows) .task-entry,
+:is(#milestoneList,#gpFlatRows) .task-entry.status-todo,
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress,
+:is(#milestoneList,#gpFlatRows) .task-entry.status-blocked,
+:is(#milestoneList,#gpFlatRows) .task-entry.status-done{padding-top:15px;padding-bottom:15px;min-height:66px;border-top-color:#e0eae3}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-todo{background:#f1f5f2;border-left-color:#97b6a7}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress{background:#eaf3fd;border-left-color:#5796d9}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-blocked{background:#fceee9;border-left-color:#d58268}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-done{background:#e8f5ed;border-left-color:#4d9f79}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-todo:hover{background:#e6efea}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress:hover{background:#dcebf9}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-blocked:hover{background:#f8e2d9}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-done:hover{background:#d9eee1}
+:is(#milestoneList,#gpFlatRows) .task-entry:has(.gp-task-drag-handle){padding-left:47px}
 #milestoneList .gp-task-drag-handle{left:11px}
-#milestoneList .task-entry .task-title{color:#36594b}
-#milestoneList .task-entry .sub{color:#698477}
+:is(#milestoneList,#gpFlatRows) .task-entry .task-title{color:#36594b}
+:is(#milestoneList,#gpFlatRows) .task-entry .sub{color:#698477}
 #milestoneList .feature-summary .title-stack .sub,#milestoneList .milestone-summary .title-stack .sub{color:#668575}
 #milestoneList .feature-section.status-progress{border-left-color:#86b4e0}
 #milestoneList .feature-section.status-blocked{border-left-color:#e3a18c}
@@ -643,7 +643,7 @@ button,input,textarea,select{font-family:inherit}
  #milestoneList .milestone-summary{padding:15px;min-height:70px}
  #milestoneList .feature-section{margin:12px 9px 13px 14px}
  #milestoneList .feature-summary{padding:13px 12px;min-height:60px}
- #milestoneList .task-entry:has(.gp-task-drag-handle){padding-left:42px}
+ :is(#milestoneList,#gpFlatRows) .task-entry:has(.gp-task-drag-handle){padding-left:42px}
  #milestoneList .gp-task-drag-handle{left:7px}
 }
 
@@ -675,21 +675,21 @@ button,input,textarea,select{font-family:inherit}
 #milestoneList .feature-section.status-progress .feature-status-label{color:#317d9d}
 #milestoneList .feature-section.status-blocked .feature-status-label{color:#a34c73}
 #milestoneList .feature-section.status-done .feature-status-label{color:#926b19}
-#milestoneList .task-entry,
-#milestoneList .task-entry.status-todo{background:#f6f7f7;border-left-color:#adb8ba}
-#milestoneList .task-entry.status-progress{background:#e3f0f5;border-left-color:#3a95b9}
-#milestoneList .task-entry.status-blocked{background:#f7e7ef;border-left-color:#b55c87}
-#milestoneList .task-entry.status-done{background:#fbf0d7;border-left-color:#c89b36}
-#milestoneList .task-entry.status-todo:hover{background:#edf0f1}
-#milestoneList .task-entry.status-progress:hover{background:#d6eaf2}
-#milestoneList .task-entry.status-blocked:hover{background:#f1d8e5}
-#milestoneList .task-entry.status-done:hover{background:#f7e7bf}
-#milestoneList .task-entry .task-title{color:#36515d}
-#milestoneList .task-entry .sub{color:#74858a}
-#milestoneList .task-entry .status-select.status-todo{background:#edf0f0;color:#566a70;border-color:#c8d0d0}
-#milestoneList .task-entry .status-select.status-progress{background:#d4e9f2;color:#2e7796;border-color:#acd4e5}
-#milestoneList .task-entry .status-select.status-blocked{background:#f1dce6;color:#a04d76;border-color:#e2b4ca}
-#milestoneList .task-entry .status-select.status-done{background:#f5e4b7;color:#8e691c;border-color:#e7ce84}
+:is(#milestoneList,#gpFlatRows) .task-entry,
+:is(#milestoneList,#gpFlatRows) .task-entry.status-todo{background:#f6f7f7;border-left-color:#adb8ba}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress{background:#e3f0f5;border-left-color:#3a95b9}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-blocked{background:#f7e7ef;border-left-color:#b55c87}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-done{background:#fbf0d7;border-left-color:#c89b36}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-todo:hover{background:#edf0f1}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress:hover{background:#d6eaf2}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-blocked:hover{background:#f1d8e5}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-done:hover{background:#f7e7bf}
+:is(#milestoneList,#gpFlatRows) .task-entry .task-title{color:#36515d}
+:is(#milestoneList,#gpFlatRows) .task-entry .sub{color:#74858a}
+:is(#milestoneList,#gpFlatRows) .task-entry .status-select.status-todo{background:#edf0f0;color:#566a70;border-color:#c8d0d0}
+:is(#milestoneList,#gpFlatRows) .task-entry .status-select.status-progress{background:#d4e9f2;color:#2e7796;border-color:#acd4e5}
+:is(#milestoneList,#gpFlatRows) .task-entry .status-select.status-blocked{background:#f1dce6;color:#a04d76;border-color:#e2b4ca}
+:is(#milestoneList,#gpFlatRows) .task-entry .status-select.status-done{background:#f5e4b7;color:#8e691c;border-color:#e7ce84}
 #gpSelectionBar{background:#e4eff2;border-color:#bad6de;color:#365c6a}
 #milestoneList .gp-template-selectable{cursor:pointer;position:relative;transition:background .12s ease,box-shadow .12s ease}
 #milestoneList .gp-template-selectable .task-title{pointer-events:none}
@@ -768,20 +768,20 @@ body{background:#fbfcfa}
 #milestoneList .feature-section.status-progress .feature-status-label{color:#96711f}
 #milestoneList .feature-section.status-blocked .feature-status-label{color:#a25579}
 #milestoneList .feature-section.status-done .feature-status-label{color:#3e815e}
-#milestoneList .task-entry.status-todo{background:#f4f6f5;border-left-color:#adbab4}
-#milestoneList .task-entry.status-progress{background:#faf1d9;border-left-color:#c5a04b}
-#milestoneList .task-entry.status-blocked{background:#f7e9f0;border-left-color:#b8698c}
-#milestoneList .task-entry.status-done{background:#e3f2e9;border-left-color:#4c9b73}
-#milestoneList .task-entry.status-todo:hover{background:#eaf0ed}
-#milestoneList .task-entry.status-progress:hover{background:#f5e9c9}
-#milestoneList .task-entry.status-blocked:hover{background:#f0dce7}
-#milestoneList .task-entry.status-done:hover{background:#d3eadc}
-#milestoneList .task-entry .status-select.status-todo{background:#e9edeb;color:#62756c;border-color:#cdd6d0}
-#milestoneList .task-entry .status-select.status-progress{background:#f4e5b9;color:#876616;border-color:#e7cb81}
-#milestoneList .task-entry .status-select.status-blocked{background:#f2dce7;color:#95476b;border-color:#e1b9cc}
-#milestoneList .task-entry .status-select.status-done{background:#d1e9d9;color:#306d4d;border-color:#acd3b9}
-#milestoneList .task-entry:not(.gp-template-selectable){cursor:pointer}
-#milestoneList .task-entry:not(.gp-template-selectable) .gp-task-drag-handle{cursor:grab}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-todo{background:#f4f6f5;border-left-color:#adbab4}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress{background:#faf1d9;border-left-color:#c5a04b}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-blocked{background:#f7e9f0;border-left-color:#b8698c}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-done{background:#e3f2e9;border-left-color:#4c9b73}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-todo:hover{background:#eaf0ed}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress:hover{background:#f5e9c9}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-blocked:hover{background:#f0dce7}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-done:hover{background:#d3eadc}
+:is(#milestoneList,#gpFlatRows) .task-entry .status-select.status-todo{background:#e9edeb;color:#62756c;border-color:#cdd6d0}
+:is(#milestoneList,#gpFlatRows) .task-entry .status-select.status-progress{background:#f4e5b9;color:#876616;border-color:#e7cb81}
+:is(#milestoneList,#gpFlatRows) .task-entry .status-select.status-blocked{background:#f2dce7;color:#95476b;border-color:#e1b9cc}
+:is(#milestoneList,#gpFlatRows) .task-entry .status-select.status-done{background:#d1e9d9;color:#306d4d;border-color:#acd3b9}
+:is(#milestoneList,#gpFlatRows) .task-entry:not(.gp-template-selectable){cursor:pointer}
+:is(#milestoneList,#gpFlatRows) .task-entry:not(.gp-template-selectable) .gp-task-drag-handle{cursor:grab}
 #milestoneList .gp-template-selectable.gp-template-selected,
 #milestoneList .gp-template-selectable.gp-template-selected.status-todo,
 #milestoneList .gp-template-selectable.gp-template-selected.status-progress,
@@ -922,20 +922,20 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
 #milestoneList .feature-section.status-progress .feature-status-label{color:#545800}
 #milestoneList .feature-section.status-blocked .feature-status-label{color:#a72b78}
 #milestoneList .feature-section.status-done .feature-status-label{color:#006865}
-#milestoneList .task-entry.status-todo{background:var(--gp-todo-bg);border-left-color:var(--gp-todo-edge)}
-#milestoneList .task-entry.status-progress{background:var(--gp-progress-bg);border-left-color:var(--gp-progress-edge)}
-#milestoneList .task-entry.status-blocked{background:var(--gp-blocked-bg);border-left-color:var(--gp-blocked-edge)}
-#milestoneList .task-entry.status-done{background:var(--gp-done-bg);border-left-color:var(--gp-done-edge)}
-#milestoneList .task-entry.status-todo:hover{background:#ebedf0}
-#milestoneList .task-entry.status-progress:hover{background:#f8f9d8}
-#milestoneList .task-entry.status-blocked:hover{background:#f6d4e9}
-#milestoneList .task-entry.status-done:hover{background:#cbe8e4}
-#milestoneList .task-entry .task-title{color:#3d3441}
-#milestoneList .task-entry .sub{color:#726c78}
-#milestoneList .task-entry .status-select.status-todo{background:#e9ebed;color:#5d6470;border-color:#cfd2d6}
-#milestoneList .task-entry .status-select.status-progress{background:var(--gp-yellow);color:#303200;border-color:#d8df00;font-weight:650}
-#milestoneList .task-entry .status-select.status-blocked{background:#f6d2e9;color:#902b6d;border-color:#edadd3}
-#milestoneList .task-entry .status-select.status-done{background:#cde9e5;color:#005e5a;border-color:#95ceca}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-todo{background:var(--gp-todo-bg);border-left-color:var(--gp-todo-edge)}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress{background:var(--gp-progress-bg);border-left-color:var(--gp-progress-edge)}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-blocked{background:var(--gp-blocked-bg);border-left-color:var(--gp-blocked-edge)}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-done{background:var(--gp-done-bg);border-left-color:var(--gp-done-edge)}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-todo:hover{background:#ebedf0}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress:hover{background:#f8f9d8}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-blocked:hover{background:#f6d4e9}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-done:hover{background:#cbe8e4}
+:is(#milestoneList,#gpFlatRows) .task-entry .task-title{color:#3d3441}
+:is(#milestoneList,#gpFlatRows) .task-entry .sub{color:#726c78}
+:is(#milestoneList,#gpFlatRows) .task-entry .status-select.status-todo{background:#e9ebed;color:#5d6470;border-color:#cfd2d6}
+:is(#milestoneList,#gpFlatRows) .task-entry .status-select.status-progress{background:var(--gp-yellow);color:#303200;border-color:#d8df00;font-weight:650}
+:is(#milestoneList,#gpFlatRows) .task-entry .status-select.status-blocked{background:#f6d2e9;color:#902b6d;border-color:#edadd3}
+:is(#milestoneList,#gpFlatRows) .task-entry .status-select.status-done{background:#cde9e5;color:#005e5a;border-color:#95ceca}
 #milestoneList .gp-template-selectable.gp-template-selected,
 #milestoneList .gp-template-selectable.gp-template-selected.status-todo,
 #milestoneList .gp-template-selectable.gp-template-selected.status-progress,
@@ -973,11 +973,11 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
 @media(max-width:680px){.grid .stat{padding:12px 14px;min-height:77px}}
 
 /* Lemon-yellow correction: vivid exact Coolors yellow only on status identifiers. */
-#milestoneList .task-entry.status-progress{background:#fcfce9;border-left-color:var(--gp-yellow)}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress{background:#fcfce9;border-left-color:var(--gp-yellow)}
 #milestoneList .feature-section.status-progress{border-left-color:var(--gp-yellow)}
 #milestoneList .feature-section.status-progress>.feature-summary{background:#fbfbe8}
-#milestoneList .task-entry.status-progress .status-select{background:var(--gp-yellow);color:#303200;border-color:#d9df00}
-#milestoneList .task-entry.status-progress:hover{background:#f8f9d8}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress .status-select{background:var(--gp-yellow);color:#303200;border-color:#d9df00}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress:hover{background:#f8f9d8}
 
 /* Sidebar option B — soft charcoal. Color-only overrides; geometry is unchanged. */
 .sidebar,.gp-collapsed .sidebar{background:#252934;border-right-color:#1d222c;color:#f4f5f7}
@@ -1047,10 +1047,10 @@ a:hover,.link:hover{color:#80115c}
 #milestoneList .feature-section.status-progress{border-left-color:var(--gp-progress-edge)}
 #milestoneList .feature-section.status-progress>.feature-summary{background:#e4f7f8}
 #milestoneList .feature-section.status-progress .feature-status-label{color:#006b70}
-#milestoneList .task-entry.status-progress{background:var(--gp-progress-bg);border-left-color:var(--gp-progress-edge)}
-#milestoneList .task-entry.status-progress:hover{background:#c9eff1}
-#milestoneList .task-entry .status-select.status-progress,
-#milestoneList .task-entry.status-progress .status-select{
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress{background:var(--gp-progress-bg);border-left-color:var(--gp-progress-edge)}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress:hover{background:#c9eff1}
+:is(#milestoneList,#gpFlatRows) .task-entry .status-select.status-progress,
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress .status-select{
  background:#00b8c0;color:#073638;border-color:#009da5;font-weight:650
 }
 .gp-detail-status.gp-detail-progress{background:#bdeef0;color:#006b70}
@@ -1076,19 +1076,19 @@ a:hover,.link:hover{color:#80115c}
 #milestoneList .feature-section.status-progress .feature-status-label{color:#49469a}
 #milestoneList .feature-section.status-blocked .feature-status-label{color:#93256c}
 #milestoneList .feature-section.status-done .feature-status-label{color:#236b4c}
-#milestoneList .task-entry.status-todo{background:var(--gp-todo-bg);border-left-color:var(--gp-todo-edge)}
-#milestoneList .task-entry.status-progress{background:var(--gp-progress-bg);border-left-color:var(--gp-progress-edge)}
-#milestoneList .task-entry.status-blocked{background:var(--gp-blocked-bg);border-left-color:var(--gp-blocked-edge)}
-#milestoneList .task-entry.status-done{background:var(--gp-done-bg);border-left-color:var(--gp-done-edge)}
-#milestoneList .task-entry.status-todo:hover{background:#e9ecf1}
-#milestoneList .task-entry.status-progress:hover{background:#dadcf7}
-#milestoneList .task-entry.status-blocked:hover{background:#f9d5eb}
-#milestoneList .task-entry.status-done:hover{background:#cce9db}
-#milestoneList .task-entry .status-select.status-todo{background:#e8ebef;border-color:#cbd0d8;color:#4b5563}
-#milestoneList .task-entry .status-select.status-progress,
-#milestoneList .task-entry.status-progress .status-select{background:#d9daf8;border-color:#a6a3e5;color:#49469a;font-weight:650}
-#milestoneList .task-entry .status-select.status-blocked{background:#f6d6e9;border-color:#eda9d2;color:#93256c}
-#milestoneList .task-entry .status-select.status-done{background:#ceebdc;border-color:#9dd4b8;color:#236b4c}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-todo{background:var(--gp-todo-bg);border-left-color:var(--gp-todo-edge)}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress{background:var(--gp-progress-bg);border-left-color:var(--gp-progress-edge)}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-blocked{background:var(--gp-blocked-bg);border-left-color:var(--gp-blocked-edge)}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-done{background:var(--gp-done-bg);border-left-color:var(--gp-done-edge)}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-todo:hover{background:#e9ecf1}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress:hover{background:#dadcf7}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-blocked:hover{background:#f9d5eb}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-done:hover{background:#cce9db}
+:is(#milestoneList,#gpFlatRows) .task-entry .status-select.status-todo{background:#e8ebef;border-color:#cbd0d8;color:#4b5563}
+:is(#milestoneList,#gpFlatRows) .task-entry .status-select.status-progress,
+:is(#milestoneList,#gpFlatRows) .task-entry.status-progress .status-select{background:#d9daf8;border-color:#a6a3e5;color:#49469a;font-weight:650}
+:is(#milestoneList,#gpFlatRows) .task-entry .status-select.status-blocked{background:#f6d6e9;border-color:#eda9d2;color:#93256c}
+:is(#milestoneList,#gpFlatRows) .task-entry .status-select.status-done{background:#ceebdc;border-color:#9dd4b8;color:#236b4c}
 .gp-detail-status.gp-detail-todo{background:#e8ebef;color:#4b5563}
 .gp-detail-status.gp-detail-progress{background:#e2e3fc;color:#49469a}
 .gp-detail-status.gp-detail-blocked{background:#f9d9ec;color:#93256c}
@@ -1191,9 +1191,9 @@ a:hover,.link:hover{color:#80115c}
 #milestoneList .feature-section.status-blocked{border-left-color:var(--gp-blocked-edge)}
 #milestoneList .feature-section.status-blocked>.feature-summary{background:#fbe7e8}
 #milestoneList .feature-section.status-blocked .feature-status-label{color:#a12c3c}
-#milestoneList .task-entry.status-blocked{background:var(--gp-blocked-bg);border-left-color:var(--gp-blocked-edge)}
-#milestoneList .task-entry.status-blocked:hover{background:#f8d9dc}
-#milestoneList .task-entry .status-select.status-blocked{background:#f7d7db;border-color:#e6a6af;color:#a12c3c}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-blocked{background:var(--gp-blocked-bg);border-left-color:var(--gp-blocked-edge)}
+:is(#milestoneList,#gpFlatRows) .task-entry.status-blocked:hover{background:#f8d9dc}
+:is(#milestoneList,#gpFlatRows) .task-entry .status-select.status-blocked{background:#f7d7db;border-color:#e6a6af;color:#a12c3c}
 .gp-detail-status.gp-detail-blocked{background:#f8dadd;color:#a12c3c}
 
 /* Compact milestone hierarchy: title, description, and a single inline progress row. */
@@ -1295,22 +1295,22 @@ a:hover,.link:hover{color:#80115c}
 }
 #mainApp .grid .stat .muted{font-size:11px}
 #mainApp .grid .stat b{font-size:25px;margin-top:4px}
-#milestoneList .task-entry{
+:is(#milestoneList,#gpFlatRows) .task-entry{
  display:grid;
  grid-template-areas:"main tags person status actions";
  grid-template-columns:minmax(145px,1.5fr) minmax(100px,1fr) minmax(72px,.55fr) minmax(104px,auto) auto;
  gap:8px 11px;align-items:center;
  padding-top:9px;padding-bottom:9px;min-height:48px;
 }
-#milestoneList .task-entry>div:first-of-type{grid-area:main;min-width:0}
-#milestoneList .task-entry .gp-task-tags{grid-area:tags;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:4px 5px}
-#milestoneList .task-entry .meta-person{grid-area:person;min-width:0;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#milestoneList .task-entry>.status-select{grid-area:status;min-width:0;width:100%;font-size:11px;padding:5px 6px;border-radius:6px;font-weight:550}
-#milestoneList .task-entry>.actions{grid-area:actions;gap:3px;justify-content:flex-end}
-#milestoneList .task-entry .actions .icon-edit{width:27px;height:27px;flex:0 0 27px}
-#milestoneList .task-entry .task-title{font-size:12.5px;font-weight:600;line-height:1.35}
-#milestoneList .task-entry>div:first-of-type>.sub{font-size:10.5px;margin-top:3px;line-height:1.3}
-#milestoneList .task-entry .gp-task-tags .gp-tag{
+:is(#milestoneList,#gpFlatRows) .task-entry>div:first-of-type{grid-area:main;min-width:0}
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags{grid-area:tags;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:4px 5px}
+:is(#milestoneList,#gpFlatRows) .task-entry .meta-person{grid-area:person;min-width:0;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+:is(#milestoneList,#gpFlatRows) .task-entry>.status-select{grid-area:status;min-width:0;width:100%;font-size:11px;padding:5px 6px;border-radius:6px;font-weight:550}
+:is(#milestoneList,#gpFlatRows) .task-entry>.actions{grid-area:actions;gap:3px;justify-content:flex-end}
+:is(#milestoneList,#gpFlatRows) .task-entry .actions .icon-edit{width:27px;height:27px;flex:0 0 27px}
+:is(#milestoneList,#gpFlatRows) .task-entry .task-title{font-size:12.5px;font-weight:600;line-height:1.35}
+:is(#milestoneList,#gpFlatRows) .task-entry>div:first-of-type>.sub{font-size:10.5px;margin-top:3px;line-height:1.3}
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags .gp-tag{
  display:inline-flex;align-items:center;gap:5px;max-width:100%;min-width:0;
  padding:3px 7px 3px 6px;border-radius:5px;
  font-size:10px;line-height:1.3;font-weight:600;
@@ -1318,30 +1318,30 @@ a:hover,.link:hover{color:#80115c}
  border:1px solid color-mix(in srgb,var(--tc),white 49%);
  color:#483e49;white-space:normal;overflow-wrap:anywhere;
 }
-#milestoneList .task-entry .gp-task-tags .gp-tag::before{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags .gp-tag::before{
  content:"";display:inline-block;flex:none;width:6px;height:6px;
  background:var(--tc);border-radius:50%;
 }
 @media(max-width:1100px){
- #milestoneList .task-entry{
+ :is(#milestoneList,#gpFlatRows) .task-entry{
   grid-template-areas:"main main status actions" "tags tags person person";
   grid-template-columns:minmax(0,1fr) minmax(40px,.35fr) minmax(106px,auto) auto;
  }
- #milestoneList .task-entry .gp-task-tags{align-self:center}
- #milestoneList .task-entry .meta-person{text-align:right;align-self:center}
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags{align-self:center}
+ :is(#milestoneList,#gpFlatRows) .task-entry .meta-person{text-align:right;align-self:center}
 }
 @media(max-width:680px){
  #mainApp .grid{gap:15px}
  #mainApp .grid>.stat,#mainApp .grid>.stat:nth-child(1),
  #mainApp .grid>.stat:nth-child(2),#mainApp .grid>.stat:nth-child(3){min-width:85px}
- #milestoneList .task-entry{
+ :is(#milestoneList,#gpFlatRows) .task-entry{
   grid-template-areas:"main main status" "tags tags actions";
   grid-template-columns:minmax(0,1fr) minmax(35px,.3fr) minmax(105px,auto);
   gap:6px 8px;
  }
- #milestoneList .task-entry .meta-person{display:none}
- #milestoneList .task-entry>.actions{grid-column:auto;justify-content:flex-end}
- #milestoneList .task-entry .gp-task-tags{grid-area:tags}
+ :is(#milestoneList,#gpFlatRows) .task-entry .meta-person{display:none}
+ :is(#milestoneList,#gpFlatRows) .task-entry>.actions{grid-column:auto;justify-content:flex-end}
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags{grid-area:tags}
 }
 
 /* Allow expanded task tags to extend beyond their milestone card. */
@@ -1350,107 +1350,107 @@ a:hover,.link:hover{color:#80115c}
 #milestoneList .milestone-section[open]>.milestone-summary{border-radius:9px 9px 0 0}
 #milestoneList .milestone-section:not([open])>.milestone-summary{border-radius:9px}
 /* Readable task typography and side-mounted tag swatches that reveal on hover. */
-#milestoneList .task-entry{
+:is(#milestoneList,#gpFlatRows) .task-entry{
  grid-template-areas:"main tags person status actions";
  grid-template-columns:minmax(155px,1.7fr) 58px minmax(76px,.5fr) minmax(114px,auto) auto;
  gap:8px 12px;min-height:57px;padding-top:11px;padding-bottom:11px;
 }
-#milestoneList .task-entry:has(.gp-tag-popover):hover,
-#milestoneList .task-entry.gp-tags-open{z-index:15}
-#milestoneList .task-entry .task-title{font-size:14px;font-weight:620;line-height:1.4}
-#milestoneList .task-entry>div:first-of-type>.sub{font-size:12px;line-height:1.4;margin-top:3px}
-#milestoneList .task-entry .meta-person{font-size:12px}
-#milestoneList .task-entry>.status-select{
+:is(#milestoneList,#gpFlatRows) .task-entry:has(.gp-tag-popover):hover,
+:is(#milestoneList,#gpFlatRows) .task-entry.gp-tags-open{z-index:15}
+:is(#milestoneList,#gpFlatRows) .task-entry .task-title{font-size:14px;font-weight:620;line-height:1.4}
+:is(#milestoneList,#gpFlatRows) .task-entry>div:first-of-type>.sub{font-size:12px;line-height:1.4;margin-top:3px}
+:is(#milestoneList,#gpFlatRows) .task-entry .meta-person{font-size:12px}
+:is(#milestoneList,#gpFlatRows) .task-entry>.status-select{
  font-size:13px;line-height:1.3;padding:7px 8px;font-weight:600;
 }
-#milestoneList .task-entry .gp-task-tags{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags{
  grid-area:tags;position:relative;display:flex;align-items:center;justify-content:flex-start;
  width:58px;min-width:0;flex-wrap:nowrap;overflow:visible;
 }
-#milestoneList .task-entry .gp-task-tags.gp-no-tags{min-height:1px}
-#milestoneList .task-entry .gp-tag-peek{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags.gp-no-tags{min-height:1px}
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-peek{
  display:flex;align-items:center;justify-content:flex-start;gap:4px;
  min-width:42px;max-width:58px;min-height:28px;padding:4px 5px;
  background:transparent;border:1px solid transparent;border-radius:7px;
  cursor:pointer;white-space:nowrap;
 }
-#milestoneList .task-entry .gp-tag-peek:hover,
-#milestoneList .task-entry .gp-tag-peek:focus-visible,
-#milestoneList .task-entry.gp-tags-open .gp-tag-peek{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-peek:hover,
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-peek:focus-visible,
+:is(#milestoneList,#gpFlatRows) .task-entry.gp-tags-open .gp-tag-peek{
  background:#ffffffb0;border-color:#cdbfc9;
 }
-#milestoneList .task-entry .gp-tag-dot{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-dot{
  display:inline-block;width:9px;height:9px;border-radius:50%;flex:none;
  background:var(--tc);border:1px solid #00000017;
 }
-#milestoneList .task-entry .gp-tag-more{font-size:11px;font-weight:650;color:#746476}
-#milestoneList .task-entry .gp-tag-popover{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-more{font-size:11px;font-weight:650;color:#746476}
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-popover{
  display:none;position:absolute;right:0;top:calc(100% + 5px);
  z-index:40;width:max-content;max-width:min(310px,70vw);
  flex-wrap:wrap;gap:6px;align-items:center;
  padding:11px 12px;background:#fff;border:1px solid #dec9dc;
  border-radius:10px;box-shadow:0 11px 26px #2b1c2c23;
 }
-#milestoneList .task-entry:hover .gp-tag-popover,
-#milestoneList .task-entry:focus-within .gp-tag-popover,
-#milestoneList .task-entry.gp-tags-open .gp-tag-popover{display:flex}
-#milestoneList .task-entry .gp-tag-popover-label{
+:is(#milestoneList,#gpFlatRows) .task-entry:hover .gp-tag-popover,
+:is(#milestoneList,#gpFlatRows) .task-entry:focus-within .gp-tag-popover,
+:is(#milestoneList,#gpFlatRows) .task-entry.gp-tags-open .gp-tag-popover{display:flex}
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-popover-label{
  width:100%;font-size:11px;font-weight:650;letter-spacing:.03em;color:#7f7180;
 }
-#milestoneList .task-entry .gp-tag-popover .gp-tag{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-popover .gp-tag{
  display:inline-flex;align-items:center;gap:6px;padding:6px 9px;
  font-size:12px;line-height:1.3;font-weight:600;border-radius:7px;
  background:color-mix(in srgb,var(--tc),white 87%);
  border:1px solid color-mix(in srgb,var(--tc),white 45%);
  color:#423642;white-space:normal;
 }
-#milestoneList .task-entry .gp-tag-popover .gp-tag::before{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-popover .gp-tag::before{
  content:"";width:8px;height:8px;border-radius:50%;flex:none;background:var(--tc);
 }
 @media(max-width:1100px){
- #milestoneList .task-entry{
+ :is(#milestoneList,#gpFlatRows) .task-entry{
   grid-template-areas:"main main status actions" "tags person person person";
   grid-template-columns:minmax(0,1fr) minmax(45px,.2fr) minmax(114px,auto) auto;
  }
- #milestoneList .task-entry .gp-task-tags{grid-area:tags}
- #milestoneList .task-entry .meta-person{grid-area:person;text-align:left}
- #milestoneList .task-entry .gp-tag-popover{right:auto;left:0}
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags{grid-area:tags}
+ :is(#milestoneList,#gpFlatRows) .task-entry .meta-person{grid-area:person;text-align:left}
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-popover{right:auto;left:0}
 }
 @media(max-width:680px){
- #milestoneList .task-entry{
+ :is(#milestoneList,#gpFlatRows) .task-entry{
   grid-template-areas:"main main status" "tags tags actions";
   grid-template-columns:minmax(0,1fr) minmax(25px,.15fr) minmax(112px,auto);
   gap:7px 9px;
  }
- #milestoneList .task-entry .meta-person{display:none}
- #milestoneList .task-entry .gp-task-tags{grid-area:tags}
- #milestoneList .task-entry .gp-tag-popover{right:auto;left:0;max-width:min(275px,75vw)}
+ :is(#milestoneList,#gpFlatRows) .task-entry .meta-person{display:none}
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags{grid-area:tags}
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-popover{right:auto;left:0;max-width:min(275px,75vw)}
 }
 
 /* Expand-in-place side tag tabs; no floating cards and no separate Tags heading. */
-#milestoneList .task-entry{
+:is(#milestoneList,#gpFlatRows) .task-entry{
  grid-template-areas:"main tags person status actions";
  grid-template-columns:minmax(155px,1.7fr) 64px minmax(76px,.5fr) minmax(114px,auto) auto;
  gap:8px 10px;
 }
-#milestoneList .task-entry .task-title{font-size:13.5px;font-weight:620;line-height:1.34}
-#milestoneList .task-entry>div:first-of-type>.sub{font-size:12px;margin-top:2px;line-height:1.3}
-#milestoneList .task-entry .gp-task-tags{
+:is(#milestoneList,#gpFlatRows) .task-entry .task-title{font-size:13.5px;font-weight:620;line-height:1.34}
+:is(#milestoneList,#gpFlatRows) .task-entry>div:first-of-type>.sub{font-size:12px;margin-top:2px;line-height:1.3}
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags{
  grid-area:tags;display:block;position:relative;justify-self:end;
  width:64px;min-width:0;height:30px;overflow:visible;
 }
-#milestoneList .task-entry .gp-task-tags.gp-no-tags{height:1px}
-#milestoneList .task-entry .gp-tag-peek{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags.gp-no-tags{height:1px}
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-peek{
  position:absolute;top:50%;right:0;transform:translateY(-50%);
  display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;
  width:max-content;max-width:min(620px,65vw);min-width:0;min-height:28px;
  gap:4px;background:transparent;border:0;border-radius:6px;
  padding:0;margin:0;overflow:visible;transition:none;
 }
-#milestoneList .task-entry .gp-tag-peek:hover,
-#milestoneList .task-entry .gp-tag-peek:focus-visible,
-#milestoneList .task-entry.gp-tags-open .gp-tag-peek{background:transparent;border-color:transparent}
-#milestoneList .task-entry .gp-tag-rail{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-peek:hover,
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-peek:focus-visible,
+:is(#milestoneList,#gpFlatRows) .task-entry.gp-tags-open .gp-tag-peek{background:transparent;border-color:transparent}
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-rail{
  display:inline-flex;align-items:center;overflow:hidden;
  height:26px;max-width:100%;flex:0 1 auto;
  background:color-mix(in srgb,var(--tc),white 88%);
@@ -1458,29 +1458,29 @@ a:hover,.link:hover{color:#80115c}
  border-radius:5px;
  box-shadow:0 1px 2px #2529340c;
 }
-#milestoneList .task-entry .gp-tag-rail-mark{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-rail-mark{
  display:block;width:9px;min-width:9px;align-self:stretch;
  background:var(--tc);border-radius:3px 0 0 3px;
  transition:width .22s cubic-bezier(.2,.75,.25,1),min-width .22s cubic-bezier(.2,.75,.25,1);
 }
-#milestoneList .task-entry .gp-tag-rail-name{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-rail-name{
  display:block;max-width:0;opacity:0;overflow:hidden;white-space:nowrap;
  font-size:12px;font-weight:650;line-height:24px;color:#352d38;
  padding:0;transition:max-width .28s cubic-bezier(.18,.8,.22,1),opacity .18s ease,padding .28s ease;
 }
-#milestoneList .task-entry:hover .gp-tag-rail-name,
-#milestoneList .task-entry:focus-within .gp-tag-rail-name,
-#milestoneList .task-entry.gp-tags-open .gp-tag-rail-name{
+:is(#milestoneList,#gpFlatRows) .task-entry:hover .gp-tag-rail-name,
+:is(#milestoneList,#gpFlatRows) .task-entry:focus-within .gp-tag-rail-name,
+:is(#milestoneList,#gpFlatRows) .task-entry.gp-tags-open .gp-tag-rail-name{
  max-width:180px;opacity:1;padding:0 8px 0 7px;
 }
-#milestoneList .task-entry:hover .gp-tag-rail-mark,
-#milestoneList .task-entry:focus-within .gp-tag-rail-mark,
-#milestoneList .task-entry.gp-tags-open .gp-tag-rail-mark{width:7px;min-width:7px}
-#milestoneList .task-entry .gp-tag-popover{display:none!important}
-#milestoneList .task-entry:hover .gp-tag-peek,
-#milestoneList .task-entry:focus-within .gp-tag-peek,
-#milestoneList .task-entry.gp-tags-open .gp-tag-peek{z-index:25}
-#milestoneList .task-entry .gp-tag-peek:focus-visible{outline:2px solid #ff3cc7;outline-offset:3px}
+:is(#milestoneList,#gpFlatRows) .task-entry:hover .gp-tag-rail-mark,
+:is(#milestoneList,#gpFlatRows) .task-entry:focus-within .gp-tag-rail-mark,
+:is(#milestoneList,#gpFlatRows) .task-entry.gp-tags-open .gp-tag-rail-mark{width:7px;min-width:7px}
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-popover{display:none!important}
+:is(#milestoneList,#gpFlatRows) .task-entry:hover .gp-tag-peek,
+:is(#milestoneList,#gpFlatRows) .task-entry:focus-within .gp-tag-peek,
+:is(#milestoneList,#gpFlatRows) .task-entry.gp-tags-open .gp-tag-peek{z-index:25}
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-peek:focus-visible{outline:2px solid #ff3cc7;outline-offset:3px}
 #back.modal-back{z-index:1000}
 #back.gp-task-detail .modal{position:relative;z-index:1}
 .gp-detail-tags{
@@ -1498,87 +1498,87 @@ a:hover,.link:hover{color:#80115c}
  background:var(--tc);margin:-5px 0 -5px -1px;
 }
 @media(max-width:1100px){
- #milestoneList .task-entry{
+ :is(#milestoneList,#gpFlatRows) .task-entry{
   grid-template-areas:"main main status actions" "tags person person person";
   grid-template-columns:minmax(0,1fr) minmax(48px,.2fr) minmax(114px,auto) auto;
  }
- #milestoneList .task-entry .gp-task-tags{justify-self:start}
- #milestoneList .task-entry .gp-tag-peek{right:auto;left:0;justify-content:flex-start}
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags{justify-self:start}
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-peek{right:auto;left:0;justify-content:flex-start}
 }
 @media(max-width:680px){
- #milestoneList .task-entry{
+ :is(#milestoneList,#gpFlatRows) .task-entry{
   grid-template-areas:"main main status" "tags tags actions";
   grid-template-columns:minmax(0,1fr) minmax(25px,.15fr) minmax(112px,auto);
  }
- #milestoneList .task-entry .gp-tag-peek{right:auto;left:0;max-width:min(275px,80vw)}
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-peek{right:auto;left:0;max-width:min(275px,80vw)}
 }
 @media(prefers-reduced-motion:reduce){
- #milestoneList .task-entry .gp-tag-rail-name,
- #milestoneList .task-entry .gp-tag-rail-mark{transition:none}
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-rail-name,
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-rail-mark{transition:none}
 }
 
 /* Evenly spaced task metadata: tag marker, team member, and status share equal tracks. */
 @media(min-width:901px){
- #milestoneList .task-entry{
+ :is(#milestoneList,#gpFlatRows) .task-entry{
   grid-template-areas:"main tags person status actions";
   grid-template-columns:minmax(155px,1fr) repeat(3,minmax(100px,124px)) auto;
   column-gap:10px;
  }
- #milestoneList .task-entry .gp-task-tags{
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags{
   width:100%;justify-self:stretch;display:flex;align-items:center;justify-content:center;
  }
- #milestoneList .task-entry .gp-tag-peek{
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-peek{
   right:50%;transform:translate(50%,-50%);justify-content:center;
  }
- #milestoneList .task-entry .meta-person{
+ :is(#milestoneList,#gpFlatRows) .task-entry .meta-person{
   grid-area:person;text-align:center;justify-self:stretch;
  }
- #milestoneList .task-entry>.status-select{
+ :is(#milestoneList,#gpFlatRows) .task-entry>.status-select{
   grid-area:status;justify-self:stretch;
  }
 }
 @media(min-width:681px) and (max-width:900px){
- #milestoneList .task-entry{
+ :is(#milestoneList,#gpFlatRows) .task-entry{
   grid-template-areas:"main main main actions" "tags person status status";
   grid-template-columns:repeat(3,minmax(0,1fr)) auto;
   column-gap:12px;
  }
- #milestoneList .task-entry .gp-task-tags{
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags{
   grid-area:tags;width:100%;justify-self:stretch;display:flex;
   align-items:center;justify-content:center;
  }
- #milestoneList .task-entry .gp-tag-peek{
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-peek{
   left:50%;right:auto;transform:translate(-50%,-50%);justify-content:center;
  }
- #milestoneList .task-entry .meta-person{grid-area:person;text-align:center}
- #milestoneList .task-entry>.status-select{
+ :is(#milestoneList,#gpFlatRows) .task-entry .meta-person{grid-area:person;text-align:center}
+ :is(#milestoneList,#gpFlatRows) .task-entry>.status-select{
   grid-area:status;width:min(100%,155px);justify-self:center;
  }
 }
 
 /* Keep tag swatches anchored to the right edge of their equal-width column. */
 @media(min-width:681px){
- #milestoneList .task-entry .gp-task-tags{
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags{
   justify-content:flex-end;justify-self:stretch;
  }
- #milestoneList .task-entry .gp-tag-peek{
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-peek{
   left:auto;right:0;transform:translateY(-50%);justify-content:flex-end;
  }
 }
 
 /* Completed titles stay faded, but without a strikethrough. */
-#milestoneList .task-entry .task-title.task-done,
-#milestoneList .task-entry.status-done .task-title{
+:is(#milestoneList,#gpFlatRows) .task-entry .task-title.task-done,
+:is(#milestoneList,#gpFlatRows) .task-entry.status-done .task-title{
  text-decoration:none;
  opacity:.63;
 }
 
 /* Legible supporting text: no tiny, pixelated-looking labels. */
-#milestoneList .task-entry>div:first-of-type>.sub{font-size:13px;line-height:1.45}
-#milestoneList .task-entry .meta-person{font-size:13px}
-#milestoneList .task-entry .task-title{font-size:14px}
-#milestoneList .task-entry>.status-select{font-size:13px}
-#milestoneList .task-entry .gp-tag-rail-name{font-size:13px}
+:is(#milestoneList,#gpFlatRows) .task-entry>div:first-of-type>.sub{font-size:13px;line-height:1.45}
+:is(#milestoneList,#gpFlatRows) .task-entry .meta-person{font-size:13px}
+:is(#milestoneList,#gpFlatRows) .task-entry .task-title{font-size:14px}
+:is(#milestoneList,#gpFlatRows) .task-entry>.status-select{font-size:13px}
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-rail-name{font-size:13px}
 #milestoneList .milestone-summary .gp-milestone-time,
 #milestoneList .milestone-summary .gp-milestone-target,
 #milestoneList .milestone-summary .gp-milestone-description,
@@ -1595,19 +1595,19 @@ a:hover,.link:hover{color:#80115c}
 .gp-detail-tag,.gp-detail-path,.gp-detail-meta-label,
 .gp-detail-log-meta,.gp-detail-logs .note .sub{font-size:13px}
 .gp-detail-description{font-size:14px;line-height:1.6}
-#milestoneList .task-entry .task-title.task-done,
-#milestoneList .task-entry.status-done .task-title{text-decoration:none;opacity:.63}
+:is(#milestoneList,#gpFlatRows) .task-entry .task-title.task-done,
+:is(#milestoneList,#gpFlatRows) .task-entry.status-done .task-title{text-decoration:none;opacity:.63}
 
 /* Quick task-tag + control, anchored just to the right of the color-coded tabs. */
-#milestoneList .task-entry .gp-task-tags,
-#milestoneList .task-entry .gp-task-tags.gp-no-tags{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags,
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags.gp-no-tags{
  display:flex;align-items:center;justify-content:flex-end;
  position:relative;overflow:visible;height:30px;min-height:30px;
 }
-#milestoneList .task-entry .gp-tag-peek{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-peek{
  left:auto;right:24px;transform:translateY(-50%);justify-content:flex-end;
 }
-#milestoneList .task-entry .gp-tag-add{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-add{
  position:absolute;right:0;top:50%;transform:translateY(-50%);
  width:23px;height:23px;min-width:23px;padding:0;
  border:1px solid #d9bdce;border-radius:6px;background:#fff9fd;
@@ -1615,17 +1615,17 @@ a:hover,.link:hover{color:#80115c}
  display:flex;align-items:center;justify-content:center;
  opacity:.85;transition:background .15s,border-color .15s,opacity .15s;
 }
-#milestoneList .task-entry .gp-tag-add:hover,
-#milestoneList .task-entry .gp-tag-add:focus-visible{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-add:hover,
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-add:focus-visible{
  background:#fce0f1;border-color:#e280b9;color:#8e145f;opacity:1;
 }
-#milestoneList .task-entry .gp-tag-rail-name{font-size:13px}
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-rail-name{font-size:13px}
 @media(max-width:1100px){
- #milestoneList .task-entry .gp-tag-peek{left:auto;right:24px;transform:translateY(-50%)}
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-peek{left:auto;right:24px;transform:translateY(-50%)}
 }
 @media(max-width:680px){
- #milestoneList .task-entry .gp-task-tags{width:86px}
- #milestoneList .task-entry .gp-tag-peek{left:auto;right:24px;transform:translateY(-50%)}
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags{width:86px}
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-peek{left:auto;right:24px;transform:translateY(-50%)}
 }
 .gp-quick-tag-picker{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .gp-quick-tag-picker>.sub{font-size:13px;line-height:1.5;margin-bottom:5px}
@@ -1708,7 +1708,7 @@ a:hover,.link:hover{color:#80115c}
  margin-top:4px;
 }
 /* Tag add action is an unobtrusive hover/focus affordance, never a bubble. */
-#milestoneList .task-entry .gp-tag-add{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-add{
  border:0;
  background:transparent;
  box-shadow:none;
@@ -1719,29 +1719,29 @@ a:hover,.link:hover{color:#80115c}
  border-radius:0;
  transition:opacity .15s,color .15s;
 }
-#milestoneList .task-entry:hover .gp-tag-add,
-#milestoneList .task-entry:focus-within .gp-tag-add{
+:is(#milestoneList,#gpFlatRows) .task-entry:hover .gp-tag-add,
+:is(#milestoneList,#gpFlatRows) .task-entry:focus-within .gp-tag-add{
  opacity:1;
 }
-#milestoneList .task-entry .gp-tag-add:hover,
-#milestoneList .task-entry .gp-tag-add:focus-visible{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-add:hover,
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-add:focus-visible{
  background:transparent;
  border:0;
  box-shadow:none;
  color:#86105d;
  opacity:1;
 }
-#milestoneList .task-entry .gp-tag-add:focus-visible{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-add:focus-visible{
  outline:2px solid #ff3cc7;
  outline-offset:1px;
  border-radius:4px;
 }
 @media(hover:none){
- #milestoneList .task-entry .gp-tag-add{opacity:.8}
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-add{opacity:.8}
 }
 
 /* Quick-add tags follows the same visibility and hover behavior as task action icons. */
-#milestoneList .task-entry .gp-task-tags .gp-tag-add.icon-edit{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags .gp-tag-add.icon-edit{
  display:inline-flex;
  align-items:center;
  justify-content:center;
@@ -1766,23 +1766,23 @@ a:hover,.link:hover{color:#80115c}
  transition:opacity .12s,background .12s,color .12s;
  z-index:2;
 }
-#milestoneList .task-entry:hover .gp-task-tags .gp-tag-add.icon-edit,
-#milestoneList .task-entry:focus-within .gp-task-tags .gp-tag-add.icon-edit,
-#milestoneList .task-entry .gp-task-tags .gp-tag-add.icon-edit:hover,
-#milestoneList .task-entry .gp-task-tags .gp-tag-add.icon-edit:focus-visible{
+:is(#milestoneList,#gpFlatRows) .task-entry:hover .gp-task-tags .gp-tag-add.icon-edit,
+:is(#milestoneList,#gpFlatRows) .task-entry:focus-within .gp-task-tags .gp-tag-add.icon-edit,
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags .gp-tag-add.icon-edit:hover,
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags .gp-tag-add.icon-edit:focus-visible{
  opacity:1;
 }
-#milestoneList .task-entry .gp-task-tags .gp-tag-add.icon-edit:hover{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags .gp-tag-add.icon-edit:hover{
  background:#e9e9ec;
  color:#55515a;
 }
-#milestoneList .task-entry .gp-task-tags .gp-tag-add.icon-edit:focus-visible{
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags .gp-tag-add.icon-edit:focus-visible{
  outline:2px solid #817784;
  outline-offset:2px;
 }
-#milestoneList .task-entry .gp-tag-peek{right:29px}
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-tag-peek{right:29px}
 @media(hover:none){
- #milestoneList .task-entry .gp-task-tags .gp-tag-add.icon-edit{opacity:1}
+ :is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags .gp-tag-add.icon-edit{opacity:1}
 }
 
 /* Project switch icon uses the same magenta accent as the rest of GamePlan. */
@@ -1835,34 +1835,34 @@ a:hover,.link:hover{color:#80115c}
 }
 /* Neutral by default; only the hovered/focused action gains the accent. */
 #milestoneList .feature-summary .feature-heading-actions .icon-edit:not(.gp-delete-icon),
-#milestoneList .task-entry .actions .icon-edit:not(.gp-delete-icon),
-#milestoneList .task-entry .gp-task-tags .gp-tag-add.icon-edit{
+:is(#milestoneList,#gpFlatRows) .task-entry .actions .icon-edit:not(.gp-delete-icon),
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags .gp-tag-add.icon-edit{
  color:#817784;
 }
 #milestoneList .feature-summary .feature-heading-actions .icon-edit:not(.gp-delete-icon):is(:hover,:focus-visible),
-#milestoneList .task-entry .actions .icon-edit:not(.gp-delete-icon):is(:hover,:focus-visible),
-#milestoneList .task-entry .gp-task-tags .gp-tag-add.icon-edit:is(:hover,:focus-visible){
+:is(#milestoneList,#gpFlatRows) .task-entry .actions .icon-edit:not(.gp-delete-icon):is(:hover,:focus-visible),
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-task-tags .gp-tag-add.icon-edit:is(:hover,:focus-visible){
  color:#a81578;
  background:#fce5f5;
 }
 /* Destructive actions retain their existing red hover and focus treatment. */
 #milestoneList .feature-summary .gp-delete-icon:is(:hover,:focus-visible),
-#milestoneList .task-entry .gp-delete-icon:is(:hover,:focus-visible){
+:is(#milestoneList,#gpFlatRows) .task-entry .gp-delete-icon:is(:hover,:focus-visible){
  color:#c03636!important;
  background:#ffebeb!important;
 }
 
 /* Drag-to-sort placement guides for tasks inside features. */
-#milestoneList .task-entry.gp-task-drop-before,
-#milestoneList .task-entry.gp-task-drop-after{position:relative}
-#milestoneList .task-entry.gp-task-drop-before::before,
-#milestoneList .task-entry.gp-task-drop-after::after{
+:is(#milestoneList,#gpFlatRows) .task-entry.gp-task-drop-before,
+:is(#milestoneList,#gpFlatRows) .task-entry.gp-task-drop-after{position:relative}
+:is(#milestoneList,#gpFlatRows) .task-entry.gp-task-drop-before::before,
+:is(#milestoneList,#gpFlatRows) .task-entry.gp-task-drop-after::after{
  content:"";position:absolute;left:8px;right:8px;height:3px;
  border-radius:3px;background:var(--gp-accent,#ff3cc7);
  z-index:10;pointer-events:none;
 }
-#milestoneList .task-entry.gp-task-drop-before::before{top:-2px}
-#milestoneList .task-entry.gp-task-drop-after::after{bottom:-2px}
+:is(#milestoneList,#gpFlatRows) .task-entry.gp-task-drop-before::before{top:-2px}
+:is(#milestoneList,#gpFlatRows) .task-entry.gp-task-drop-after::after{bottom:-2px}
 #milestoneList .feature-section.gp-feature-drop-target{
  outline:2px dashed var(--gp-accent,#ff3cc7);
  outline-offset:-3px;background:#fff2fa;
@@ -2050,7 +2050,7 @@ a:hover,.link:hover{color:#80115c}
 #milestoneList .gp-mine-tag{display:inline-flex;align-items:center;justify-content:center;
  padding:3px 6px;border-radius:5px;background:#f8ddec;color:#98216e;font-size:10px;
  font-weight:750;line-height:1.2;vertical-align:middle}
-@media(max-width:900px){#milestoneList .task-entry .meta-person{display:block}}
+@media(max-width:900px){:is(#milestoneList,#gpFlatRows) .task-entry .meta-person{display:block}}
 .gp-running-clock{position:fixed;bottom:20px;right:20px;z-index:999;background:#fff;border:1px solid #e0d3e1;border-radius:14px;box-shadow:0 9px 34px #38223830;padding:12px 15px;display:flex;gap:14px;align-items:center;max-width:min(92vw,680px);flex-wrap:wrap}.gp-running-clock[hidden]{display:none}.gp-clock-label{font-size:13px;color:#655669;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gp-clock-elapsed{font-variant-numeric:tabular-nums;font-weight:700;font-size:17px;color:#452347}@media(max-width:650px){.gp-running-clock{left:12px;right:12px;bottom:12px;justify-content:space-between}}
 
 /* Consistent circular Discord avatars with the user's chart color as a border.
@@ -2367,7 +2367,7 @@ a:hover,.link:hover{color:#80115c}
 
 .gp-task-link-count{display:inline-flex;margin-left:6px;align-items:center;gap:3px;color:#ae3189;font-size:11px;font-weight:650;white-space:nowrap}
 .gp-flat-task-list.gp-flat-card-list{border:0;background:transparent;display:grid;gap:9px;overflow:visible;padding:0}
-.gp-flat-card-list .task-entry{margin:0;width:100%;box-sizing:border-box}
+.gp-flat-card-list .task-entry{margin:0;width:100%;box-sizing:border-box;border:1px solid #eff2ee;border-radius:7px}
 .gp-flat-card-list .gp-task-drag-handle{display:none}
 @media(max-width:1040px){.gp-flat-task-list.gp-flat-card-list{overflow:visible}}
 
