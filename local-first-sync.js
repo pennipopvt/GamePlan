@@ -7,13 +7,14 @@
 'use strict';
 const $s=q=>document.querySelector(q);
 const CFG='gameplan-cloud-config-v1',LAST='gp-sync-backup-import-v1',PENDING_INVITE='gp-pending-link-invite',PENDING_APP='gp-pending-app-access-invite';
+let PRIVATE_BASE='gp-account-private-baselines-v1',privateBases={};
 let LINKS='gp-sync-links-v1',BASE='gp-sync-baselines-v1',DELETED='gp-sync-deleted-v1',NAME_DIRTY='gp-sync-name-dirty-v1',NAME_KNOWN='gp-sync-name-known-v1';
 const KINDS=['milestones','features','tasks','logs','tags','templates','team','custom_tag_colors'];
 const IDS={milestones:'milestone_id',features:'feature_id',tasks:'task_id',logs:'log_id',tags:'tag_id',templates:'template_id',team:'member_id'};
 let api=null,user=null,links=read(LINKS,{}),bases=read(BASE,{}),busy=false,loop=null,subscription=null,watched='',ready=false,blocked=false,inviteAttempted=false;
 let lastSyncError=null,lastSyncAt=0,remoteMissingCount=0,deletedIntents=read(DELETED,{}),copyMessageTimer=null;
 let activatedUserId='',activating=null,cloudProjectList=[],teamByProject={},teamUpgradeNeeded=false,appAccess={access:true,admin:false,installed:false},preAcceptedProjectId='',preAcceptedProjectToken='';
-let nameDirty=read(NAME_DIRTY,{}),knownNames=read(NAME_KNOWN,{}),nameConflictBusy=false;
+let nameDirty=read(NAME_DIRTY,{}),knownNames=read(NAME_KNOWN,{}),nameConflictBusy=false,privateSyncError='';
 const unique=(kind,obj)=>kind==='team'?'member:'+obj.member_id:kind==='custom_tag_colors'?'color:'+obj.color:String(obj[IDS[kind]]||'');
 const key=(kind,id)=>kind+'\u0000'+id;
 // PostgreSQL JSONB may reorder object keys without changing record values.
@@ -95,6 +96,64 @@ function projectRows(pid,source=data){
  }
  return out;
 }
+// An entirely separate owner-only snapshot. Never put these records in gp_items.
+function privateRows(pid,source=data){
+ const milestones=new Set((source.milestones||[]).filter(m=>String(m.project_id)===String(pid)&&m.__gp_private).map(m=>String(m.milestone_id)));
+ const features=new Set((source.features||[]).filter(f=>String(f.project_id)===String(pid)&&(f.__gp_private||milestones.has(String(f.milestone_id)))).map(f=>String(f.feature_id)));
+ const tasks=new Set((source.tasks||[]).filter(t=>String(t.project_id)===String(pid)&&(t.__gp_private||features.has(String(t.feature_id)))).map(t=>String(t.task_id)));
+ const result={};
+ for(const kind of ['milestones','features','tasks','logs']){
+  const arr=(source[kind]||[]).filter(x=>
+   kind==='milestones'?milestones.has(String(x.milestone_id)):
+   kind==='features'?features.has(String(x.feature_id)):
+   kind==='tasks'?tasks.has(String(x.task_id)):
+   tasks.has(String(x.task_id)));
+  for(const [sort_order,obj] of arr.entries()){
+   const id=unique(kind,obj);if(!id)continue;
+   result[key(kind,id)]={kind,item_id:id,sort_order,
+    payload:{...clone(obj),project_id:pid,__gp_private:true}};
+  }
+ }
+ return result;
+}
+function savePrivateBaseline(pid,snapshot){
+ privateBases[pid]=snapshot;store(PRIVATE_BASE,privateBases);
+}
+async function reconcilePrivate(pid,cloudId){
+ // No fallback to the shared item table: a missing migration must fail closed.
+ if(roleFor(pid)!=='owner')return;
+ const {data:rows,error}=await api.client.from('gp_private_items')
+  .select('kind,item_id,payload,sort_order').eq('project_id',cloudId).eq('user_id',user.id);
+ if(error)throw Error('Private draft sync unavailable (install supabase/private-drafts.sql): '+error.message);
+ const remote={};
+ for(const row of rows||[]){
+  if(!['milestones','features','tasks','logs'].includes(row.kind))continue;
+  const id=key(row.kind,row.item_id);
+  remote[id]={kind:row.kind,item_id:row.item_id,sort_order:row.sort_order,
+   payload:{...row.payload,project_id:pid}};
+ }
+ const base=privateBases[pid]||{},local=privateRows(pid);
+ const pending=changesSince(base,local);
+ // Receive changes from other devices, but never replace edits made since
+ // this browser's last successful sync.
+ mergeRemote(pid,remote,base,local,new Set(),true);
+ const after=privateRows(pid);
+ const changed=changesSince(remote,after);
+ for(const [id,row] of Object.entries(changed)){
+  // Only upload local changes that differ from the last successful baseline.
+  if(!Object.prototype.hasOwnProperty.call(pending,id))continue;
+  const previous=remote[id]||base[id];
+  const next=row||deletedMarker(previous,pid);
+  const {error:saveError}=await api.client.from('gp_private_items').upsert({
+   user_id:user.id,project_id:cloudId,kind:next.kind,item_id:next.item_id,
+   payload:{...next.payload,project_id:cloudId},
+   sort_order:next.sort_order,updated_at:new Date().toISOString()
+  },{onConflict:'user_id,project_id,kind,item_id'});
+  if(saveError)throw saveError;
+  remote[id]=next;
+ }
+ savePrivateBaseline(pid,remote);
+}
 function remoteRows(items,pid){
  const out={};
  for(const kind of KINDS){
@@ -155,6 +214,7 @@ function refreshStatus(){
  else if(!api||!user)status('Saved on this device');
  else if(!linked)status('Local · not shared');
  else if(busy)status('Syncing…');
+ else if(privateSyncError)status('Private drafts not synced · '+privateSyncError,true);
  else if(lastSyncError)status('Sync failed · '+lastSyncError,true);
  else if(remoteMissingCount)status(remoteMissingCount+' items missing remotely · saved locally',true);
  else status(pending?pending+' changes pending':'Cloud synced');
@@ -173,7 +233,7 @@ function isEditing(){return !!($s('#back.show')||$s('#gpDialogOverlay'))}
 async function checkAccount(){
  const cfg=config();if(!cfg?.url||!cfg?.key)return false;
  if(!api){
-  const module=await import('./supabase/gameplan-cloud.js?v=2026.11.07.84');
+  const module=await import('./supabase/gameplan-cloud.js?v=2026.11.07.78');
   api=module.createGamePlanCloud({url:cfg.url,publishableKey:cfg.key});
  }
  if(!navigator.onLine){
@@ -224,6 +284,7 @@ async function activateAccount(){
   const linksKey='gp-account-links-v1:'+id;
   const baseKey='gp-account-baselines-v1:'+id;
   const deletedKey='gp-account-deletes-v1:'+id;
+   PRIVATE_BASE='gp-account-private-baselines-v1:'+id;
   const nameDirtyKey='gp-account-name-dirty-v1:'+id;
   const knownNameKey='gp-account-name-known-v1:'+id;
   let saved=read(accountKey,null);
@@ -260,7 +321,7 @@ async function activateAccount(){
   }
   LOCAL_KEY=accountKey;PROJECT_KEY=projectKey;
   LINKS=linksKey;BASE=baseKey;DELETED=deletedKey;NAME_DIRTY=nameDirtyKey;NAME_KNOWN=knownNameKey;
-  links=read(LINKS,{});bases=read(BASE,{});deletedIntents=read(DELETED,{});
+  links=read(LINKS,{});bases=read(BASE,{});privateBases=read(PRIVATE_BASE,{});deletedIntents=read(DELETED,{});
   nameDirty=read(NAME_DIRTY,{});knownNames=read(NAME_KNOWN,{});
   data=loadLocal();
   gpMyOnly=false;
@@ -453,22 +514,8 @@ window.GamePlanAuth={canEdit:pid=>user&&activatedUserId===user.id&&['owner','edi
 function makeLocalRow(record,pid){
  return {...clone(record.payload),project_id:pid};
 }
-function mergeRemote(pid,remote,base,local,confirmedLegacyDeletes=new Set()){
+function mergeRemote(pid,remote,base,local,confirmedLegacyDeletes=new Set(),privateMode=false){
  const pending=pendingChanges(pid,base,local),toApply=[];
- // Once the owner unpublishes or deletes an item, a teammate's stale local
- // edit must not silently resurrect that remote tombstone. Preserve a local
- // recovery copy before honoring the cloud deletion.
- const overridden={};
- if(roleFor(pid)!=='owner'){
-  for(const [k,row] of Object.entries(remote)){
-   if(!row?.payload?.__gp_deleted||!Object.prototype.hasOwnProperty.call(pending,k)||!local[k])continue;
-   overridden[k]=local[k];delete pending[k];
-  }
- }
- if(Object.keys(overridden).length){
-  try{store('gp-stale-edit-recovery-'+Date.now(),{project_id:pid,items:overridden})}
-  catch(err){console.warn('[GamePlan stale edit recovery]',err)}
- }
  for(const k of new Set([...Object.keys(base),...Object.keys(remote)])){
   if(Object.prototype.hasOwnProperty.call(pending,k))continue;
   if(equal(canonical(base[k]),canonical(remote[k])))continue;
@@ -485,6 +532,7 @@ function mergeRemote(pid,remote,base,local,confirmedLegacyDeletes=new Set()){
     ?true:String(x.project_id)===String(pid)));
   if(op.record){
    const row=makeLocalRow(op.record,pid);
+   if(privateMode&&findIndex>=0&&!arr[findIndex].__gp_private)continue;
    if(findIndex>=0)arr[findIndex]=row;else arr.push(row);
    if(op.kind==='team'){
     const member=draft.members.find(m=>String(m.member_id)===String(row.member_id));
@@ -498,6 +546,7 @@ function mergeRemote(pid,remote,base,local,confirmedLegacyDeletes=new Set()){
     }
    }
    }else if(findIndex>=0){
+   if(privateMode&&!arr[findIndex].__gp_private)continue;
    // A tombstone is a confirmed intentional deletion, unlike a missing row.
    if(op.explicitDelete)arr.splice(findIndex,1);
    else continue;
@@ -533,7 +582,9 @@ async function reconcile(pid,{allowWrites=true}={}){
   const visible=await api.listProjects();
   if(!visible.some(p=>p.id===cloudId))throw Error('Cloud project is not accessible. Local data is safe.');
   await syncProjectName(pid,visible);
-  const remote=await remoteSnapshot(cloudId,pid);
+  try{await reconcilePrivate(pid,cloudId);privateSyncError=''}
+  catch(err){privateSyncError=String(err?.message||err);console.warn('[GamePlan private drafts]',err)}
+   const remote=await remoteSnapshot(cloudId,pid);
   // First linked sync may not run until a baseline is saved by link/share flow.
   if(!Object.prototype.hasOwnProperty.call(bases,pid))throw Error('Project is not initialized for syncing. Reconnect from Account.');
   // Re-read the local board after network I/O so edits saved during the
@@ -712,10 +763,6 @@ gpSettings=function(...args){
 // Deletion is now handled by gpDeleteProject, which confirms and backs up the
 // local board, deletes the cloud project first, then clears its browser copy.
 // Never clear the local link merely because a network request was started.
-// Turn an already-public item into a private draft. One atomic server batch
-// tombstones its public subtree BEFORE the local edit is committed, so the
-// team never merely sees an owner-only CSS hide. Teammates may still have
-// previously downloaded browser copies; server RLS cannot erase those.
 async function unpublishExisting(kind,id,pid=String(activeProject)){
  if(!user||!api||roleFor(pid)!=='owner')
   throw Error('Only the project owner can make published work private.');
