@@ -2364,6 +2364,13 @@ a:hover,.link:hover{color:#80115c}
 .gp-link-add{justify-self:start}
 @media(max-width:700px){.gp-link-edit-row{grid-template-columns:1fr 1fr}.gp-link-remove{grid-column:1 / -1;justify-self:end}}
 
+
+.gp-task-link-count{display:inline-flex;margin-left:6px;align-items:center;gap:3px;color:#ae3189;font-size:11px;font-weight:650;white-space:nowrap}
+.gp-flat-task-list.gp-flat-card-list{border:0;background:transparent;display:grid;gap:9px;overflow:visible;padding:0}
+.gp-flat-card-list .task-entry{margin:0;width:100%;box-sizing:border-box}
+.gp-flat-card-list .gp-task-drag-handle{display:none}
+@media(max-width:1040px){.gp-flat-task-list.gp-flat-card-list{overflow:visible}}
+
 </style><link rel="stylesheet" href="account-ui.css?v=2026.11.10.89"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
 <body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.10.89" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.10.89</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">+ Import project</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
@@ -2780,6 +2787,13 @@ function gpDueInfo(t){
  if(days<=7)return {date:raw,days,tone:'soon',label:'Due in '+days+' day'+(days===1?'':'s')+' · '+formatted,short:'In '+days+'d · '+formatted};
  return {date:raw,days,tone:'scheduled',label:'Due '+formatted,short:formatted};
 }
+function gpTaskLinkCount(t){
+ return (Array.isArray(t.resources)?t.resources.length:0)+(Array.isArray(t.deliverables)?t.deliverables.length:0);
+}
+function gpTaskAttachmentBadge(t){
+ const total=gpTaskLinkCount(t);
+ return total?'<span class="gp-task-link-count" title="'+total+' resource / deliverable link items">↗ '+total+'</span>':'';
+}
 function gpDueBadge(t){
  const d=gpDueInfo(t);return d.date?'<span class="gp-task-due gp-due-'+e(d.tone)+'" title="'+e(d.label)+'">'+e(d.label)+'</span>':'';
 }
@@ -2790,7 +2804,7 @@ function taskRow(t){
  const isMine=gpTaskIsMine(t);
  const assigneeName=isMine?'<span class="gp-mine-tag" title="Assigned to you">You</span>':e(member(t.assignee_member_id));
  const assignedHTML='<span class="gp-assignee-label">'+gpAssigneeAvatar(t.assignee_member_id,member(t.assignee_member_id))+assigneeName+'</span>';
- return `<div class="task-entry ${statusClass}"><div><button class="task-title ${t.status==='Done'?'task-done':''}" data-detail="${e(t.task_id)}">${e(t.title)}</button>${gpDraftTask(t)?'<span class="gp-draft-indicator gp-task-draft-tag">DRAFT</span>':''}<div class="sub">${e(t.priority)} · ${formatHours(t.estimated_hours)} estimated · ${formatHours(logs)} logged · ${formatHours(taskRemainingHours(t))} remaining ${gpDueBadge(t)}</div></div><div class="meta-person sub">${assignedHTML}</div><select class="status-select ${statusClass}" data-status="${e(t.task_id)}" aria-label="Status for ${e(t.title)}">${ST.map(status=>`<option value="${e(status)}" ${t.status===status?'selected':''}>${e(status)}</option>`).join('')}</select><div class="actions"><button data-clock-in="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Start working: ${e(t.title)}" title="Start working">▶</button><button data-log="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Manage time: ${e(t.title)}" title="Manage time"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button><button class="icon-edit" data-edit="${e(t.task_id)}" type="button" aria-label="Edit task: ${e(t.title)}" title="Edit task"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></div>`;
+ return `<div class="task-entry ${statusClass}"><div><button class="task-title ${t.status==='Done'?'task-done':''}" data-detail="${e(t.task_id)}">${e(t.title)}</button>${gpDraftTask(t)?'<span class="gp-draft-indicator gp-task-draft-tag">DRAFT</span>':''}<div class="sub">${e(t.priority)} · ${formatHours(t.estimated_hours)} estimated · ${formatHours(logs)} logged · ${formatHours(taskRemainingHours(t))} remaining ${gpDueBadge(t)} ${gpTaskAttachmentBadge(t)}</div></div><div class="meta-person sub">${assignedHTML}</div><select class="status-select ${statusClass}" data-status="${e(t.task_id)}" aria-label="Status for ${e(t.title)}">${ST.map(status=>`<option value="${e(status)}" ${t.status===status?'selected':''}>${e(status)}</option>`).join('')}</select><div class="actions"><button data-clock-in="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Start working: ${e(t.title)}" title="Start working">▶</button><button data-log="${e(t.task_id)}" type="button" class="icon-edit" aria-label="Manage time: ${e(t.title)}" title="Manage time"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button><button class="icon-edit" data-edit="${e(t.task_id)}" type="button" aria-label="Edit task: ${e(t.title)}" title="Edit task"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg></button></div></div>`;
 }
 function renderMilestones(){
  const filtered=visibleTasks(),project=projectTasks(),isFiltered=gpMyOnly||!!$('#assigneeFilter').value||!!$('#searchTasks').value||(typeof gpHasFacetFilters==='function'&&gpHasFacetFilters());
