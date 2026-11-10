@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GamePlan</title><link rel="icon" type="image/svg+xml" href="gameplan-mark.svg?v=2026.11.10.85">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GamePlan</title><link rel="icon" type="image/svg+xml" href="gameplan-mark.svg?v=2026.11.10.86">
 <style>
 :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;color:#273c43;background:#f7f8f5;font-size:14px}*{box-sizing:border-box}body{margin:0}button,input,textarea,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #4c9b97;outline-offset:2px}.app{min-height:100vh;max-width:1220px;margin:auto;padding:30px 22px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center}.brand{font:700 29px Georgia,serif;letter-spacing:-.7px}.brand span{color:#31847c}.sub{color:#778987;font-size:12px}.top-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.button{border:1px solid #c9d8d4;padding:10px 15px;border-radius:9px;background:white;color:#355951;font-weight:600}.button.main{background:#317d73;color:white;border-color:#317d73}.button:hover{filter:brightness(.96)}.button.danger{color:#9d3030;border-color:#e6bebe;background:#fff7f7}.card{background:white;border:1px solid #e0e7e3;border-radius:15px;padding:22px;box-shadow:0 5px 22px #152b2107}.banner{margin:22px 0}.muted{color:#758680}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:21px 0}.stat b{font-size:27px;display:block;margin-top:8px}.head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}.filters{display:flex;gap:9px;flex-wrap:wrap}select,input,textarea{border:1px solid #cbd9d5;background:white;border-radius:8px;padding:9px 11px;color:inherit;min-width:0}textarea{min-height:110px;resize:vertical}label{display:flex;flex-direction:column;gap:5px;color:#4d6563;font-size:12px;font-weight:650}.table-wrap{overflow-x:auto;margin-top:15px}table{border-collapse:collapse;width:100%;min-width:750px}th{text-align:left;background:#eef4f1;color:#56726c;font-size:11px;text-transform:uppercase;letter-spacing:.6px}td,th{padding:13px 11px;border-bottom:1px solid #ebefed;vertical-align:middle}.task-title{border:0;background:none;padding:0;text-align:left;color:#204e50;font-weight:700}.tag{font-size:11px;border-radius:50px;background:#eaf3ef;padding:4px 9px;display:inline-block}.actions{display:flex;gap:6px;flex-wrap:wrap}.actions .button{padding:6px 9px;font-size:12px}.empty{text-align:center;padding:50px 20px;color:#84918d}.modal-back{position:fixed;inset:0;background:#132d3199;display:none;align-items:center;justify-content:center;padding:20px;z-index:3}.modal-back.show{display:flex}.modal{background:white;border-radius:16px;width:min(620px,100%);max-height:90vh;overflow:auto;padding:25px}.modal h2{margin:0 0 12px;font:700 25px Georgia,serif}.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:15px 0}.fields .wide{grid-column:1/-1}.fields input,.fields textarea,.fields select{width:100%}.desc{white-space:pre-wrap;line-height:1.7;padding:10px 0;min-height:40px}.note{padding:9px 0;border-bottom:1px solid #e9efed}.controls{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:15px}.error{color:#ad3939}.success{color:#28796b}#connectFrame{display:none;width:1px;height:1px;border:0;position:absolute;pointer-events:none}.link{color:#287d73;text-decoration:none}.link:hover{text-decoration:underline}@media(max-width:700px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.fields{grid-template-columns:1fr}.fields .wide{grid-column:1}.app{padding:18px 12px}}
 
@@ -2301,8 +2301,8 @@ a:hover,.link:hover{color:#80115c}
   }
 }
 
-</style><link rel="stylesheet" href="account-ui.css?v=2026.11.10.85"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
-<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.10.85" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.10.85</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">↑ Import full board</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
+</style><link rel="stylesheet" href="account-ui.css?v=2026.11.10.86"><script>document.documentElement.classList.add('gp-auth-locked');</script></head>
+<body><div class="app"><aside class="sidebar" id="sidebar"><div class="sidebar-brand"><img class="gp-brand-mark" src="gameplan-mark.svg?v=2026.11.10.86" alt=""><span class="gp-brand-wordmark"><span class="gp-brand-game">Game</span><span class="gp-brand-plan">Plan</span></span></div></aside><main class="workspace"><header class="top"><div><div class="brand"><button id="menuToggle" class="button" aria-label="Show navigation">☰</button> Game<span>Plan</span></div><div class="sub">Local projects, teams, and hours · Saved in this browser · <span id="appVersion">v2026.11.10.86</span></div></div><div class="top-actions"><button class="button" id="export">↓ Export backup</button><button class="button" id="import">+ Import project</button><button class="button" id="importMilestone">+ Import milestone</button><input id="fileInput" type="file" accept=".json,application/json" hidden><input id="milestoneFileInput" type="file" accept=".json,application/json" hidden><button class="button" id="reload">↻ Reload app</button></div></header>
 <div class="card banner" id="notice" hidden></div>
 <section id="mainApp" hidden><div class="head gp-overview-head"><div class="gp-overview-intro"><div class="gp-overview-heading"><h1 id="pageHeading" style="margin:0">Project Overview</h1><div class="gp-breakdown-actions"><div class="section-actions" id="pmActions"></div></div></div><div class="sub" id="roleDescription"></div></div><div class="filters"><select id="project"></select><input id="searchTasks" class="board-search" type="search" placeholder="Search tasks…" aria-label="Search tasks"><button type="button" class="button gp-my-filter" id="gpMyTasks" aria-pressed="false" title="Show only your unfinished assigned tasks">My tasks <span id="gpMyCount" class="gp-my-count">0</span></button><select id="gpMilestoneFilter" aria-label="Filter board by milestone" title="Filter by milestone"><option value="">All milestones</option></select><select id="assigneeFilter" hidden aria-hidden="true"><option value="">All assignees</option></select><div class="gp-filter-wrap"><button type="button" class="button gp-filter-trigger" id="gpFilterTrigger" aria-expanded="false" aria-controls="gpFilterPanel"><span aria-hidden="true">⚲</span> Filters <span id="gpFilterCount" class="gp-filter-count" hidden>0</span></button><div class="gp-filter-panel" id="gpFilterPanel" hidden></div></div><button class="button main" id="newTask" hidden>+ Task</button></div></div>
 <div id="gpFilterChips" class="gp-filter-chips" hidden></div>
@@ -2313,7 +2313,7 @@ a:hover,.link:hover{color:#80115c}
 <script>
 'use strict';
 const $=q=>document.querySelector(q),ST=['To do','In progress','Blocked','Done'],PRI=['Low','Normal','High','Urgent'];
-let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.10.85';
+let LOCAL_KEY='little-dock-local-v2',PROJECT_KEY='little-dock-local-project';const LEGACY_KEY='little-dock-v1',APP_VERSION='2026.11.10.86';
 const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'id'+Date.now().toString(36)+Math.random().toString(36).slice(2);
 const pm={member_id:'penni',display_name:'Penni',google_email:'',active:'Yes'};
 const defaultTeam=[];
@@ -3045,7 +3045,8 @@ async function milestoneFromImport(source){
  }
  throw Error('Expected a milestone file or a full GamePlan backup');
 }
-async function importOneMilestone(source){
+async function importOneMilestone(source,options={}){
+ const targetProject=options.targetProject||activeProject;
  const parsed=await milestoneFromImport(source);
  if(!parsed)return false;
  const {milestone,features,tasks,logs,members,tags}=parsed;
@@ -3070,8 +3071,8 @@ async function importOneMilestone(source){
  };
  const estimatedTotal=tasks.reduce((sum,t)=>sum+estimateOf(t),0);
  const message=`Add milestone “${name}” with ${features.length} features and ${tasks.length} tasks (${formatHours(estimatedTotal)} estimated) to the current project? Tags, assignees and time logs will be imported. Existing board data will be kept.`;
- if(!await gpConfirm(message,{confirmLabel:'Import milestone'}))return false;
- const next=structuredClone(data),newMilestoneId=uid();
+ if(!options.skipConfirm&&!await gpConfirm(message,{confirmLabel:'Import milestone'}))return false;
+ const next=options.previewData||structuredClone(data),newMilestoneId=uid();
  next.tags=Array.isArray(next.tags)?next.tags:[];
  const memberById=id=>members.find(m=>String(m.member_id||m.id)===String(id))?.display_name;
  const memberByName=name=>next.members.find(m=>String(m.display_name).toLowerCase()===String(name).toLowerCase());
@@ -3082,8 +3083,8 @@ async function importOneMilestone(source){
    existing={member_id:uid(),display_name:String(name),google_email:'',active:'Yes'};
    next.members.push(existing);next.roster.push({...existing});
   }
-  if(existing&&!next.team.some(m=>m.project_id===activeProject&&m.member_id===existing.member_id))
-   next.team.push({project_id:activeProject,member_id:existing.member_id,project_role:'Member',discipline:'',membership_status:'Active'});
+  if(existing&&!next.team.some(m=>m.project_id===targetProject&&m.member_id===existing.member_id))
+   next.team.push({project_id:targetProject,member_id:existing.member_id,project_role:'Member',discipline:'',membership_status:'Active'});
   return existing?.member_id||'';
  };
  const sourceTagsById=new Map(tags.filter(t=>t&&typeof t==='object'&&(t.tag_id||t.id)).map(t=>[String(t.tag_id||t.id),t]));
@@ -3092,7 +3093,7 @@ async function importOneMilestone(source){
   const inputs=[];
   for(const id of (Array.isArray(t.tag_ids)?t.tag_ids:[])){
    const fromSource=sourceTagsById.get(String(id));
-   const local=next.tags.find(tag=>tag.project_id===activeProject&&String(tag.tag_id)===String(id));
+   const local=next.tags.find(tag=>tag.project_id===targetProject&&String(tag.tag_id)===String(id));
    if(!fromSource&&!local)throw Error('No tag definition found for imported tag ID '+String(id));
    inputs.push(fromSource||local);
   }
@@ -3102,26 +3103,26 @@ async function importOneMilestone(source){
   for(const tag of inputs){
    const tagName=String(tag?.name||'').trim();
    if(!tagName)throw Error('Imported task has a tag without a name');
-   let existing=next.tags.find(x=>x.project_id===activeProject&&String(x.name).toLowerCase()===tagName.toLowerCase());
+   let existing=next.tags.find(x=>x.project_id===targetProject&&String(x.name).toLowerCase()===tagName.toLowerCase());
    if(!existing){
     const color=String(tag.color||'#98aab6');
-    existing={tag_id:uid(),project_id:activeProject,name:tagName,color:/^#[a-f0-9]{6}$/i.test(color)?color:'#98aab6'};
+    existing={tag_id:uid(),project_id:targetProject,name:tagName,color:/^#[a-f0-9]{6}$/i.test(color)?color:'#98aab6'};
     next.tags.push(existing);
    }
    if(!result.includes(existing.tag_id))result.push(existing.tag_id);
   }
   return result;
  };
- next.milestones.push({milestone_id:newMilestoneId,project_id:activeProject,name,description:milestone.description||'',status:milestone.status||'To do',target_date:milestone.target_date||'',created_at:new Date().toISOString()});
+ next.milestones.push({milestone_id:newMilestoneId,project_id:targetProject,name,description:milestone.description||'',status:milestone.status||'To do',target_date:milestone.target_date||'',created_at:new Date().toISOString()});
  const mappedFeatures=new Map(),mappedTasks=new Map();
  for(const f of features){
   const id=uid();mappedFeatures.set(fkey(f),id);
-  next.features.push({feature_id:id,project_id:activeProject,milestone_id:newMilestoneId,name:String(f.name),description:f.description||'',status:f.status||'To do'});
+  next.features.push({feature_id:id,project_id:targetProject,milestone_id:newMilestoneId,name:String(f.name),description:f.description||'',status:f.status||'To do'});
  }
  for(const t of tasks){
   const id=uid();mappedTasks.set(tkey(t),id);
   next.tasks.push({
-   task_id:id,project_id:activeProject,feature_id:mappedFeatures.get(String(t.feature_id||t.featureId)),
+   task_id:id,project_id:targetProject,feature_id:mappedFeatures.get(String(t.feature_id||t.featureId)),
    title:String(t.title||t.name),description:t.description||'',assignee_member_id:resolveMember(t),
    tag_ids:resolveTags(t),status:ST.includes(t.status)?t.status:'To do',
    priority:PRI.includes(t.priority)?t.priority:'Normal',estimated_hours:estimateOf(t),
@@ -3133,6 +3134,8 @@ async function importOneMilestone(source){
   const newTask=next.tasks.find(t=>t.task_id===importedTaskId);
   next.logs.push({log_id:uid(),task_id:importedTaskId,member_id:newTask?.assignee_member_id||data.me.member_id||'penni',hours:Number(l.hours)||0,work_date:l.work_date||l.date||'',note:l.note||'',created_at:l.created_at||''});
  }
+ // A dry-run validates the complete import without changing any saved board.
+ if(options.previewData)return next;
  // Keep current board untouched if validation or persistence fails.
  const oldData=data;data=next;
  try{persist()}catch(err){data=oldData;throw err}
@@ -3146,18 +3149,130 @@ $('#milestoneFileInput').onchange=async ev=>{
  finally{ev.target.value=''}
 };
 
+/* Project imports always ADD exactly one project. There is no full-workspace
+   replacement operation. Validate every milestone before creating anything. */
+async function projectFromImport(source){
+ if(!source||typeof source!=='object'||Array.isArray(source))throw Error('Expected a GamePlan project or milestone JSON file');
+ if(source.format==='gameplan-project'||(source.project&&Array.isArray(source.milestones)&&!Array.isArray(source.projects))){
+  const name=String(source.project?.name||source.project?.project_name||'Imported project').trim();
+  const list=source.milestones;
+  if(!Array.isArray(list)||!list.length)throw Error('Project import needs at least one milestone');
+  return {name,description:source.project?.description||'',entries:list.map(m=>({
+   milestone:m.milestone||m,features:m.features||[],...(Array.isArray(m.tasks)?{tasks:m.tasks}:{}),
+   logs:m.logs||[],tags:source.tags||[],members:source.members||[]
+  }))};
+ }
+ if(source.milestone&&typeof source.milestone==='object'){
+  return {name:String(source.project?.name||source.milestone.name||'Imported project'),description:source.project?.description||'',
+   entries:[source]};
+ }
+ if(Array.isArray(source.projects)){
+  if(!Array.isArray(source.milestones)||!Array.isArray(source.features)||!Array.isArray(source.tasks))
+   throw Error('Invalid GamePlan backup: missing milestones, features, or tasks');
+  if(!source.projects.length)throw Error('This backup has no projects to import');
+  let choice=source.projects[0];
+  if(source.projects.length>1){
+   const response=await gpPrompt('Import ONE project from this backup. Select its number:\n'+
+    source.projects.map((p,i)=>(i+1)+'. '+(p.project_name||'Unnamed project')).join('\n'),'1');
+   if(response===null)return null;
+   const index=Number(response)-1;
+   if(!Number.isInteger(index)||index<0||index>=source.projects.length)
+    throw Error('Select a valid project number');
+   choice=source.projects[index];
+  }
+  const ms=(source.milestones||[]).filter(m=>String(m.project_id)===String(choice.project_id));
+  const entries=ms.map(m=>{
+   const features=source.features.filter(f=>String(f.project_id)===String(choice.project_id)&&
+    String(f.milestone_id)===String(m.milestone_id));
+   const featureIds=new Set(features.map(f=>String(f.feature_id)));
+   const tasks=source.tasks.filter(t=>featureIds.has(String(t.feature_id)));
+   const ids=new Set(tasks.map(t=>String(t.task_id)));
+   return {milestone:m,features,tasks,logs:(source.logs||[]).filter(l=>ids.has(String(l.task_id))),
+    members:source.members||[],tags:source.tags||[]};
+  });
+  return {name:choice.project_name||'Imported project',description:choice.description||'',entries};
+ }
+ throw Error('Expected a single project, milestone, or a GamePlan backup (one project will be selected)');
+}
+async function importOneProject(source){
+ const parsed=await projectFromImport(source);
+ if(!parsed)return false;
+ const proposed=String(parsed.name||'Imported project').trim();
+ const answer=await gpPrompt('Name for the NEW project',proposed);
+ if(answer===null)return false;
+ const name=String(answer).trim();
+ if(!name)throw Error('Project name cannot be empty');
+ if(name.length>160)throw Error('Project name is too long');
+ // Build and validate in memory, completely separate from saved user projects.
+ const tempId='project-import-preview-'+uid(),before=structuredClone(data);
+ const preview=structuredClone(data);
+ preview.projects.push({project_id:tempId,project_name:name,description:parsed.description||'',
+  status:'Active',project_manager_member_id:data.me.member_id});
+ preview.team.push({project_id:tempId,member_id:data.me.member_id,project_role:'Owner',
+  discipline:'',membership_status:'Active'});
+ for(const entry of parsed.entries){
+  await importOneMilestone(entry,{skipConfirm:true,previewData:preview,targetProject:tempId});
+ }
+ const newMilestones=preview.milestones.filter(m=>m.project_id===tempId);
+ const newFeatures=preview.features.filter(x=>x.project_id===tempId);
+ const newTasks=preview.tasks.filter(x=>x.project_id===tempId);
+ const taskIds=new Set(newTasks.map(t=>String(t.task_id)));
+ const newLogs=preview.logs.filter(l=>taskIds.has(String(l.task_id)));
+ const hours=newTasks.reduce((sum,t)=>sum+Number(t.estimated_hours||0),0);
+ if(!await gpConfirm('Create ONE new project “'+name+'” with '+newMilestones.length+
+  ' milestones, '+newFeatures.length+' features and '+newTasks.length+
+  ' tasks ('+formatHours(hours)+' estimated)?\n\nAll existing projects, tasks and time logs will be kept.',
+  {confirmLabel:'Import new project'}))return false;
+ localStorage.setItem('gp-pre-project-import-backup-'+Date.now(),JSON.stringify(before));
+ let created=false;
+ try{
+  await rpc('createProject',{name});
+  created=true;
+  const realId=String(activeProject);
+  if(!realId||!data.projects.some(p=>String(p.project_id)===realId))
+   throw Error('The new project was not created');
+  const next=structuredClone(data);
+  const actualProject=next.projects.find(p=>String(p.project_id)===realId);
+  if(actualProject)actualProject.description=parsed.description||'';
+  for(const kind of ['milestones','features','tasks','tags']){
+   for(const record of preview[kind].filter(item=>String(item.project_id)===tempId)){
+    next[kind].push({...record,project_id:realId});
+   }
+  }
+  next.logs.push(...newLogs);
+  for(const kind of ['members','roster']){
+   const known=new Set(next[kind].map(m=>String(m.member_id)));
+   for(const member of preview[kind]){
+    if(!known.has(String(member.member_id))){next[kind].push(member);known.add(String(member.member_id));}
+   }
+  }
+  for(const member of preview.team.filter(t=>String(t.project_id)===tempId)){
+   if(!next.team.some(t=>String(t.project_id)===realId&&String(t.member_id)===String(member.member_id)))
+    next.team.push({...member,project_id:realId});
+  }
+  const beforePersist=data;
+  data=next;
+  try{persist()}catch(err){data=beforePersist;throw err}
+  gpMilestoneSelection='';gpMyOnly=false;
+  $('#searchTasks').value='';$('#assigneeFilter').value='';
+  if(typeof gpResetFacets==='function')gpResetFacets();
+  saveProject();
+  if(typeof gpNavigate==='function')gpNavigate('board');else render();
+  return true;
+ }catch(err){
+  if(created)throw Error('New project may exist, but importing its tasks did not finish. Other projects were preserved. '+err.message);
+  throw err;
+ }
+}
 $('#import').onclick=()=>$('#fileInput').click();
 $('#fileInput').onchange=async ev=>{
  const file=ev.target.files?.[0];if(!file)return;
  try{
-  const incoming=JSON.parse(await file.text());
-  const next=Array.isArray(incoming.projects)?normalizeLocal(incoming):migrateLegacy(incoming);
-  if(!await gpConfirm('Replace all local projects and tasks with this backup? Export your current board first.',{danger:true,confirmLabel:'Replace board'}))return;
-  data=next;persist();activeProject='';saveProject();await refresh();
- }catch(err){gpAlert('Import failed: '+err.message)}
+  const source=JSON.parse(await file.text());
+  if(await importOneProject(source))setNotice('New project imported · Your existing projects were preserved.');
+ }catch(err){gpAlert('Could not import project: '+err.message)}
  finally{ev.target.value=''}
 };
-
 init();
-</script><script src="supabase/public-config.js?v=2026.11.10.85"></script>
-<script src="gameplan.js?v=2026.11.10.85"></script><script src="local-first-sync.js?v=2026.11.10.85"></script><script src="account-ui.js?v=2026.11.10.85"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
+</script><script src="supabase/public-config.js?v=2026.11.10.86"></script>
+<script src="gameplan.js?v=2026.11.10.86"></script><script src="local-first-sync.js?v=2026.11.10.86"></script><script src="account-ui.js?v=2026.11.10.86"></script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});</script></body></html>
