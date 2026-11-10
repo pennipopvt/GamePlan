@@ -49,7 +49,7 @@ Use **… More → Import milestone** from the project you want to add work to. 
 - `estimated_minutes` (or `estimate_minutes`) is preferred. Older `estimated_hours` and `estimate` values also work. The editable task form uses hours **and** minutes.
 - `assignee` is the team member's display name. Existing members are reused; an unknown name creates a member in the selected project. Omit it to leave the task unassigned.
 - `tags` and `tag_names` accept multiple tag names. Tags matching the current project's names are reused without changing their colors. Unknown names are created with the matching color from the top-level `tags` definitions, or gray if none was supplied.
-- Feature `description`, task `description`, `priority`, `status` and milestone `target_date` are preserved.
+- Feature `description`, task `description`, `priority`, `status`, optional task `due_date` (`YYYY-MM-DD`), and milestone `target_date` are preserved.
 - A **flat** `tasks` array is also supported; each task needs `feature` (matching a feature name) or `feature_id`. Legacy full-board exports with `projects`/`milestones`/`features`/`tasks`/`logs`/`tags` still work as sources: select the milestone when prompted.
 - If importing time entries, provide explicit task IDs and reference them using `logs[].task_id`. No logs are required for a new milestone.
 - Invalid feature references, missing tag-ID definitions, negative estimates, and duplicate IDs stop the import before it saves the board.
