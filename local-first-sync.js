@@ -1117,27 +1117,6 @@ function controls(){
  const footer=$s('.gp-site-footer p:first-child');if(footer)footer.textContent='Local-first · Your edits are saved on this device and synced when online';
  refreshStatus();
 }
-const originalImport=$s('#fileInput').onchange;
-$s('#fileInput').onchange=async ev=>{
- // Keep an independent recovery copy even when the user elects a full restore.
- // Disable syncing until the user reviews what was imported.
- const file=ev.target.files?.[0];if(!file)return;
- const previous=clone(data);
- blocked=true;refreshStatus();
- await originalImport.call($s('#fileInput'),ev);
- if(!equal(previous,data)){
-  store('gp-pre-import-backup-'+Date.now(),previous);
-  store(LAST,{created_at:new Date().toISOString(),project_id:activeProject});
-  modal('Backup restored locally','<p class="sub">Your restored board is saved on this device. Syncing is paused so it cannot overwrite or delete cloud data automatically.</p>'+
-   '<div class="controls"><button class="button" id="gpRestoreReview">Keep offline for now</button>'+
-   '<button class="button main" id="gpRestoreResume">Review and resume syncing</button></div>');
-  $s('#gpRestoreReview').onclick=closeModal;
-  $s('#gpRestoreResume').onclick=async()=>{
-   if(!await gpConfirm('Resume syncing the restored board? Changed items, including deletions, may be applied to the linked cloud project.',{confirmLabel:'Resume syncing'}))return;
-   blocked=false;localStorage.removeItem(LAST);closeModal();schedule();
-  };
- }else{blocked=false}
-};
 blocked=!!read(LAST,null);
 controls();
 window.addEventListener('online',()=>{void initialize().then(()=>{schedule();refreshStatus()})});
