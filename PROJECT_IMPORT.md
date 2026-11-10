@@ -30,3 +30,23 @@ The app makes a pre-import recovery snapshot. Importing while signed in creates 
 
 **There is intentionally no Import full board or Replace all projects operation.** Export backup remains available for safekeeping.
 Task JSON entries may optionally include `"due_date": "2026-11-21"` (ISO calendar date). Due dates are shown in both Board and All Tasks. Existing tasks without a due date are unchanged.
+
+## Task reference links and deliverables
+
+Each nested task can include optional arrays:
+
+```json
+{
+  "title": "Submit the application",
+  "due_date": "2026-11-18",
+  "resources": [
+    {"title": "Official job posting", "url": "https://job-boards.greenhouse.io/example"}
+  ],
+  "deliverables": [
+    {"title": "Role-tailored resume PDF", "url": ""},
+    {"title": "Submitted application confirmation", "url": "https://drive.google.com/example"}
+  ]
+}
+```
+
+These sample URLs demonstrate the format; replace them with real URLs. A resource must have an HTTP(S) URL; deliverables may be placeholders with a blank URL until the document exists. Actual file bytes are **not** uploaded or stored in GamePlan; paste a link to the file in a service you control instead. Projects remain safe and additive on import, so importing an updated file creates another project rather than overwriting or deleting the old one.
