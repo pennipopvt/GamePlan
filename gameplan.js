@@ -58,7 +58,7 @@ taskRow=function(task){
  return html.replace(/(<div class="task-entry [^"]*">)/, '$1'+handle);
 };
 const gpOriginalRenderMilestones=renderMilestones;
-renderMilestones=function(){gpOriginalRenderMilestones();gpWireTaskDrag()};
+renderMilestones=function(){gpOriginalRenderMilestones();gpWireTaskDrag();gpWireFeatureDrag()};
 let gpDraggingTaskId=null;
 function gpWireTaskDrag(){
  const root=$('#milestoneList');
@@ -126,6 +126,124 @@ function gpWireTaskDrag(){
  };
  root.ondragend=clear;
 }
+
+/* Manual feature order is the persisted data.features order, already synchronized
+   through gp_items.sort_order. Done-last is only a view sort: undoing completion
+   restores the feature's manual position. */
+let gpDraggingFeatureId=null;
+const gpFeatureGrip='<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="currentColor"><circle cx="8" cy="5" r="1.7"/><circle cx="16" cy="5" r="1.7"/><circle cx="8" cy="12" r="1.7"/><circle cx="16" cy="12" r="1.7"/><circle cx="8" cy="19" r="1.7"/><circle cx="16" cy="19" r="1.7"/></svg>';
+function gpReorderFeature(id,targetId,after){
+ if(!isPM()||gpSelecting||String(id)===String(targetId))return false;
+ const moved=data.features.find(f=>String(f.feature_id)===String(id));
+ const target=data.features.find(f=>String(f.feature_id)===String(targetId));
+ if(!moved||!target||String(moved.project_id)!==String(activeProject)
+    ||String(target.project_id)!==String(activeProject)
+    ||String(moved.milestone_id)!==String(target.milestone_id)
+    ||(featureStatus(id)==='Done')!==(featureStatus(targetId)==='Done'))return false;
+ const before=[...data.features],slots=[],ordered=[];
+ before.forEach((f,i)=>{
+  if(String(f.project_id)===String(activeProject)&&String(f.milestone_id)===String(moved.milestone_id)){
+   slots.push(i);ordered.push(f);
+  }
+ });
+ const changed=ordered.filter(f=>f!==moved),at=changed.indexOf(target);
+ if(at<0)return false;
+ changed.splice(at+(after?1:0),0,moved);
+ if(changed.every((f,i)=>f===ordered[i]))return false;
+ slots.forEach((slot,i)=>{data.features[slot]=changed[i]});
+ try{persist();render();return true}
+ catch(err){data.features=before;gpAlert('Could not reorder feature: '+err.message);render();return false}
+}
+function gpWireFeatureDrag(){
+ const root=$('#milestoneList');if(!root||!isPM()||gpSelecting)return;
+ root.querySelectorAll('.feature-section[data-feat]').forEach(section=>{
+  const feature=data.features.find(f=>String(f.feature_id)===String(section.dataset.feat));
+  const summary=section.querySelector(':scope > .feature-summary');
+  if(!feature||!summary)return;
+  const handle=document.createElement('span');
+  handle.className='gp-feature-drag-handle';
+  handle.draggable=true;handle.tabIndex=0;handle.setAttribute('role','button');
+  handle.dataset.gpDragFeature=String(feature.feature_id);
+  handle.setAttribute('aria-label','Reorder '+feature.name+'. Drag, or use up and down arrow keys.');
+  handle.title='Drag to reorder within this milestone; arrow keys also work';
+  handle.innerHTML=gpFeatureGrip;
+  const chevron=summary.querySelector('.chevron');
+  if(chevron)chevron.after(handle);else summary.prepend(handle);
+  handle.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation()});
+  handle.addEventListener('keydown',ev=>{
+   if(ev.key!=='ArrowUp'&&ev.key!=='ArrowDown')return;
+   ev.preventDefault();ev.stopPropagation();
+   const done=featureStatus(feature.feature_id)==='Done';
+   const peers=[...root.querySelectorAll('.feature-section[data-feat]')]
+     .map(el=>data.features.find(f=>String(f.feature_id)===String(el.dataset.feat)))
+     .filter(f=>f&&String(f.project_id)===String(activeProject)
+       &&String(f.milestone_id)===String(feature.milestone_id)
+       &&(featureStatus(f.feature_id)==='Done')===done);
+   const index=peers.findIndex(f=>String(f.feature_id)===String(feature.feature_id));
+   const direction=ev.key==='ArrowDown'?1:-1,neighbor=peers[index+direction];
+   if(neighbor&&gpReorderFeature(feature.feature_id,neighbor.feature_id,direction>0)){
+    const movedHandle=[...root.querySelectorAll('[data-gp-drag-feature]')]
+      .find(el=>el.dataset.gpDragFeature===String(feature.feature_id));
+    movedHandle?.focus();
+   }
+  });
+ });
+ const clean=()=>{
+  gpDraggingFeatureId=null;
+  root.querySelectorAll('.gp-feature-sort-dragging,.gp-feature-sort-before,.gp-feature-sort-after')
+    .forEach(el=>el.classList.remove('gp-feature-sort-dragging','gp-feature-sort-before','gp-feature-sort-after'));
+ };
+ const destination=ev=>{
+  if(!gpDraggingFeatureId)return null;
+  const summary=ev.target.closest?.('.feature-summary');
+  const section=summary?.closest('.feature-section[data-feat]');
+  const moved=data.features.find(f=>String(f.feature_id)===gpDraggingFeatureId);
+  const target=section&&data.features.find(f=>String(f.feature_id)===String(section.dataset.feat));
+  if(!moved||!target||moved===target
+    ||String(moved.project_id)!==String(activeProject)
+    ||String(target.project_id)!==String(activeProject)
+    ||String(moved.milestone_id)!==String(target.milestone_id)
+    ||(featureStatus(moved.feature_id)==='Done')!==(featureStatus(target.feature_id)==='Done'))return null;
+  const rect=summary.getBoundingClientRect();
+  return {section,after:ev.clientY>rect.top+rect.height/2};
+ };
+ // Extend the existing task drag handlers without changing how tasks reorder.
+ const taskStart=root.ondragstart,taskOver=root.ondragover,taskLeave=root.ondragleave,taskDrop=root.ondrop,taskEnd=root.ondragend;
+ root.ondragstart=ev=>{
+  const handle=ev.target.closest?.('[data-gp-drag-feature]');
+  if(!handle){taskStart?.call(root,ev);return}
+  const item=data.features.find(f=>String(f.feature_id)===String(handle.dataset.gpDragFeature));
+  if(!item||String(item.project_id)!==String(activeProject)){ev.preventDefault();return}
+  gpDraggingFeatureId=String(item.feature_id);
+  ev.dataTransfer.effectAllowed='move';
+  ev.dataTransfer.setData('text/plain',gpDraggingFeatureId);
+  handle.closest('.feature-section')?.classList.add('gp-feature-sort-dragging');
+ };
+ root.ondragover=ev=>{
+  if(!gpDraggingFeatureId){taskOver?.call(root,ev);return}
+  root.querySelectorAll('.gp-feature-sort-before,.gp-feature-sort-after')
+    .forEach(el=>el.classList.remove('gp-feature-sort-before','gp-feature-sort-after'));
+  const dest=destination(ev);if(!dest)return;
+  ev.preventDefault();ev.dataTransfer.dropEffect='move';
+  dest.section.classList.add(dest.after?'gp-feature-sort-after':'gp-feature-sort-before');
+ };
+ root.ondragleave=ev=>{
+  if(!gpDraggingFeatureId){taskLeave?.call(root,ev);return}
+  const section=ev.target.closest?.('.feature-section[data-feat]');
+  if(section&&!section.contains(ev.relatedTarget))
+   section.classList.remove('gp-feature-sort-before','gp-feature-sort-after');
+ };
+ root.ondrop=ev=>{
+  if(!gpDraggingFeatureId){taskDrop?.call(root,ev);return}
+  const dest=destination(ev),id=gpDraggingFeatureId;
+  if(!dest){clean();return}
+  ev.preventDefault();ev.stopPropagation();
+  const targetId=dest.section.dataset.feat,after=dest.after;
+  clean();gpReorderFeature(id,targetId,after);
+ };
+ root.ondragend=ev=>{clean();taskEnd?.call(root,ev)};
+}
+
 const gpOriginalForm=taskForm;
 taskForm=function(t,featureId=''){
  gpOriginalForm(t,featureId);
